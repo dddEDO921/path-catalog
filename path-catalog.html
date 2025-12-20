@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Path Catalog</title>
+
+  <!-- 外部CDN OKとのことなので Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* ちょい補助：テキスト省略 */
+    .line-clamp-2{
+      display:-webkit-box;
+      -webkit-line-clamp:2;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100">
+  <div class="min-h-dvh grid grid-cols-1 md:grid-cols-[260px_1fr]">
+
+    <!-- Sidebar -->
+    <aside class="border-r border-slate-800 bg-slate-900">
+      <div class="p-4 sticky top-0">
+        <div class="flex items-center justify-between gap-2">
+          <h1 class="text-lg font-semibold tracking-tight text-white">Path Catalog</h1>
+          <span class="text-[11px] text-slate-400" id="stats"></span>
+        </div>
+
+        <div class="mt-3 text-xs text-slate-400" id="toast"></div>
+
+        <div class="mt-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-semibold text-slate-200">カテゴリ</h2>
+            <button id="toggleSidebar"
+                    class="md:hidden text-xs text-slate-300 underline underline-offset-2">
+              閉じる
+            </button>
+          </div>
+
+          <nav class="mt-2 space-y-1" id="catList"></nav>
+        </div>
+
+        <div class="mt-4">
+          <h2 class="text-xs font-semibold text-slate-200">サブカテゴリ</h2>
+          <nav class="mt-2 space-y-1" id="subList"></nav>
+        </div>
+
+        <div class="mt-4 text-[11px] text-slate-400">
+          <p>操作:</p>
+          <ul class="list-disc ml-4 mt-1 space-y-1">
+            <li>カテゴリ → サブカテゴリの順に絞り込み</li>
+            <li>カードをクリックするとパスをコピー</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="p-4 md:p-5">
+      <!-- Mobile header -->
+      <div class="md:hidden mb-4 flex items-center justify-between">
+        <button id="openSidebar"
+                class="rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-100 hover:bg-slate-800">
+          カテゴリ
+        </button>
+        <div class="text-xs text-slate-400" id="statsMobile"></div>
+      </div>
+
+      <div class="mb-2"></div>
+
+      <section id="list" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3"></section>
+
+      <section id="empty" class="hidden mt-10">
+        <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center text-slate-300">
+          条件に一致するデータがありません
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===== ここにデータ(JSON配列)を貼る ===== -->
+  <script id="data" type="application/json">
+  [
+    { "category": "申請", "subCategory": "経費", "name": "経費精算フォルダ", "path": "\\\\fileserver\\share\\finance\\expense", "note": "年度ごとに格納" },
+    { "category": "申請", "subCategory": "経費", "name": "旅費申請書式", "path": "\\\\fileserver\\share\\finance\\travel\\forms", "note": "出張手当含む" },
+    { "category": "申請", "subCategory": "勤怠", "name": "勤怠申請フォルダ", "path": "\\\\fileserver\\share\\hr\\attendance", "note": "" },
+    { "category": "申請", "subCategory": "勤怠", "name": "休暇申請テンプレート", "path": "\\\\fileserver\\share\\hr\\leave\\template.docx", "note": "" },
+    { "category": "申請", "subCategory": "稟議", "name": "稟議申請書式", "path": "\\\\fileserver\\share\\admin\\ringi\\forms", "note": "最新テンプレート" },
+    { "category": "申請", "subCategory": "稟議", "name": "購買申請シート", "path": "\\\\fileserver\\share\\procurement\\requests.xlsx", "note": "月次締めあり" },
+
+    { "category": "設計", "subCategory": "API", "name": "OpenAPI仕様書", "path": "C:\\\\work\\\\spec\\\\openapi.yaml", "note": "" },
+    { "category": "設計", "subCategory": "API", "name": "APIモック", "path": "\\\\fileserver\\share\\api\\mock", "note": "sandbox" },
+    { "category": "設計", "subCategory": "インフラ", "name": "ネットワーク構成図", "path": "\\\\fileserver\\share\\infra\\nw-diagram.drawio", "note": "" },
+    { "category": "設計", "subCategory": "インフラ", "name": "IaCテンプレート", "path": "C:\\\\work\\\\infra\\\\terraform\\\\modules", "note": "" },
+    { "category": "設計", "subCategory": "DB", "name": "ER図", "path": "\\\\fileserver\\share\\db\\er\\main.drawio", "note": "最新版" },
+    { "category": "設計", "subCategory": "DB", "name": "マイグレーションスクリプト", "path": "\\\\fileserver\\share\\db\\migration", "note": "" },
+
+    { "category": "開発", "subCategory": "リポジトリ", "name": "Monorepo", "path": "C:\\\\dev\\\\repo\\\\monorepo", "note": "" },
+    { "category": "開発", "subCategory": "リポジトリ", "name": "Design System Repo", "path": "C:\\\\dev\\\\repo\\\\design-system", "note": "" },
+    { "category": "開発", "subCategory": "ビルド", "name": "CI設定", "path": "\\\\fileserver\\share\\ci\\pipelines", "note": "共通ジョブ" },
+    { "category": "開発", "subCategory": "ビルド", "name": "パイプラインテンプレ", "path": "\\\\fileserver\\share\\ci\\templates", "note": "" },
+    { "category": "開発", "subCategory": "ツール", "name": "コードスタイル設定", "path": "C:\\\\dev\\\\config\\\\lint\\\\.eslintrc.json", "note": "" },
+    { "category": "開発", "subCategory": "ツール", "name": "npm private registry", "path": "https://npm.example.local/", "note": "" },
+
+    { "category": "運用", "subCategory": "ジョブ", "name": "夜間バッチ", "path": "\\\\fileserver\\share\\ops\\batch\\nightly", "note": "" },
+    { "category": "運用", "subCategory": "ジョブ", "name": "月次集計ジョブ", "path": "\\\\fileserver\\share\\ops\\batch\\monthly", "note": "" },
+    { "category": "運用", "subCategory": "監視", "name": "監視ダッシュボードURL", "path": "https://monitor.example.local/dashboards/main", "note": "" },
+    { "category": "運用", "subCategory": "監視", "name": "アラート設定", "path": "\\\\fileserver\\share\\ops\\monitoring\\alerts", "note": "" },
+    { "category": "運用", "subCategory": "障害対応", "name": "インシデント手順書", "path": "\\\\fileserver\\share\\ops\\incident\\runbook.pdf", "note": "" },
+    { "category": "運用", "subCategory": "障害対応", "name": "バックアップ", "path": "\\\\fileserver\\share\\backup\\db", "note": "日次" },
+
+    { "category": "共有", "subCategory": "テンプレート", "name": "議事録テンプレート", "path": "\\\\fileserver\\share\\templates\\minutes.docx", "note": "" },
+    { "category": "共有", "subCategory": "テンプレート", "name": "契約書ドラフト", "path": "\\\\fileserver\\share\\templates\\contract.docx", "note": "" },
+    { "category": "共有", "subCategory": "ガイド", "name": "社内Wikiトップ", "path": "https://wiki.example.local/", "note": "" },
+    { "category": "共有", "subCategory": "ガイド", "name": "ブランドガイドライン", "path": "\\\\fileserver\\share\\brand\\guide.pdf", "note": "" },
+    { "category": "共有", "subCategory": "ガイド", "name": "ロゴ画像一式", "path": "\\\\fileserver\\share\\brand\\logo", "note": "SVG/PNG" },
+
+    { "category": "顧客", "subCategory": "案件共通", "name": "NDA雛形", "path": "\\\\fileserver\\share\\clients\\common\\nda.docx", "note": "" },
+    { "category": "顧客", "subCategory": "案件共通", "name": "契約基本書", "path": "\\\\fileserver\\share\\clients\\common\\msa.docx", "note": "" },
+    { "category": "顧客", "subCategory": "案件A", "name": "案件A仕様書", "path": "\\\\fileserver\\share\\clients\\a\\spec", "note": "" },
+    { "category": "顧客", "subCategory": "案件A", "name": "案件A納品物", "path": "\\\\fileserver\\share\\clients\\a\\deliverables", "note": "" },
+    { "category": "顧客", "subCategory": "案件B", "name": "案件B仕様書", "path": "\\\\fileserver\\share\\clients\\b\\spec", "note": "" },
+    { "category": "顧客", "subCategory": "案件B", "name": "案件B納品物", "path": "\\\\fileserver\\share\\clients\\b\\deliverables", "note": "" }
+  ]
+  </script>
+
+  <script>
+    // ---------- util ----------
+    const $ = (id) => document.getElementById(id);
+    const safe = (v) => (v ?? "").toString();
+    const escapeHtml = (str) => str.replace(/[&<>"']/g, (m)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+    const uniq = (arr) => Array.from(new Set(arr));
+    const sortJa = (arr) => arr.slice().sort((a,b)=>a.localeCompare(b, "ja"));
+
+    const toast = (msg) => {
+      const el = $("toast");
+      el.textContent = msg;
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(()=> el.textContent = "", 1200);
+    };
+
+    async function copyText(text) {
+      await navigator.clipboard.writeText(text);
+      toast("コピーしました");
+    }
+
+    function parseData() {
+      const raw = $("data").textContent.trim();
+      const items = JSON.parse(raw || "[]");
+      return items.map((x, i) => ({
+      id: i + 1,
+      category: safe(x.category),
+      subCategory: safe(x.subCategory),
+      name: safe(x.name),
+      path: safe(x.path),
+      note: safe(x.note)
+    }));
+  }
+
+    // ---------- state ----------
+    const state = {
+      all: parseData(),
+      cat: "",       // 選択カテゴリ
+      sub: ""        // 選択サブカテゴリ
+    };
+
+    // ---------- filtering ----------
+    function filtered() {
+      return state.all.filter(x => {
+        if (state.cat && x.category !== state.cat) return false;
+        if (state.sub && x.subCategory !== state.sub) return false;
+        return true;
+      });
+    }
+
+    // ---------- sidebar lists ----------
+    function renderCategoryList() {
+      const cats = sortJa(uniq(state.all.map(x => x.category).filter(Boolean)));
+      const current = state.cat;
+
+      const allBtn = `
+        <button class="${current==="" ? "bg-purple-600 text-white border-purple-500 shadow" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
+                data-cat="">
+          すべて
+        </button>`;
+
+      $("catList").innerHTML = allBtn + cats.map(c => `
+        <button class="${current===c ? "bg-purple-600 text-white border-purple-500 shadow" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
+                data-cat="${escapeHtml(c)}">
+          ${escapeHtml(c)}
+        </button>
+      `).join("");
+
+      $("catList").querySelectorAll("button[data-cat]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.cat = btn.getAttribute("data-cat") || "";
+          state.sub = ""; // カテゴリ変えたらサブ解除
+          renderCategoryList();
+          renderSubCategoryList();
+          renderMain();
+          closeSidebarOnMobile();
+        });
+      });
+    }
+
+    function renderSubCategoryList() {
+      if (!state.cat) {
+        state.sub = "";
+        $("subList").innerHTML = `
+          <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+            カテゴリを選択してください
+          </div>
+        `;
+        return;
+      }
+
+      const base = state.all.filter(x => x.category === state.cat);
+      const subs = sortJa(uniq(base.map(x => x.subCategory).filter(Boolean)));
+      const current = state.sub;
+
+      const allBtn = `
+        <button class="${current==="" ? "bg-slate-800 border-slate-700 text-slate-100" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
+                data-sub="">
+          （すべて）
+        </button>`;
+
+      $("subList").innerHTML = allBtn + subs.map(s => `
+        <button class="${current===s ? "bg-slate-800 border-slate-700 text-slate-100" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
+                data-sub="${escapeHtml(s)}">
+          ${escapeHtml(s)}
+        </button>
+      `).join("");
+
+      $("subList").querySelectorAll("button[data-sub]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.sub = btn.getAttribute("data-sub") || "";
+          renderSubCategoryList();
+          renderMain();
+          closeSidebarOnMobile();
+        });
+      });
+    }
+
+    // ---------- list row (compact) ----------
+    function listRow(item) {
+      return `
+        <li class="group cursor-pointer px-2 py-1.5 rounded-md hover:bg-slate-800/80 border border-slate-800/60 hover:border-purple-500/50 flex items-start gap-1.5 transition"
+            data-copy="${escapeHtml(item.path)}">
+          <div class="w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-purple-600 opacity-30 group-hover:opacity-90 transition"></div>
+          <div class="min-w-0">
+            <div class="text-[12px] font-semibold leading-snug break-words text-slate-100">
+              ${escapeHtml(item.name || "(no name)")}
+            </div>
+            <div class="mt-0.5 text-[11px] text-slate-500 font-mono break-all">
+              ${escapeHtml(item.path)}
+            </div>
+            ${item.note ? `<div class="mt-0.5 text-[10px] text-slate-400 line-clamp-2 hidden group-hover:block">${escapeHtml(item.note)}</div>` : ""}
+          </div>
+        </li>
+      `;
+    }
+
+    function renderMain() {
+      const items = filtered();
+      const list = $("list");
+      const empty = $("empty");
+
+      // タイトル
+      // 件数やタイトル表示を省略（要素があれば空文字で上書き）
+      const t = $("title");
+      const st = $("subtitle");
+      const s1 = $("stats");
+      const s2 = $("statsMobile");
+      if (t) t.textContent = "";
+      if (st) st.textContent = "";
+      if (s1) s1.textContent = "";
+      if (s2) s2.textContent = "";
+
+      if (items.length === 0) {
+        list.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+      }
+      empty.classList.add("hidden");
+
+      // カテゴリ単位でボックス表示（サブカテゴリごとにリスト）
+      const catMap = {};
+      items.forEach(item => {
+        const cat = item.category || "(未設定カテゴリ)";
+        const sub = item.subCategory || "(未設定)";
+        if (!catMap[cat]) catMap[cat] = {};
+        if (!catMap[cat][sub]) catMap[cat][sub] = [];
+        catMap[cat][sub].push(item);
+      });
+      const catLabels = sortJa(Object.keys(catMap));
+
+      list.innerHTML = catLabels.map(cat => {
+        const subMap = catMap[cat];
+        const subLabels = sortJa(Object.keys(subMap));
+        const total = subLabels.reduce((n, s) => n + subMap[s].length, 0);
+        return `
+        <div class="rounded-2xl border border-slate-800 bg-slate-950/90 shadow-lg ring-1 ring-purple-500/10 overflow-hidden">
+          <div class="px-3 py-3 bg-gradient-to-r from-purple-700/60 via-slate-900 to-slate-900 border-b border-slate-800">
+            <div class="text-base font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
+          </div>
+          <div class="p-2 space-y-1.5">
+            ${subLabels.map(sub => `
+              <div class="rounded-lg border border-slate-800 bg-slate-900/90 shadow-sm overflow-hidden">
+                <div class="px-2 py-1.5 flex items-center bg-gradient-to-r from-purple-700/25 via-slate-900 to-slate-900">
+                  <span class="inline-flex items-center gap-2 text-[13px] font-semibold text-white tracking-wide uppercase">
+                    <span class="inline-block h-1.5 w-1.5 rounded-full bg-purple-400"></span>
+                    ${escapeHtml(sub)}
+                  </span>
+                </div>
+                <ul class="divide-y divide-slate-800">
+                  ${subMap[sub].map(listRow).join("")}
+                </ul>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+        `;
+      }).join("");
+
+      // クリックでコピー（行）
+      list.querySelectorAll("li[data-copy]").forEach(el => {
+        el.addEventListener("click", async () => {
+          const p = el.getAttribute("data-copy") || "";
+          try {
+            await copyText(p);
+          } catch (e) {
+            const ta = document.createElement("textarea");
+            ta.value = p;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+            toast("コピーしました（互換モード）");
+          }
+        });
+      });
+    }
+
+    // ---------- overall render ----------
+    function renderAll() {
+      renderCategoryList();
+      renderSubCategoryList();
+      renderMain();
+    }
+
+    // ---------- controls ----------
+    // ---------- mobile sidebar behavior ----------
+    function closeSidebarOnMobile() {
+      // md未満のときだけ視覚的に閉じる（簡易：asideを非表示化）
+      if (window.matchMedia("(max-width: 767px)").matches) {
+        document.querySelector("aside").classList.add("hidden");
+      }
+    }
+    function openSidebarOnMobile() {
+      document.querySelector("aside").classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    $("openSidebar").addEventListener("click", openSidebarOnMobile);
+    $("toggleSidebar").addEventListener("click", closeSidebarOnMobile);
+
+    // ---------- start ----------
+    // モバイルは最初サイドバー表示（好みで hidden にしてもOK）
+    renderAll();
+  </script>
+</body>
+</html>
