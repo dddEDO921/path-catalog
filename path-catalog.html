@@ -20,7 +20,7 @@
 </head>
 
 <body class="bg-slate-950 text-slate-100">
-  <div class="min-h-dvh grid grid-cols-1 md:grid-cols-[260px_1fr]">
+  <div class="min-h-dvh grid grid-cols-[260px_1fr]">
 
     <!-- Sidebar -->
     <aside class="border-r border-slate-800 bg-slate-900">
@@ -35,10 +35,6 @@
         <div class="mt-4">
           <div class="flex items-center justify-between">
             <h2 class="text-xs font-semibold text-slate-200">カテゴリ</h2>
-            <button id="toggleSidebar"
-                    class="md:hidden text-xs text-slate-300 underline underline-offset-2">
-              閉じる
-            </button>
           </div>
 
           <nav class="mt-2 space-y-1" id="catList"></nav>
@@ -55,15 +51,7 @@
     </aside>
 
     <!-- Main -->
-    <main class="p-4 md:p-5">
-      <!-- Mobile header -->
-      <div class="md:hidden mb-4 flex items-center justify-between">
-        <button id="openSidebar"
-                class="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 hover:bg-slate-800">
-          カテゴリ
-        </button>
-        <div class="text-xs text-slate-400" id="statsMobile"></div>
-      </div>
+    <main class="p-5">
 
       <div class="mb-2"></div>
 
@@ -348,18 +336,6 @@
         renderCategoryList();
         renderMain();
       };
-
-      const closeSidebarOnMobile = () => {
-        if (window.matchMedia("(max-width: 767px)").matches) {
-          document.querySelector("aside").classList.add("hidden");
-        }
-      };
-      const openSidebarOnMobile = () => {
-        document.querySelector("aside").classList.remove("hidden");
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      };
-      $("openSidebar").addEventListener("click", openSidebarOnMobile);
-      $("toggleSidebar").addEventListener("click", closeSidebarOnMobile);
 
       renderAll();
     })();
