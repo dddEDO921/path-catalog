@@ -323,10 +323,10 @@
           if (!note) return;
           el.addEventListener("mouseenter", (e) => {
             const rect = el.getBoundingClientRect();
-            noteTooltip.show(note, rect.right, rect.bottom + 6);
+            noteTooltip.show(note, rect.right + 36, rect.bottom);
           });
           el.addEventListener("mousemove", (e) => {
-            noteTooltip.show(note, e.clientX + 8, e.clientY + 10);
+            noteTooltip.show(note, e.clientX + 36, e.clientY);
           });
           el.addEventListener("mouseleave", () => noteTooltip.hide());
         });
