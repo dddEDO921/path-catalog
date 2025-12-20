@@ -26,7 +26,30 @@
     <aside class="border-r border-slate-800 bg-slate-900">
       <div class="p-4 sticky top-0">
         <div class="flex items-center justify-between gap-2">
-          <h1 class="text-lg font-semibold tracking-tight text-white">Path Catalog</h1>
+          <div class="flex items-center gap-3 text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo" class="h-11 w-auto">
+              <defs>
+                <style>
+                  .badge { fill: #7c3aed; }
+                  .sqFront { fill: #f8fafc; }
+                  .sqBack  { fill: #e2e8f0; opacity: 0.55; }
+                  .slash { stroke: #f8fafc; stroke-width: 22; stroke-linecap: round; fill: none; }
+                  .wordMain { fill: #f8fafc; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 800; letter-spacing: -0.02em; }
+                  .wordSub { fill: #cbd5e1; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 700; letter-spacing: -0.02em; }
+                </style>
+              </defs>
+              <g transform="translate(24,24) scale(0.75)">
+                <rect class="badge" x="16" y="16" width="224" height="224" rx="64"/>
+                <path class="slash" d="M50 165 L94 91" />
+                <rect class="sqBack"  x="136" y="80" width="80" height="80" rx="12"/>
+                <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12"/>
+              </g>
+              <g transform="translate(220,150)">
+                <text x="0" y="0" class="wordMain">Path</text>
+                <text x="205" y="0" class="wordSub">Catalog</text>
+              </g>
+            </svg>
+          </div>
           <span class="text-[11px] text-slate-400" id="stats"></span>
         </div>
 
