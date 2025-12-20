@@ -189,24 +189,35 @@
         const current = state.cat;
 
         const allBtn = `
-          <button class="${current==="" ? "bg-purple-600 text-white border-purple-500 shadow" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-2.5 py-1 text-sm"
+          <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition mt-1 mb-1 ${
+            current === ""
+              ? "bg-purple-500/60 border-purple-400 text-white shadow-lg shadow-purple-500/25"
+              : "bg-purple-500/10 border-purple-400/40 text-white/90 hover:text-white"
+          }"
                   data-cat="">
             すべて
           </button>`;
 
-        $("catList").innerHTML = allBtn + cats.map(c => `
-          <button class="${current===c ? "bg-purple-600 text-white border-purple-500 shadow" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-2.5 py-1 text-sm"
-                  data-cat="${escapeHtml(c)}">
-            ${escapeHtml(c)}
-          </button>
-        `).join("");
+        $("catList").innerHTML = allBtn + cats.map(c => {
+          const color = colorForCat(c);
+          const isSel = current === c;
+          const style = isSel
+            ? `background-color:${color.alpha(0.22)}; border-color:${color.alpha(0.55)}; color:${color.base}; box-shadow:0 0 0 1px ${color.alpha(0.35)}; margin-top:4px; margin-bottom:4px;`
+            : `background-color:${color.alpha(0.08)}; border-color:${color.alpha(0.15)}; color:#ffffff; margin-top:4px; margin-bottom:4px;`;
+          return `
+            <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition hover:opacity-95"
+                    data-cat="${escapeHtml(c)}"
+                    style="${style}">
+              ${escapeHtml(c)}
+            </button>
+          `;
+        }).join("");
 
         $("catList").querySelectorAll("button[data-cat]").forEach(btn => {
           btn.addEventListener("click", () => {
             state.cat = btn.getAttribute("data-cat") || "";
             renderCategoryList();
             renderMain();
-            closeSidebarOnMobile();
           });
         });
       };
