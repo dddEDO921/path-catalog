@@ -305,16 +305,17 @@
         const subLabels = sortJa(Object.keys(subMap));
         const total = subLabels.reduce((n, s) => n + subMap[s].length, 0);
         return `
-        <div class="rounded-2xl border border-slate-800 bg-slate-950/90 shadow-lg ring-1 ring-purple-500/10 overflow-hidden">
-          <div class="px-3 py-3 bg-gradient-to-r from-purple-700/60 via-slate-900 to-slate-900 border-b border-slate-800">
-            <div class="text-base font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
+        <div class="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 shadow-lg ring-1 ring-slate-800/80 overflow-hidden">
+          <div class="px-3 py-2 flex items-center gap-2 bg-purple-900/30 border-b border-slate-800">
+            <span class="inline-block h-1 w-5 rounded-full bg-purple-500/80"></span>
+            <div class="text-sm font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
           </div>
           <div class="p-2 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2">
             ${subLabels.map(sub => `
-              <div class="rounded-lg border border-slate-800 bg-slate-900/90 shadow-sm overflow-hidden">
-                <div class="px-2 py-1.5 flex items-center bg-gradient-to-r from-purple-700/25 via-slate-900 to-slate-900">
-                  <span class="inline-flex items-center gap-2 text-[13px] font-semibold text-white tracking-wide uppercase">
-                    <span class="inline-block h-1.5 w-1.5 rounded-full bg-purple-400"></span>
+              <div class="rounded-lg border border-slate-800 bg-slate-900/85 shadow-sm overflow-hidden">
+                <div class="px-2 py-1.5 flex items-center gap-2 bg-purple-900/15 border-b border-slate-800/80">
+                  <span class="inline-flex items-center gap-2 text-[12px] font-semibold text-white tracking-wide uppercase">
+                    <span class="inline-block h-1.5 w-3 rounded-full bg-purple-400/80"></span>
                     ${escapeHtml(sub)}
                   </span>
                 </div>
