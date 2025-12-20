@@ -137,10 +137,20 @@
         window.__toastTimer = setTimeout(()=> el.textContent = "", 1200);
       };
 
-      // クリップボードコピー + トースト
-      const copyText = async (text) => {
+      // カード上に短時間出すミニトースト
+      const inlineToast = (parent, msg) => {
+        if (!parent) return;
+        const tag = document.createElement("span");
+        tag.className = "absolute right-2 top-2 rounded-full bg-slate-900/90 text-slate-100 text-[10px] px-2 py-0.5 border border-slate-700 shadow";
+        tag.textContent = msg;
+        parent.appendChild(tag);
+        setTimeout(() => tag.remove(), 900);
+      };
+
+      // クリップボードコピー + インライン表示
+      const copyText = async (text, targetEl) => {
         await navigator.clipboard.writeText(text);
-        toast("コピーしました");
+        inlineToast(targetEl, "コピーしました");
       };
 
       // 外部データを安全な形に正規化
@@ -238,7 +248,7 @@
         const c = colorForCat(item.category || "");
         const badgeStyle = `color:${c.base}; background-color:${c.alpha(0.12)}; border:1px solid ${c.alpha(0.25)};`;
         return `
-          <li class="group cursor-pointer px-2 py-1.5 rounded-md bg-slate-900/40 hover:bg-slate-900 border border-transparent hover:border-purple-500/60 shadow-sm grid grid-cols-[150px_minmax(0,1fr)] gap-x-2 gap-y-1 items-start transition"
+          <li class="group relative cursor-pointer px-2 py-1.5 rounded-md bg-slate-900/40 hover:bg-slate-900 border border-transparent hover:border-purple-500/60 shadow-sm grid grid-cols-[150px_minmax(0,1fr)] gap-x-2 gap-y-1 items-start transition"
               data-copy="${escapeHtml(item.path)}">
             <div class="w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-purple-600 opacity-30 group-hover:opacity-90 transition col-span-2"></div>
             <div class="text-[12px] font-semibold leading-snug text-slate-100 break-words">
@@ -323,7 +333,7 @@
           el.addEventListener("click", async () => {
             const p = el.getAttribute("data-copy") || "";
             try {
-              await copyText(p);
+              await copyText(p, el);
             } catch (e) {
               const ta = document.createElement("textarea");
               ta.value = p;
@@ -331,7 +341,7 @@
               ta.select();
               document.execCommand("copy");
               ta.remove();
-              toast("コピーしました（互換モード）");
+              inlineToast(el, "コピーしました");
             }
           });
         });
