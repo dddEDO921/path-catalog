@@ -24,11 +24,6 @@
 - `data.js` 内の `window.PATH_CATALOG_DATA` を編集します。
 - バックスラッシュは `const r = String.raw;` を使った ``r`\\server\share` `` 形式でそのまま記述できます。
 
-## ビルド済みCSS（任意）
-- Tailwindをローカルビルドする場合  
-  `npx tailwindcss@3.4.1 -i ./src/input.css -o ./dist/tailwind.css --minify`
-- `path-catalog.html` をCDN版からビルド済みCSSに切り替えるには、CDNスクリプトを外し、`<link rel="stylesheet" href="./dist/tailwind.css">` を追加します。
-
 ## 使い方
 - 左サイドバーでカテゴリを選択
 - 右側にカテゴリ／サブカテゴリ／パスの一覧が表示
@@ -39,6 +34,7 @@
 - Tailwind CDN を使用（本番利用時はビルド導入を推奨）
 - アイコンやカラーリングはカテゴリ名から HSL を生成して安定化
 - モバイル対応は不要な前提でレイアウト固定
+- ビルド済みCSSを使う場合: `npx tailwindcss@3.4.1 -i ./src/input.css -o ./dist/tailwind.css --minify` を実行し、`<link rel="stylesheet" href="./dist/tailwind.css">` に差し替え。CDN運用なら現状のまま。
 
 ## ライセンス
 MIT License
