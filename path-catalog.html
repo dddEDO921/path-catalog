@@ -94,6 +94,29 @@
       }[m]));
       const uniq = (arr) => Array.from(new Set(arr));
       const sortJa = (arr) => arr.slice().sort((a,b)=>a.localeCompare(b, "ja"));
+      const typeIcon = {
+        url: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5 7 17a4 4 0 1 1-5.7-5.6l4-4a4 4 0 0 1 5.6 0M13.5 10.5 17 7a4 4 0 0 1 5.7 5.6l-4 4a4 4 0 0 1-5.6 0"/><path d="m8 16 8-8"/></svg>`,
+        file: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>`,
+        folder: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>`,
+        unknown: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 9a2.5 2.5 0 1 1 3.9 2 2.5 2.5 0 0 0-1.4 2.2V14"/><path d="M12 18.01l.01-.011"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>`
+      };
+      // パス種別（UNC/ドライブもファイル・フォルダに分類）とバッジ情報
+      const classifyPath = (path) => {
+        const p = path || "";
+        const isUrl = /^https?:\/\//i.test(p);
+        if (isUrl) return { type: "url", icon: typeIcon.url };
+        const isUnc = /^\\\\/.test(p);
+        const isDrive = /^[a-zA-Z]:\\/.test(p);
+        const hasExt = /\.[a-z0-9]{1,5}$/i.test(p);
+        if (isUnc || isDrive) {
+          return hasExt
+            ? { type: "file", icon: typeIcon.file }
+            : { type: "folder", icon: typeIcon.folder };
+        }
+        if (hasExt) return { type: "file", icon: typeIcon.file };
+        if (/[\\\/]/.test(p)) return { type: "folder", icon: typeIcon.folder };
+        return { type: "unknown", icon: typeIcon.unknown };
+      };
       // カテゴリ名から安定した色を生成
       const colorForCat = (cat) => {
         const key = (cat || "").split("").reduce((n, c) => n + c.charCodeAt(0)*7, 0);
@@ -209,19 +232,29 @@
         });
       };
 
-      const listRow = (item) => `
-        <li class="group cursor-pointer px-2 py-1.5 rounded-md bg-slate-900/40 hover:bg-slate-900 border border-transparent hover:border-purple-500/60 shadow-sm grid grid-cols-[150px_minmax(0,1fr)] gap-x-2 gap-y-1 items-start transition"
-            data-copy="${escapeHtml(item.path)}">
-          <div class="w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-purple-600 opacity-30 group-hover:opacity-90 transition col-span-2"></div>
-          <div class="text-[12px] font-semibold leading-snug text-slate-100 break-words">
-            ${escapeHtml(item.name || "(no name)")}
-          </div>
-          <div class="text-[11px] text-slate-500 font-mono break-all tabular-nums">
-            ${escapeHtml(item.path)}
-          </div>
-          ${item.note ? `<div class="text-[10px] text-slate-400 line-clamp-2 hidden group-hover:block col-span-2">${escapeHtml(item.note)}</div>` : ""}
-        </li>
-      `;
+      const listRow = (item) => {
+        const meta = classifyPath(item.path);
+        const label = (meta.type || "").toUpperCase();
+        const c = colorForCat(item.category || "");
+        const badgeStyle = `color:${c.base}; background-color:${c.alpha(0.12)}; border:1px solid ${c.alpha(0.25)};`;
+        return `
+          <li class="group cursor-pointer px-2 py-1.5 rounded-md bg-slate-900/40 hover:bg-slate-900 border border-transparent hover:border-purple-500/60 shadow-sm grid grid-cols-[150px_minmax(0,1fr)] gap-x-2 gap-y-1 items-start transition"
+              data-copy="${escapeHtml(item.path)}">
+            <div class="w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-purple-600 opacity-30 group-hover:opacity-90 transition col-span-2"></div>
+            <div class="text-[12px] font-semibold leading-snug text-slate-100 break-words">
+              ${escapeHtml(item.name || "(no name)")}
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-slate-500 font-mono break-all tabular-nums">
+              <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide border" style="${badgeStyle}" title="${label}">
+                ${meta.icon || ""}
+                <span class="sr-only">${label}</span>
+              </span>
+              <span>${escapeHtml(item.path)}</span>
+            </div>
+            ${item.note ? `<div class="text-[10px] text-slate-400 line-clamp-2 hidden group-hover:block col-span-2">${escapeHtml(item.note)}</div>` : ""}
+          </li>
+        `;
+      };
 
       const renderMain = () => {
         const items = filtered();
