@@ -1,5 +1,5 @@
 // Path catalog data (編集用)
-const PATH_CATALOG_DATA = [
+window.PATH_CATALOG_DATA = [
   { "category": "申請", "subCategory": "経費", "name": "経費精算フォルダ", "path": "\\\\fileserver\\share\\finance\\expense", "note": "年度ごとに格納" },
   { "category": "申請", "subCategory": "経費", "name": "旅費申請書式", "path": "\\\\fileserver\\share\\finance\\travel\\forms", "note": "出張手当含む" },
   { "category": "申請", "subCategory": "勤怠", "name": "勤怠申請フォルダ", "path": "\\\\fileserver\\share\\hr\\attendance", "note": "" },
