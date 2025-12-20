@@ -291,17 +291,14 @@
             </div>
             <div class="p-1.5 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-1.5">
               ${subLabels.map(sub => `
-                <div class="space-y-0.5">
-                  <div class="px-3 py-1 grid grid-cols-[18px_1fr_auto] items-center gap-2" style="background-color:${color.alpha(0.25)}; border:1px solid ${color.alpha(0.45)}; border-radius:6px;">
-                    <span class="inline-block h-1 w-3 rounded-full" style="background-color:${color.base};"></span>
-                    <span class="inline-flex items-center text-[12px] font-semibold text-white tracking-wide uppercase">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 px-2 py-0.5">
+                    <span class="inline-block h-1 w-5 rounded-full" style="background-color:${color.base};"></span>
+                    <span class="text-[12px] font-semibold text-white tracking-wide uppercase">
                       ${escapeHtml(sub)}
                     </span>
-                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold" style="color:${color.base}; background-color:${color.alpha(0.25)}; border:1px solid ${color.alpha(0.45)};">
-                      ${escapeHtml(cat)}
-                    </span>
                   </div>
-                  <ul class="space-y-0.5 px-3">
+                  <ul class="space-y-0.5 pl-5 ml-3 border-l" style="border-color:${color.alpha(0.35)};">
                     ${subMap[sub].map(listRow).join("")}
                   </ul>
                 </div>
