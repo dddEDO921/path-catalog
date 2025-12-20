@@ -82,6 +82,8 @@
     </main>
   </div>
 
+  <script src="data.js"></script>
+
   <script>
     // ---------- util ----------
     const $ = (id) => document.getElementById(id);
@@ -127,23 +129,10 @@
 
     // ---------- state ----------
     const state = {
-      all: [],
+      all: normalize(window.PATH_CATALOG_DATA || []),
       cat: "",       // 選択カテゴリ
       sub: ""        // 選択サブカテゴリ
     };
-    async function loadData() {
-      try {
-        const res = await fetch("data.json", { cache: "no-store" });
-        if (!res.ok) throw new Error(res.statusText);
-        const json = await res.json();
-        state.all = normalize(json);
-      } catch (e) {
-        console.error(e);
-        state.all = [];
-        toast("データの読み込みに失敗しました");
-      }
-      renderAll();
-    }
 
     // ---------- filtering ----------
     function filtered() {
@@ -350,7 +339,7 @@
 
     // ---------- start ----------
     // モバイルは最初サイドバー表示（好みで hidden にしてもOK）
-    loadData();
+    renderAll();
   </script>
 </body>
 </html>
