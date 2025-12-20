@@ -44,15 +44,10 @@
           <nav class="mt-2 space-y-1" id="catList"></nav>
         </div>
 
-        <div class="mt-4">
-          <h2 class="text-xs font-semibold text-slate-200">サブカテゴリ</h2>
-          <nav class="mt-2 space-y-1" id="subList"></nav>
-        </div>
-
         <div class="mt-4 text-[11px] text-slate-400">
           <p>操作:</p>
           <ul class="list-disc ml-4 mt-1 space-y-1">
-            <li>カテゴリ → サブカテゴリの順に絞り込み</li>
+            <li>カテゴリで絞り込み</li>
             <li>カードをクリックするとパスをコピー</li>
           </ul>
         </div>
@@ -194,12 +189,10 @@
       const state = {
         all: normalize(window.PATH_CATALOG_DATA || []),
         cat: "",
-        sub: ""
       };
 
       const filtered = () => state.all.filter(x => {
         if (state.cat && x.category !== state.cat) return false;
-        if (state.sub && x.subCategory !== state.sub) return false;
         return true;
       });
 
@@ -223,47 +216,7 @@
         $("catList").querySelectorAll("button[data-cat]").forEach(btn => {
           btn.addEventListener("click", () => {
             state.cat = btn.getAttribute("data-cat") || "";
-            state.sub = "";
             renderCategoryList();
-            renderSubCategoryList();
-            renderMain();
-            closeSidebarOnMobile();
-          });
-        });
-      };
-
-      const renderSubCategoryList = () => {
-        if (!state.cat) {
-          state.sub = "";
-          $("subList").innerHTML = `
-            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-600">
-              カテゴリを選択してください
-            </div>
-          `;
-          return;
-        }
-
-        const base = state.all.filter(x => x.category === state.cat);
-        const subs = sortJa(uniq(base.map(x => x.subCategory).filter(Boolean)));
-        const current = state.sub;
-
-        const allBtn = `
-          <button class="${current==="" ? "bg-slate-800 border-slate-700 text-slate-100" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-2.5 py-1 text-sm"
-                  data-sub="">
-            （すべて）
-          </button>`;
-
-        $("subList").innerHTML = allBtn + subs.map(s => `
-          <button class="${current===s ? "bg-slate-800 border-slate-700 text-slate-100" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-2.5 py-1 text-sm"
-                  data-sub="${escapeHtml(s)}">
-            ${escapeHtml(s)}
-          </button>
-        `).join("");
-
-        $("subList").querySelectorAll("button[data-sub]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            state.sub = btn.getAttribute("data-sub") || "";
-            renderSubCategoryList();
             renderMain();
             closeSidebarOnMobile();
           });
@@ -393,7 +346,6 @@
 
       const renderAll = () => {
         renderCategoryList();
-        renderSubCategoryList();
         renderMain();
       };
 
