@@ -85,39 +85,43 @@
   <script src="data.js"></script>
 
   <script>
-    // ---------- util ----------
-    const $ = (id) => document.getElementById(id);
-    const safe = (v) => (v ?? "").toString();
-    const escapeHtml = (str) => str.replace(/[&<>"']/g, (m)=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[m]));
-    const uniq = (arr) => Array.from(new Set(arr));
-    const sortJa = (arr) => arr.slice().sort((a,b)=>a.localeCompare(b, "ja"));
-    // カテゴリごとにHSL生成（同じカテゴリは同じ色になるようハッシュ → 色相変換）
-    const colorForCat = (cat) => {
-      const key = (cat || "").split("").reduce((n, c) => n + c.charCodeAt(0)*7, 0);
-      const hue = key % 360;
-      const saturation = 65;
-      const lightness = 60;
-      const base = `hsl(${hue}deg ${saturation}% ${lightness}%)`;
-      const alpha = (a) => `hsl(${hue}deg ${saturation}% ${lightness}% / ${a})`;
-      return { base, alpha };
-    };
+    (() => {
+      // DOM helper / 安全変換
+      const $ = (id) => document.getElementById(id);
+      const safe = (v) => (v ?? "").toString();
+      const escapeHtml = (str) => str.replace(/[&<>"']/g, (m)=>({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+      }[m]));
+      const uniq = (arr) => Array.from(new Set(arr));
+      const sortJa = (arr) => arr.slice().sort((a,b)=>a.localeCompare(b, "ja"));
+      // カテゴリ名から安定した色を生成
+      const colorForCat = (cat) => {
+        const key = (cat || "").split("").reduce((n, c) => n + c.charCodeAt(0)*7, 0);
+        const hue = key % 360;
+        const saturation = 65;
+        const lightness = 60;
+        const base = `hsl(${hue}deg ${saturation}% ${lightness}%)`;
+        const alpha = (a) => `hsl(${hue}deg ${saturation}% ${lightness}% / ${a})`;
+        return { base, alpha };
+      };
 
-    const toast = (msg) => {
-      const el = $("toast");
-      el.textContent = msg;
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(()=> el.textContent = "", 1200);
-    };
+      // 軽量トースト表示
+      const toast = (msg) => {
+        const el = $("toast");
+        if (!el) return;
+        el.textContent = msg;
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(()=> el.textContent = "", 1200);
+      };
 
-    async function copyText(text) {
-      await navigator.clipboard.writeText(text);
-      toast("コピーしました");
-    }
+      // クリップボードコピー + トースト
+      const copyText = async (text) => {
+        await navigator.clipboard.writeText(text);
+        toast("コピーしました");
+      };
 
-    function normalize(items) {
-      return (items || []).map((x, i) => ({
+      // 外部データを安全な形に正規化
+      const normalize = (items) => (items || []).map((x, i) => ({
         id: i + 1,
         category: safe(x.category),
         subCategory: safe(x.subCategory),
@@ -125,95 +129,87 @@
         path: safe(x.path),
         note: safe(x.note)
       }));
-    }
 
-    // ---------- state ----------
-    const state = {
-      all: normalize(window.PATH_CATALOG_DATA || []),
-      cat: "",       // 選択カテゴリ
-      sub: ""        // 選択サブカテゴリ
-    };
+      const state = {
+        all: normalize(window.PATH_CATALOG_DATA || []),
+        cat: "",
+        sub: ""
+      };
 
-    // ---------- filtering ----------
-    function filtered() {
-      return state.all.filter(x => {
+      const filtered = () => state.all.filter(x => {
         if (state.cat && x.category !== state.cat) return false;
         if (state.sub && x.subCategory !== state.sub) return false;
         return true;
       });
-    }
 
-    // ---------- sidebar lists ----------
-    function renderCategoryList() {
-      const cats = sortJa(uniq(state.all.map(x => x.category).filter(Boolean)));
-      const current = state.cat;
+      const renderCategoryList = () => {
+        const cats = sortJa(uniq(state.all.map(x => x.category).filter(Boolean)));
+        const current = state.cat;
 
-      const allBtn = `
-        <button class="${current==="" ? "bg-purple-600 text-white border-purple-500 shadow" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
-                data-cat="">
-          すべて
-        </button>`;
+        const allBtn = `
+          <button class="${current==="" ? "bg-purple-600 text-white border-purple-500 shadow" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
+                  data-cat="">
+            すべて
+          </button>`;
 
-      $("catList").innerHTML = allBtn + cats.map(c => `
-        <button class="${current===c ? "bg-purple-600 text-white border-purple-500 shadow" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
-                data-cat="${escapeHtml(c)}">
-          ${escapeHtml(c)}
-        </button>
-      `).join("");
+        $("catList").innerHTML = allBtn + cats.map(c => `
+          <button class="${current===c ? "bg-purple-600 text-white border-purple-500 shadow" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
+                  data-cat="${escapeHtml(c)}">
+            ${escapeHtml(c)}
+          </button>
+        `).join("");
 
-      $("catList").querySelectorAll("button[data-cat]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.cat = btn.getAttribute("data-cat") || "";
-          state.sub = ""; // カテゴリ変えたらサブ解除
-          renderCategoryList();
-          renderSubCategoryList();
-          renderMain();
-          closeSidebarOnMobile();
+        $("catList").querySelectorAll("button[data-cat]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            state.cat = btn.getAttribute("data-cat") || "";
+            state.sub = "";
+            renderCategoryList();
+            renderSubCategoryList();
+            renderMain();
+            closeSidebarOnMobile();
+          });
         });
-      });
-    }
+      };
 
-    function renderSubCategoryList() {
-      if (!state.cat) {
-        state.sub = "";
-        $("subList").innerHTML = `
-          <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-            カテゴリを選択してください
-          </div>
-        `;
-        return;
-      }
+      const renderSubCategoryList = () => {
+        if (!state.cat) {
+          state.sub = "";
+          $("subList").innerHTML = `
+            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              カテゴリを選択してください
+            </div>
+          `;
+          return;
+        }
 
-      const base = state.all.filter(x => x.category === state.cat);
-      const subs = sortJa(uniq(base.map(x => x.subCategory).filter(Boolean)));
-      const current = state.sub;
+        const base = state.all.filter(x => x.category === state.cat);
+        const subs = sortJa(uniq(base.map(x => x.subCategory).filter(Boolean)));
+        const current = state.sub;
 
-      const allBtn = `
-        <button class="${current==="" ? "bg-slate-800 border-slate-700 text-slate-100" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
-                data-sub="">
-          （すべて）
-        </button>`;
+        const allBtn = `
+          <button class="${current==="" ? "bg-slate-800 border-slate-700 text-slate-100" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
+                  data-sub="">
+            （すべて）
+          </button>`;
 
-      $("subList").innerHTML = allBtn + subs.map(s => `
-        <button class="${current===s ? "bg-slate-800 border-slate-700 text-slate-100" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
-                data-sub="${escapeHtml(s)}">
-          ${escapeHtml(s)}
-        </button>
-      `).join("");
+        $("subList").innerHTML = allBtn + subs.map(s => `
+          <button class="${current===s ? "bg-slate-800 border-slate-700 text-slate-100" : "bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800"} w-full text-left rounded-xl border px-3 py-1.5 text-sm"
+                  data-sub="${escapeHtml(s)}">
+            ${escapeHtml(s)}
+          </button>
+        `).join("");
 
-      $("subList").querySelectorAll("button[data-sub]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.sub = btn.getAttribute("data-sub") || "";
-          renderSubCategoryList();
-          renderMain();
-          closeSidebarOnMobile();
+        $("subList").querySelectorAll("button[data-sub]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            state.sub = btn.getAttribute("data-sub") || "";
+            renderSubCategoryList();
+            renderMain();
+            closeSidebarOnMobile();
+          });
         });
-      });
-    }
+      };
 
-    // ---------- list row (compact) ----------
-    function listRow(item) {
-      return `
+      const listRow = (item) => `
         <li class="group cursor-pointer px-2 py-1.5 rounded-md bg-slate-900/40 hover:bg-slate-900 border border-transparent hover:border-purple-500/60 shadow-sm flex items-start gap-1.5 transition"
             data-copy="${escapeHtml(item.path)}">
           <div class="w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-purple-600 opacity-30 group-hover:opacity-90 transition"></div>
@@ -228,118 +224,108 @@
           </div>
         </li>
       `;
-    }
 
-    function renderMain() {
-      const items = filtered();
-      const list = $("list");
-      const empty = $("empty");
+      const renderMain = () => {
+        const items = filtered();
+        const list = $("list");
+        const empty = $("empty");
 
-      // タイトル
-      // 件数やタイトル表示を省略（要素があれば空文字で上書き）
-      const t = $("title");
-      const st = $("subtitle");
-      const s1 = $("stats");
-      const s2 = $("statsMobile");
-      if (t) t.textContent = "";
-      if (st) st.textContent = "";
-      if (s1) s1.textContent = "";
-      if (s2) s2.textContent = "";
+        const t = $("title");
+        const st = $("subtitle");
+        const s1 = $("stats");
+        const s2 = $("statsMobile");
+        if (t) t.textContent = "";
+        if (st) st.textContent = "";
+        if (s1) s1.textContent = "";
+        if (s2) s2.textContent = "";
 
-      if (items.length === 0) {
-        list.innerHTML = "";
-        empty.classList.remove("hidden");
-        return;
-      }
-      empty.classList.add("hidden");
+        if (items.length === 0) {
+          list.innerHTML = "";
+          empty.classList.remove("hidden");
+          return;
+        }
+        empty.classList.add("hidden");
 
-      // カテゴリ単位でボックス表示（サブカテゴリごとにリスト）
-      const catMap = {};
-      items.forEach(item => {
-        const cat = item.category || "(未設定カテゴリ)";
-        const sub = item.subCategory || "(未設定)";
-        if (!catMap[cat]) catMap[cat] = {};
-        if (!catMap[cat][sub]) catMap[cat][sub] = [];
-        catMap[cat][sub].push(item);
-      });
-      const catLabels = sortJa(Object.keys(catMap));
-
-      list.innerHTML = catLabels.map(cat => {
-        const color = colorForCat(cat);
-        const subMap = catMap[cat];
-        const subLabels = sortJa(Object.keys(subMap));
-        return `
-        <div class="rounded-2xl border border-slate-800 bg-slate-950 shadow-lg ring-1 ring-slate-800/80 overflow-hidden" style="box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.1)}; border-color: ${color.alpha(0.2)};">
-          <div class="px-3 py-2 flex items-center gap-2 border-b border-slate-800" style="background-color: ${color.alpha(0.12)};">
-            <span class="inline-block h-1 w-5 rounded-full" style="background-color:${color.base};"></span>
-            <div class="text-sm font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
-          </div>
-          <div class="p-2 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2">
-            ${subLabels.map(sub => `
-              <div class="rounded-lg border border-slate-800 bg-slate-900/85 shadow-sm overflow-hidden" style="border-color:${color.alpha(0.2)};">
-                <div class="px-2 py-1.5 flex items-center gap-2 border-b border-slate-800/80" style="background-color:${color.alpha(0.08)};">
-                  <span class="inline-flex items-center gap-2 text-[12px] font-semibold text-white tracking-wide uppercase">
-                    <span class="inline-block h-1.5 w-3 rounded-full" style="background-color:${color.base};"></span>
-                    ${escapeHtml(sub)}
-                  </span>
-                  <span class="ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold" style="color:${color.base}; background-color:${color.alpha(0.12)}; border:1px solid ${color.alpha(0.2)};">
-                    ${escapeHtml(cat)}
-                  </span>
-                </div>
-                <ul class="space-y-1 border-l border-slate-800/60 pl-2">
-                  ${subMap[sub].map(listRow).join("")}
-                </ul>
-              </div>
-            `).join("")}
-          </div>
-        </div>
-        `;
-      }).join("");
-
-      // クリックでコピー（行）
-      list.querySelectorAll("li[data-copy]").forEach(el => {
-        el.addEventListener("click", async () => {
-          const p = el.getAttribute("data-copy") || "";
-          try {
-            await copyText(p);
-          } catch (e) {
-            const ta = document.createElement("textarea");
-            ta.value = p;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand("copy");
-            ta.remove();
-            toast("コピーしました（互換モード）");
-          }
+        const catMap = {};
+        items.forEach(item => {
+          const cat = item.category || "(未設定カテゴリ)";
+          const sub = item.subCategory || "(未設定)";
+          if (!catMap[cat]) catMap[cat] = {};
+          if (!catMap[cat][sub]) catMap[cat][sub] = [];
+          catMap[cat][sub].push(item);
         });
-      });
-    }
+        const catLabels = sortJa(Object.keys(catMap));
 
-    // ---------- overall render ----------
-    function renderAll() {
-      renderCategoryList();
-      renderSubCategoryList();
-      renderMain();
-    }
+        list.innerHTML = catLabels.map(cat => {
+          const color = colorForCat(cat);
+          const subMap = catMap[cat];
+          const subLabels = sortJa(Object.keys(subMap));
+          return `
+          <div class="rounded-2xl border border-slate-800 bg-slate-950 shadow-lg ring-1 ring-slate-800/80 overflow-hidden" style="box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.1)}; border-color: ${color.alpha(0.2)};">
+            <div class="px-3 py-2 flex items-center gap-2 border-b border-slate-800" style="background-color: ${color.alpha(0.12)};">
+              <span class="inline-block h-1 w-5 rounded-full" style="background-color:${color.base};"></span>
+              <div class="text-sm font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
+            </div>
+            <div class="p-2 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2">
+              ${subLabels.map(sub => `
+                <div class="rounded-lg border border-slate-800 bg-slate-900/85 shadow-sm overflow-hidden" style="border-color:${color.alpha(0.2)};">
+                  <div class="px-2 py-1.5 flex items-center gap-2 border-b border-slate-800/80" style="background-color:${color.alpha(0.08)};">
+                    <span class="inline-flex items-center gap-2 text-[12px] font-semibold text-white tracking-wide uppercase">
+                      <span class="inline-block h-1.5 w-3 rounded-full" style="background-color:${color.base};"></span>
+                      ${escapeHtml(sub)}
+                    </span>
+                    <span class="ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold" style="color:${color.base}; background-color:${color.alpha(0.12)}; border:1px solid ${color.alpha(0.2)};">
+                      ${escapeHtml(cat)}
+                    </span>
+                  </div>
+                  <ul class="space-y-1 border-l border-slate-800/60 pl-2">
+                    ${subMap[sub].map(listRow).join("")}
+                  </ul>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+          `;
+        }).join("");
 
-    // ---------- controls ----------
-    // ---------- mobile sidebar behavior ----------
-    function closeSidebarOnMobile() {
-      // md未満のときだけ視覚的に閉じる（簡易：asideを非表示化）
-      if (window.matchMedia("(max-width: 767px)").matches) {
-        document.querySelector("aside").classList.add("hidden");
-      }
-    }
-    function openSidebarOnMobile() {
-      document.querySelector("aside").classList.remove("hidden");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-    $("openSidebar").addEventListener("click", openSidebarOnMobile);
-    $("toggleSidebar").addEventListener("click", closeSidebarOnMobile);
+        list.querySelectorAll("li[data-copy]").forEach(el => {
+          el.addEventListener("click", async () => {
+            const p = el.getAttribute("data-copy") || "";
+            try {
+              await copyText(p);
+            } catch (e) {
+              const ta = document.createElement("textarea");
+              ta.value = p;
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand("copy");
+              ta.remove();
+              toast("コピーしました（互換モード）");
+            }
+          });
+        });
+      };
 
-    // ---------- start ----------
-    // モバイルは最初サイドバー表示（好みで hidden にしてもOK）
-    renderAll();
+      const renderAll = () => {
+        renderCategoryList();
+        renderSubCategoryList();
+        renderMain();
+      };
+
+      const closeSidebarOnMobile = () => {
+        if (window.matchMedia("(max-width: 767px)").matches) {
+          document.querySelector("aside").classList.add("hidden");
+        }
+      };
+      const openSidebarOnMobile = () => {
+        document.querySelector("aside").classList.remove("hidden");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+      $("openSidebar").addEventListener("click", openSidebarOnMobile);
+      $("toggleSidebar").addEventListener("click", closeSidebarOnMobile);
+
+      renderAll();
+    })();
   </script>
 </body>
 </html>
