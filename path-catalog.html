@@ -153,6 +153,34 @@
         inlineToast(targetEl, "コピーしました");
       };
 
+      // ノート用ツールチップ（行外に出すため body 直下に生成）
+      const noteTooltip = (() => {
+        const el = document.createElement("div");
+        el.id = "note-tooltip";
+        el.style.position = "fixed";
+        el.style.zIndex = "9999";
+        el.style.pointerEvents = "none";
+        el.style.opacity = "0";
+        el.style.transition = "opacity 120ms ease, transform 120ms ease";
+        el.className = "max-w-md whitespace-pre-line rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-[10px] text-slate-100 shadow-lg";
+        document.body.appendChild(el);
+        let showTimer;
+        return {
+          show(text, x, y) {
+            el.textContent = text;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            el.style.opacity = "1";
+            el.style.transform = "translate(-8px, 6px)";
+            clearTimeout(showTimer);
+          },
+          hide() {
+            el.style.opacity = "0";
+            el.style.transform = "translate(-8px, 10px)";
+          }
+        };
+      })();
+
       // 外部データを安全な形に正規化
       const normalize = (items) => (items || []).map((x, i) => ({
         id: i + 1,
@@ -248,10 +276,11 @@
         const c = colorForCat(item.category || "");
         const iconHtml = (meta.icon || "").trim();
         return `
-          <li class="group relative cursor-pointer px-0 py-1 rounded-md bg-slate-900/40 hover:bg-slate-900 border border-transparent hover:border-purple-500/60 shadow-sm grid grid-cols-[18px_150px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition"
-              data-copy="${escapeHtml(item.path)}">
+          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-1 rounded-md bg-slate-900/40 hover:bg-slate-900 border border-transparent hover:border-purple-500/60 shadow-sm grid grid-cols-[18px_150px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition overflow-visible"
+              data-copy="${escapeHtml(item.path)}"
+              data-note="${item.note ? escapeHtml(item.note) : ""}">
             <div class="w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-purple-600 opacity-30 group-hover:opacity-90 transition col-span-3"></div>
-            <div class="flex h-4 items-center justify-center text-[12px] leading-none col-start-1 col-span-1" style="color:${c.base};">
+            <div class="flex h-4 items-center justify-center text-[12px] leading-none col-start-1 col-span-1 z-10" style="color:${c.base};">
               ${iconHtml}
             </div>
             <div class="text-[12px] font-normal leading-snug text-slate-100 break-words col-start-2 col-span-1">
@@ -261,9 +290,6 @@
               ${escapeHtml(item.path)}
               ${item.note ? `
                 <span class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-700 text-[10px] text-slate-300 bg-slate-900/80">i</span>
-                <div class="absolute right-0 top-full mt-2 max-w-md whitespace-pre-line rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-[10px] text-slate-100 shadow-lg opacity-0 group-hover:opacity-100 transition z-30">
-                  ${escapeHtml(item.note)}
-                </div>
               ` : ""}
             </div>
           </li>
@@ -348,6 +374,20 @@
               inlineToast(el, "コピーしました");
             }
           });
+        });
+
+        // ノートツールチップ（body直下で表示）
+        list.querySelectorAll("li[data-note]").forEach(el => {
+          const note = el.getAttribute("data-note") || "";
+          if (!note) return;
+          el.addEventListener("mouseenter", (e) => {
+            const rect = el.getBoundingClientRect();
+            noteTooltip.show(note, rect.right, rect.bottom + 6);
+          });
+          el.addEventListener("mousemove", (e) => {
+            noteTooltip.show(note, e.clientX + 8, e.clientY + 10);
+          });
+          el.addEventListener("mouseleave", () => noteTooltip.hide());
         });
       };
 
