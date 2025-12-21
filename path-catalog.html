@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Path Catalog</title>
+
+  <!-- 開発・配布を簡単にするため CDN 版 Tailwind を利用 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: "IBM Plex Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    /* ちょい補助：テキスト省略 */
+    .line-clamp-2{
+      display:-webkit-box;
+      -webkit-line-clamp:2;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100">
+  <div class="min-h-dvh grid grid-cols-[260px_1fr]">
+
+    <!-- Sidebar -->
+    <aside class="border-r border-slate-800 bg-slate-900">
+      <div class="p-4 sticky top-0">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-4 text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo" class="h-11 w-auto">
+              <defs>
+                <style>
+                  .badge { fill: #7c3aed; }
+                  .sqFront { fill: #f8fafc; }
+                  .sqBack  { fill: #e2e8f0; opacity: 0.55; }
+                  .slash { stroke: #f8fafc; stroke-width: 22; stroke-linecap: round; fill: none; }
+                  .wordMain { fill: #f8fafc; font-family: "IBM Plex Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 700; letter-spacing: -0.02em; }
+                  .wordSub { fill: #cbd5e1; font-family: "IBM Plex Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 600; letter-spacing: -0.02em; }
+                </style>
+              </defs>
+              <g transform="translate(24,24) scale(0.75)">
+                <rect class="badge" x="16" y="16" width="224" height="224" rx="64"/>
+                <path class="slash" d="M50 165 L94 91" />
+                <rect class="sqBack"  x="136" y="80" width="80" height="80" rx="12"/>
+                <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12"/>
+              </g>
+              <g transform="translate(280,150)">
+                <text x="0" y="0" class="wordMain">Path</text>
+                <text x="205" y="0" class="wordSub">Catalog</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-semibold text-slate-200">カテゴリ</h2>
+          </div>
+
+          <nav class="mt-2 space-y-1" id="catList"></nav>
+        </div>
+
+        <div class="mt-4 text-[11px] text-slate-400">
+          <p>操作:</p>
+          <ul class="list-disc ml-4 mt-1 space-y-1">
+            <li>カテゴリで絞り込み</li>
+            <li>カードをクリックするとパスをコピー</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="p-5">
+
+      <div class="mb-2"></div>
+
+      <section id="list" class="space-y-2"></section>
+
+      <section id="empty" class="hidden mt-10">
+        <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center text-slate-300">
+          条件に一致するデータがありません
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="data.js"></script>
+
+  <script>
+    (() => {
+      // DOM helper / 安全変換
+      const $ = (id) => document.getElementById(id);
+      const safe = (v) => (v ?? "").toString();
+      const escapeHtml = (str) => str.replace(/[&<>"']/g, (m)=>({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+      }[m]));
+      const uniq = (arr) => Array.from(new Set(arr));
+      const sortJa = (arr) => arr.slice().sort((a,b)=>a.localeCompare(b, "ja"));
+      const typeIcon = {
+        url: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5 7 17a4 4 0 1 1-5.7-5.6l4-4a4 4 0 0 1 5.6 0M13.5 10.5 17 7a4 4 0 0 1 5.7 5.6l-4 4a4 4 0 0 1-5.6 0"/><path d="m8 16 8-8"/></svg>`,
+        file: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>`,
+        folder: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>`,
+        unknown: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 9a2.5 2.5 0 1 1 3.9 2 2.5 2.5 0 0 0-1.4 2.2V14"/><path d="M12 18.01l.01-.011"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>`
+      };
+      // パス種別（UNC/ドライブもファイル・フォルダに分類）とバッジ情報
+      const classifyPath = (path) => {
+        const p = path || "";
+        const isUrl = /^https?:\/\//i.test(p);
+        if (isUrl) return { type: "url", icon: typeIcon.url };
+        const isUnc = /^\\\\/.test(p);
+        const isDrive = /^[a-zA-Z]:\\/.test(p);
+        const hasExt = /\.[a-z0-9]{1,5}$/i.test(p);
+        if (isUnc || isDrive) {
+          return hasExt
+            ? { type: "file", icon: typeIcon.file }
+            : { type: "folder", icon: typeIcon.folder };
+        }
+        if (hasExt) return { type: "file", icon: typeIcon.file };
+        if (/[\\\/]/.test(p)) return { type: "folder", icon: typeIcon.folder };
+        return { type: "unknown", icon: typeIcon.unknown };
+      };
+      // カテゴリ名から安定した色を生成
+      const colorForCat = (cat) => {
+        const key = (cat || "").split("").reduce((n, c) => n + c.charCodeAt(0)*7, 0);
+        const hue = key % 360;
+        const saturation = 65;
+        const lightness = 60;
+        const base = `hsl(${hue}deg ${saturation}% ${lightness}%)`;
+        const alpha = (a) => `hsl(${hue}deg ${saturation}% ${lightness}% / ${a})`;
+        return { base, alpha };
+      };
+
+      // カード上に短時間出すミニトースト
+      const inlineToast = (parent, msg) => {
+        if (!parent) return;
+        const tag = document.createElement("span");
+        tag.className = "absolute right-2 top-1/2 -translate-y-1/2 transform rounded-full bg-slate-900/90 text-slate-100 text-[10px] px-2 py-0.5 border border-slate-700 shadow";
+        tag.textContent = msg;
+        parent.appendChild(tag);
+        setTimeout(() => tag.remove(), 900);
+      };
+
+      // クリップボードコピー + インライン表示
+      const copyText = async (text, targetEl) => {
+        await navigator.clipboard.writeText(text);
+        inlineToast(targetEl, "コピーしました");
+      };
+
+      // ノート用ツールチップ（行外に出すため body 直下に生成）
+      const noteTooltip = (() => {
+        const el = document.createElement("div");
+        el.id = "note-tooltip";
+        el.style.position = "fixed";
+        el.style.zIndex = "9999";
+        el.style.pointerEvents = "none";
+        el.style.opacity = "0";
+        el.style.transition = "opacity 120ms ease, transform 120ms ease";
+        el.className = "max-w-md whitespace-pre-line rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-[10px] text-slate-100 shadow-lg";
+        document.body.appendChild(el);
+        let showTimer;
+        return {
+          show(text, x, y) {
+            el.textContent = text;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            el.style.opacity = "1";
+            el.style.transform = "translate(-8px, 6px)";
+            clearTimeout(showTimer);
+          },
+          hide() {
+            el.style.opacity = "0";
+          }
+        };
+      })();
+
+      // 外部データを安全な形に正規化
+      const normalize = (items) => (items || []).map((x, i) => ({
+        id: i + 1,
+        category: safe(x.category),
+        subCategory: safe(x.subCategory),
+        name: safe(x.name),
+        path: safe(x.path),
+        note: safe(x.note)
+      }));
+
+      const state = {
+        all: normalize(window.PATH_CATALOG_DATA || []),
+        cat: "",
+      };
+
+      const filtered = () => state.all.filter(x => {
+        if (state.cat && x.category !== state.cat) return false;
+        return true;
+      });
+
+      const renderCategoryList = () => {
+        const cats = sortJa(uniq(state.all.map(x => x.category).filter(Boolean)));
+        const current = state.cat;
+
+        const allBtn = `
+          <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition mt-1 mb-1 ${
+            current === ""
+              ? "bg-purple-500/60 border-purple-400 text-white shadow-lg shadow-purple-500/25"
+              : "bg-purple-500/10 border-purple-400/40 text-white/90 hover:text-white"
+          }"
+                  data-cat="">
+            すべて
+          </button>`;
+
+        $("catList").innerHTML = allBtn + cats.map(c => {
+          const color = colorForCat(c);
+          const isSel = current === c;
+          const style = isSel
+            ? `background-color:${color.alpha(0.22)}; border-color:${color.alpha(0.55)}; color:#ffffff; box-shadow:0 0 0 1px ${color.alpha(0.35)}; margin-top:4px; margin-bottom:4px;`
+            : `background-color:${color.alpha(0.08)}; border-color:${color.alpha(0.15)}; color:#ffffff; margin-top:4px; margin-bottom:4px;`;
+          return `
+            <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition hover:opacity-95"
+                    data-cat="${escapeHtml(c)}"
+                    style="${style}">
+              ${escapeHtml(c)}
+            </button>
+          `;
+        }).join("");
+
+        $("catList").querySelectorAll("button[data-cat]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            state.cat = btn.getAttribute("data-cat") || "";
+            renderCategoryList();
+            renderMain();
+          });
+        });
+      };
+
+      const listRow = (item) => {
+        const meta = classifyPath(item.path);
+        const c = colorForCat(item.category || "");
+        const iconHtml = (meta.icon || "").trim();
+        return `
+          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-1 rounded-md bg-purple-900/0 hover:bg-purple-900/20 border border-transparent hover:border-purple-500/60 shadow-sm grid grid-cols-[18px_150px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition overflow-visible"
+              data-copy="${escapeHtml(item.path)}"
+              data-note="${item.note ? escapeHtml(item.note) : ""}">
+            <div class="w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-purple-600 opacity-30 group-hover:opacity-90 transition col-span-3"></div>
+            <div class="flex h-4 items-center justify-center text-[12px] leading-none col-start-1 col-span-1 z-10" style="color:${c.base};">
+              ${iconHtml}
+            </div>
+            <div class="text-[12px] font-normal leading-snug text-slate-100 break-words col-start-2 col-span-1">
+              ${escapeHtml(item.name || "(no name)")}
+            </div>
+            <div class="relative text-[11px] text-slate-400 font-mono break-all tabular-nums col-start-3 col-span-1 pr-7">
+              ${escapeHtml(item.path)}
+              ${item.note ? `
+                <span class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-[9px] text-slate-300 bg-slate-900/80">i</span>
+              ` : ""}
+            </div>
+          </li>
+        `;
+      };
+
+      const renderMain = () => {
+        const items = filtered();
+        const list = $("list");
+        const empty = $("empty");
+
+        const s1 = $("stats");
+        if (s1) s1.textContent = "";
+
+        if (items.length === 0) {
+          list.innerHTML = "";
+          empty.classList.remove("hidden");
+          return;
+        }
+        empty.classList.add("hidden");
+
+        const catMap = {};
+        items.forEach(item => {
+          const cat = item.category || "(未設定カテゴリ)";
+          const sub = item.subCategory || "(未設定)";
+          if (!catMap[cat]) catMap[cat] = {};
+          if (!catMap[cat][sub]) catMap[cat][sub] = [];
+          catMap[cat][sub].push(item);
+        });
+        const catLabels = sortJa(Object.keys(catMap));
+
+        list.innerHTML = catLabels.map(cat => {
+          const color = colorForCat(cat);
+          const subMap = catMap[cat];
+          const subLabels = sortJa(Object.keys(subMap));
+          return `
+          <div class="rounded-lg border border-slate-800 bg-slate-950 shadow-lg ring-1 ring-slate-800/80 overflow-hidden" style="box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: ${color.alpha(0.45)};">
+            <div class="px-3 py-1.5 grid grid-cols-[18px_1fr] items-center gap-3 border-b border-slate-800" style="background-color: ${color.alpha(0.25)};">
+              <span class="inline-block h-1.5 w-5 rounded-full" style="background-color:${color.base};"></span>
+              <div class="text-sm font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
+            </div>
+            <div class="p-1.5 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-1.5">
+              ${subLabels.map(sub => `
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 px-2 py-0.5">
+                    <span class="inline-block h-1 w-3 rounded-full" style="background-color:${color.base};"></span>
+                    <span class="text-[12px] font-semibold text-white tracking-wide uppercase">
+                      ${escapeHtml(sub)}
+                    </span>
+                  </div>
+                  <ul class="space-y-0.5 pl-5 ml-3 border-l" style="border-color:${color.alpha(0.35)};">
+                    ${subMap[sub].map(listRow).join("")}
+                  </ul>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+          `;
+        }).join("");
+
+        list.querySelectorAll("li[data-copy]").forEach(el => {
+          el.addEventListener("click", async () => {
+            const p = el.getAttribute("data-copy") || "";
+            try {
+              await copyText(p, el);
+            } catch (e) {
+              const ta = document.createElement("textarea");
+              ta.value = p;
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand("copy");
+              ta.remove();
+              inlineToast(el, "コピーしました");
+            }
+          });
+        });
+
+        // ノートツールチップ（body直下で表示）
+        list.querySelectorAll("li[data-note]").forEach(el => {
+          const note = el.getAttribute("data-note") || "";
+          if (!note) return;
+          el.addEventListener("mouseenter", (e) => {
+            const rect = el.getBoundingClientRect();
+            noteTooltip.show(note, rect.right + 36, rect.bottom);
+          });
+          el.addEventListener("mousemove", (e) => {
+            noteTooltip.show(note, e.clientX + 36, e.clientY);
+          });
+          el.addEventListener("mouseleave", () => noteTooltip.hide());
+        });
+      };
+
+      const renderAll = () => {
+        renderCategoryList();
+        renderMain();
+      };
+
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
