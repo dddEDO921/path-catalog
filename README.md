@@ -2,6 +2,8 @@
 
 パスをカテゴリ×サブカテゴリにまとめ、ワンクリックでコピーできるシンプルなビューアです。
 
+![Path Catalog sample](docs/path-catalog-sample-capture.png)
+
 ## 目次
 
 - [Path Catalog](#path-catalog)
