@@ -288,7 +288,7 @@
           const subLabels = sortJa(Object.keys(subMap));
           return `
           <div class="rounded-lg border border-slate-800 bg-slate-950 shadow-lg ring-1 ring-slate-800/80 overflow-hidden" style="box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: ${color.alpha(0.45)};">
-            <div class="px-3 py-1.5 grid grid-cols-[18px_1fr] items-center gap-3 border-b border-slate-800" style="background-color: ${color.alpha(0.25)};">
+            <div class="px-3 py-1.5 grid grid-cols-[18px_1fr] items-center gap-1 border-b border-slate-800" style="background-color: ${color.alpha(0.25)};">
               <span class="inline-block h-1 w-4 rounded-full" style="background-color:${color.base};"></span>
               <div class="text-sm font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
             </div>
@@ -296,7 +296,7 @@
               ${subLabels.map(sub => `
                 <div class="space-y-1">
                   <div class="flex items-center gap-2 px-2 py-0.5">
-                    <span class="inline-block h-1 w-5 rounded-full" style="background-color:${color.base};"></span>
+                    <span class="inline-block h-1 w-3 rounded-full" style="background-color:${color.base};"></span>
                     <span class="text-[12px] font-semibold text-white tracking-wide uppercase">
                       ${escapeHtml(sub)}
                     </span>
