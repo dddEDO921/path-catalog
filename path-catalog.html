@@ -134,15 +134,6 @@
         return { base, alpha };
       };
 
-      // 軽量トースト表示
-      const toast = (msg) => {
-        const el = $("toast");
-        if (!el) return;
-        el.textContent = msg;
-        clearTimeout(window.__toastTimer);
-        window.__toastTimer = setTimeout(()=> el.textContent = "", 1200);
-      };
-
       // カード上に短時間出すミニトースト
       const inlineToast = (parent, msg) => {
         if (!parent) return;
@@ -247,7 +238,6 @@
 
       const listRow = (item) => {
         const meta = classifyPath(item.path);
-        const label = (meta.type || "").toUpperCase();
         const c = colorForCat(item.category || "");
         const iconHtml = (meta.icon || "").trim();
         return `
@@ -276,14 +266,8 @@
         const list = $("list");
         const empty = $("empty");
 
-        const t = $("title");
-        const st = $("subtitle");
         const s1 = $("stats");
-        const s2 = $("statsMobile");
-        if (t) t.textContent = "";
-        if (st) st.textContent = "";
         if (s1) s1.textContent = "";
-        if (s2) s2.textContent = "";
 
         if (items.length === 0) {
           list.innerHTML = "";
