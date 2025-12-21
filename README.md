@@ -34,7 +34,7 @@
 - Tailwind CDN を使用（本番利用時はビルド導入を推奨）
 - アイコンやカラーリングはカテゴリ名から HSL を生成して安定化
 - モバイル対応は不要な前提でレイアウト固定
-- ビルド済みCSSを使う場合: `npx tailwindcss@3.4.1 -i ./src/input.css -o ./dist/tailwind.css --minify` を実行し、`<link rel="stylesheet" href="./dist/tailwind.css">` に差し替え。CDN運用なら現状のまま。
+- 配布物は CDN 前提。ビルド済みCSSは含めていません。必要なら手元で生成して差し替えてください。
 
 ## ライセンス
 MIT License
