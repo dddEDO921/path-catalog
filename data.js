@@ -165,6 +165,7 @@ const flatten = (nested) => {
     (cat.subCategories || []).forEach(sub => {
       (sub.items || []).forEach(item => {
         out.push({
+          tab: item.tab || sub.tab || cat.tab || "",
           category: cat.name || "",
           subCategory: sub.name || "",
           name: item.name || "",
