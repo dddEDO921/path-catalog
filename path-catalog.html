@@ -26,69 +26,73 @@
 </head>
 
 <body class="bg-slate-950 text-slate-100">
-  <div class="min-h-dvh grid grid-cols-[260px_1fr]">
+  <div class="min-h-dvh flex flex-col">
 
-    <!-- Sidebar -->
-    <aside class="border-r border-slate-800 bg-slate-900">
-      <div class="p-4 sticky top-0">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-4 text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo" class="h-11 w-auto">
-              <defs>
-                <style>
-                  .badge { fill: #7c3aed; }
-                  .sqFront { fill: #f8fafc; }
-                  .sqBack  { fill: #e2e8f0; opacity: 0.55; }
-                  .slash { stroke: #f8fafc; stroke-width: 22; stroke-linecap: round; fill: none; }
-                  .wordMain { fill: #f8fafc; font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 700; letter-spacing: -0.02em; }
-                  .wordSub { fill: #cbd5e1; font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 600; letter-spacing: -0.02em; }
-                </style>
-              </defs>
-              <g transform="translate(24,24) scale(0.75)">
-                <rect class="badge" x="16" y="16" width="224" height="224" rx="64"/>
-                <path class="slash" d="M50 165 L94 91" />
-                <rect class="sqBack"  x="136" y="80" width="80" height="80" rx="12"/>
-                <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12"/>
-              </g>
-              <g transform="translate(280,150)">
-                <text x="0" y="0" class="wordMain">Path</text>
-                <text x="205" y="0" class="wordSub">Catalog</text>
-              </g>
-            </svg>
-          </div>
-        </div>
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur px-5 py-2">
+      <div class="flex items-center gap-2.5 text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo" class="h-9 w-auto">
+          <defs>
+            <style>
+              .badge { fill: #7c3aed; }
+              .sqFront { fill: #f8fafc; }
+              .sqBack  { fill: #e2e8f0; opacity: 0.55; }
+              .slash { stroke: #f8fafc; stroke-width: 22; stroke-linecap: round; fill: none; }
+              .wordMain { fill: #f8fafc; font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 700; letter-spacing: -0.02em; }
+              .wordSub { fill: #cbd5e1; font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 600; letter-spacing: -0.02em; }
+            </style>
+          </defs>
+          <g transform="translate(24,24) scale(0.72)">
+            <rect class="badge" x="16" y="16" width="224" height="224" rx="64"/>
+            <path class="slash" d="M50 165 L94 91" />
+            <rect class="sqBack"  x="136" y="80" width="80" height="80" rx="12"/>
+            <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12"/>
+          </g>
+          <g transform="translate(280,150)">
+            <text x="0" y="0" class="wordMain">Path</text>
+            <text x="205" y="0" class="wordSub">Catalog</text>
+          </g>
+        </svg>
+      </div>
+    </header>
 
-        <div class="mt-4">
+    <div class="grid grid-cols-[260px_1fr] items-end px-5 bg-slate-950 border-b border-slate-800">
+      <div></div>
+      <div id="tabNav" class="flex flex-wrap items-end gap-1.5 pt-2 pb-2 -mb-[1px]"></div>
+    </div>
+
+    <div class="grid grid-cols-[260px_1fr] flex-1">
+
+      <!-- Sidebar -->
+      <aside class="border-r border-slate-800 bg-slate-900">
+        <div class="p-4 sticky top-0">
           <div class="flex items-center justify-between">
             <h2 class="text-xs font-semibold text-slate-200">カテゴリ</h2>
+            <span id="tabIndicator" class="text-[10px] text-slate-400"></span>
           </div>
 
           <nav class="mt-2 space-y-1" id="catList"></nav>
+
+          <div class="mt-4 text-[11px] text-slate-400">
+            <p>操作:</p>
+            <ul class="list-disc ml-4 mt-1 space-y-1">
+              <li>カテゴリで絞り込み</li>
+              <li>カードをクリックするとパスをコピー</li>
+            </ul>
+          </div>
         </div>
+      </aside>
 
-        <div class="mt-4 text-[11px] text-slate-400">
-          <p>操作:</p>
-          <ul class="list-disc ml-4 mt-1 space-y-1">
-            <li>カテゴリで絞り込み</li>
-            <li>カードをクリックするとパスをコピー</li>
-          </ul>
-        </div>
-      </div>
-    </aside>
+      <!-- Main -->
+      <main class="p-5 space-y-4">
+        <section id="list" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></section>
 
-    <!-- Main -->
-    <main class="p-5 space-y-4">
-
-      <div id="tabNav" class="flex flex-wrap items-center gap-2"></div>
-
-      <section id="list" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></section>
-
-      <section id="empty" class="hidden mt-10">
-        <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center text-slate-300">
-          条件に一致するデータがありません
-        </div>
-      </section>
-    </main>
+        <section id="empty" class="hidden mt-10">
+          <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center text-slate-300">
+            条件に一致するデータがありません
+          </div>
+        </section>
+      </main>
+    </div>
   </div>
 
   <script src="data.js"></script>
@@ -215,8 +219,11 @@
         holder.innerHTML = tabs.map(tab => {
           const isSel = current === tab;
           return `
-            <button class="rounded-2xl border px-3.5 py-1.5 text-sm transition shadow-sm ${isSel ? "bg-slate-100 text-slate-900 border-slate-100 shadow-slate-800/50" : "bg-slate-800/80 text-slate-100 border-slate-700 hover:border-slate-500"}"
-                    data-tab="${escapeHtml(tab)}">
+            <button
+              class="rounded-t-lg px-4 py-1.5 text-sm font-semibold tracking-wide transition border ${isSel
+                ? "bg-slate-900 text-white border-slate-500 border-b-slate-900 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.9)]"
+                : "text-slate-300 border-transparent border-b-slate-700/60 hover:text-white hover:border-slate-600 hover:bg-slate-800/70"}"
+              data-tab="${escapeHtml(tab)}">
               ${escapeHtml(tab)}
             </button>
           `;
@@ -244,6 +251,10 @@
         );
         if (state.cat && !cats.includes(state.cat)) state.cat = "";
         const current = state.cat;
+        const tabBadge = $("tabIndicator");
+        if (tabBadge) {
+          tabBadge.textContent = state.tab ? `タブ: ${state.tab}` : "";
+        }
 
         const allBtn = `
           <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition mt-1 mb-1 ${
