@@ -9,11 +9,71 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      --bg-base: #0f172a;
+      --bg-layer: #111827;
+      --border: #1f2937;
+      --accent: #7c3aed;
+      --accent-soft: rgba(124, 58, 237, 0.12);
+      --accent-soft-strong: rgba(124, 58, 237, 0.15);
+      --text-heading: #e5e7eb;
+      --text-body: #cbd5e1;
+      --text-muted: #9ca3af;
+    }
     body {
-      font-family: "IBM Plex Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-body);
+    }
+    .tab-btn {
+      border: 1px solid transparent;
+      color: #cbd5e1;
+      background-color: transparent;
+      padding: 0.4rem 0.9rem;
+      border-radius: 0.75rem 0.75rem 0 0;
+      font-weight: 600;
+      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+    }
+    .tab-btn:hover {
+      background-color: var(--bg-layer);
+      border-color: var(--border);
+      color: #ffffff;
+    }
+    .tab-btn.active {
+      background-color: var(--bg-layer);
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 10px 30px -18px rgba(0,0,0,0.9);
+    }
+    .cat-btn {
+      background-color: var(--bg-layer);
+      border: 1px solid var(--border);
+      color: #e5e7eb;
+      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      position: relative;
+    }
+    .cat-btn:hover {
+      background-color: var(--accent-soft);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+    .cat-btn.active {
+      background-color: var(--bg-layer);
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 0 0 1px rgba(124,58,237,0.35);
+    }
+    .list-row {
+      background-color: transparent;
+      border: 1px solid transparent;
+    }
+    .list-row:hover {
+      background-color: var(--accent-soft);
+      border-color: var(--accent);
     }
     /* ちょい補助：テキスト省略 */
     .line-clamp-2{
@@ -25,70 +85,72 @@
   </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100">
-  <div class="min-h-dvh grid grid-cols-[260px_1fr]">
+<body class="text-slate-100">
+  <div class="min-h-dvh flex flex-col">
 
-    <!-- Sidebar -->
-    <aside class="border-r border-slate-800 bg-slate-900">
-      <div class="p-4 sticky top-0">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-4 text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo" class="h-11 w-auto">
-              <defs>
-                <style>
-                  .badge { fill: #7c3aed; }
-                  .sqFront { fill: #f8fafc; }
-                  .sqBack  { fill: #e2e8f0; opacity: 0.55; }
-                  .slash { stroke: #f8fafc; stroke-width: 22; stroke-linecap: round; fill: none; }
-                  .wordMain { fill: #f8fafc; font-family: "IBM Plex Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 700; letter-spacing: -0.02em; }
-                  .wordSub { fill: #cbd5e1; font-family: "IBM Plex Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 600; letter-spacing: -0.02em; }
-                </style>
-              </defs>
-              <g transform="translate(24,24) scale(0.75)">
-                <rect class="badge" x="16" y="16" width="224" height="224" rx="64"/>
-                <path class="slash" d="M50 165 L94 91" />
-                <rect class="sqBack"  x="136" y="80" width="80" height="80" rx="12"/>
-                <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12"/>
-              </g>
-              <g transform="translate(280,150)">
-                <text x="0" y="0" class="wordMain">Path</text>
-                <text x="205" y="0" class="wordSub">Catalog</text>
-              </g>
-            </svg>
-          </div>
+    <header class="border-b backdrop-blur px-5 py-2" style="background-color: var(--bg-layer); border-color: var(--border);">
+      <div class="grid grid-cols-[260px_1fr] items-end">
+        <div class="flex items-center gap-2.5" style="color: var(--text-heading);">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo" class="h-9 w-auto">
+            <defs>
+              <style>
+                .badge { fill: #7c3aed; }
+                .sqFront { fill: #f8fafc; }
+                .sqBack  { fill: #e2e8f0; opacity: 0.55; }
+                .slash { stroke: #f8fafc; stroke-width: 22; stroke-linecap: round; fill: none; }
+                .wordMain { fill: #f8fafc; font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 700; letter-spacing: -0.02em; }
+                .wordSub { fill: #cbd5e1; font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 600; letter-spacing: -0.02em; }
+              </style>
+            </defs>
+            <g transform="translate(24,24) scale(0.72)">
+              <rect class="badge" x="16" y="16" width="224" height="224" rx="64"/>
+              <path class="slash" d="M50 165 L94 91" />
+              <rect class="sqBack"  x="136" y="80" width="80" height="80" rx="12"/>
+              <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12"/>
+            </g>
+            <g transform="translate(280,150)">
+              <text x="0" y="0" class="wordMain">Path</text>
+              <text x="205" y="0" class="wordSub">Catalog</text>
+            </g>
+          </svg>
         </div>
+        <div id="tabNav" class="flex flex-wrap items-end gap-1.5 pt-1 pb-1 -mb-[1px]"></div>
+      </div>
+    </header>
 
-        <div class="mt-4">
+    <div class="grid grid-cols-[260px_1fr] flex-1">
+
+      <!-- Sidebar -->
+      <aside class="border-r" style="background-color: var(--bg-base); border-color: var(--border);">
+        <div class="p-4 sticky top-0">
           <div class="flex items-center justify-between">
-            <h2 class="text-xs font-semibold text-slate-200">カテゴリ</h2>
+            <h2 class="text-xs font-semibold" style="color: var(--text-heading);">カテゴリ</h2>
+            <span id="tabIndicator" class="text-[10px]" style="color: var(--text-muted);"></span>
           </div>
 
           <nav class="mt-2 space-y-1" id="catList"></nav>
+
+          <div class="mt-4 text-[11px]" style="color: var(--text-muted);">
+            <p>操作:</p>
+            <ul class="list-disc ml-4 mt-1 space-y-1">
+              <li>カテゴリで絞り込み</li>
+              <li>カードをクリックするとパスをコピー</li>
+            </ul>
+          </div>
         </div>
+      </aside>
 
-        <div class="mt-4 text-[11px] text-slate-400">
-          <p>操作:</p>
-          <ul class="list-disc ml-4 mt-1 space-y-1">
-            <li>カテゴリで絞り込み</li>
-            <li>カードをクリックするとパスをコピー</li>
-          </ul>
-        </div>
-      </div>
-    </aside>
+      <!-- Main -->
+      <main class="p-5 space-y-4" style="background-color: var(--bg-base);">
+        <section id="list" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></section>
 
-    <!-- Main -->
-    <main class="p-5">
-
-      <div class="mb-2"></div>
-
-      <section id="list" class="space-y-2"></section>
-
-      <section id="empty" class="hidden mt-10">
-        <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center text-slate-300">
-          条件に一致するデータがありません
-        </div>
-      </section>
-    </main>
+        <section id="empty" class="hidden mt-10">
+          <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center" style="color: var(--text-muted);">
+            条件に一致するデータがありません
+          </div>
+        </section>
+      </main>
+    </div>
   </div>
 
   <script src="data.js"></script>
@@ -141,7 +203,8 @@
       const inlineToast = (parent, msg) => {
         if (!parent) return;
         const tag = document.createElement("span");
-        tag.className = "absolute right-2 top-1/2 -translate-y-1/2 transform rounded-full bg-slate-900/90 text-slate-100 text-[10px] px-2 py-0.5 border border-slate-700 shadow";
+        tag.className = "absolute right-2 top-1/2 -translate-y-1/2 transform rounded-full bg-slate-900/90 text-[10px] px-2 py-0.5 border border-slate-700 shadow";
+        tag.style.color = "var(--text-heading)";
         tag.textContent = msg;
         parent.appendChild(tag);
         setTimeout(() => tag.remove(), 900);
@@ -162,7 +225,8 @@
         el.style.pointerEvents = "none";
         el.style.opacity = "0";
         el.style.transition = "opacity 120ms ease, transform 120ms ease";
-        el.className = "max-w-md whitespace-pre-line rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-[10px] text-slate-100 shadow-lg";
+        el.className = "max-w-md whitespace-pre-line rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-[10px] shadow-lg";
+        el.style.color = "var(--text-heading)";
         document.body.appendChild(el);
         let showTimer;
         return {
@@ -180,9 +244,12 @@
         };
       })();
 
+      const DEFAULT_TAB = "共通";
+
       // 外部データを安全な形に正規化
       const normalize = (items) => (items || []).map((x, i) => ({
         id: i + 1,
+        tab: safe(x.tab || DEFAULT_TAB),
         category: safe(x.category),
         subCategory: safe(x.subCategory),
         name: safe(x.name),
@@ -192,24 +259,63 @@
 
       const state = {
         all: normalize(window.PATH_CATALOG_DATA || []),
+        tab: "",
         cat: "",
       };
 
       const filtered = () => state.all.filter(x => {
+        if (state.tab && x.tab !== state.tab) return false;
         if (state.cat && x.category !== state.cat) return false;
         return true;
       });
 
+      const renderTabList = () => {
+        const holder = $("tabNav");
+        if (!holder) return;
+        const tabs = sortJa(uniq(state.all.map(x => x.tab || DEFAULT_TAB)));
+        if (!state.tab && tabs.length) state.tab = tabs[0];
+        const current = state.tab;
+
+        holder.innerHTML = tabs.map(tab => {
+          const isSel = current === tab;
+          return `
+            <button
+              class="tab-btn ${isSel ? "active" : ""}"
+              data-tab="${escapeHtml(tab)}">
+              ${escapeHtml(tab)}
+            </button>
+          `;
+        }).join("");
+
+        holder.querySelectorAll("button[data-tab]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            state.tab = btn.getAttribute("data-tab") || "";
+            state.cat = "";
+            renderTabList();
+            renderCategoryList();
+            renderMain();
+          });
+        });
+      };
+
       const renderCategoryList = () => {
-        const cats = sortJa(uniq(state.all.map(x => x.category).filter(Boolean)));
+        const cats = sortJa(
+          uniq(
+            state.all
+              .filter(x => !state.tab || x.tab === state.tab)
+              .map(x => x.category)
+              .filter(Boolean)
+          )
+        );
+        if (state.cat && !cats.includes(state.cat)) state.cat = "";
         const current = state.cat;
+        const tabBadge = $("tabIndicator");
+        if (tabBadge) {
+          tabBadge.textContent = state.tab ? `タブ: ${state.tab}` : "";
+        }
 
         const allBtn = `
-          <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition mt-1 mb-1 ${
-            current === ""
-              ? "bg-purple-500/60 border-purple-400 text-white shadow-lg shadow-purple-500/25"
-              : "bg-purple-500/10 border-purple-400/40 text-white/90 hover:text-white"
-          }"
+          <button class="w-full text-left rounded-xl px-3 py-1.5 text-sm mt-1 mb-1 cat-btn ${current === "" ? "active" : ""}"
                   data-cat="">
             すべて
           </button>`;
@@ -217,14 +323,11 @@
         $("catList").innerHTML = allBtn + cats.map(c => {
           const color = colorForCat(c);
           const isSel = current === c;
-          const style = isSel
-            ? `background-color:${color.alpha(0.22)}; border-color:${color.alpha(0.55)}; color:#ffffff; box-shadow:0 0 0 1px ${color.alpha(0.35)}; margin-top:4px; margin-bottom:4px;`
-            : `background-color:${color.alpha(0.08)}; border-color:${color.alpha(0.15)}; color:#ffffff; margin-top:4px; margin-bottom:4px;`;
           return `
-            <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition hover:opacity-95"
-                    data-cat="${escapeHtml(c)}"
-                    style="${style}">
-              ${escapeHtml(c)}
+            <button class="w-full text-left rounded-xl px-3 py-1.5 text-sm mt-1 mb-1 cat-btn ${isSel ? "active" : ""}"
+                    data-cat="${escapeHtml(c)}">
+              <span class="inline-block h-1 w-3 rounded-full mr-2 align-middle" style="background-color:${color.alpha(0.6)};"></span>
+              <span class="align-middle">${escapeHtml(c)}</span>
             </button>
           `;
         }).join("");
@@ -243,20 +346,20 @@
         const c = colorForCat(item.category || "");
         const iconHtml = (meta.icon || "").trim();
         return `
-          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-1 rounded-md bg-purple-900/0 hover:bg-purple-900/20 border border-transparent hover:border-purple-500/60 shadow-sm grid grid-cols-[18px_150px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition overflow-visible"
+          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-1 rounded-md shadow-sm grid grid-cols-[18px_150px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition overflow-visible list-row"
               data-copy="${escapeHtml(item.path)}"
               data-note="${item.note ? escapeHtml(item.note) : ""}">
-            <div class="w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-purple-600 opacity-30 group-hover:opacity-90 transition col-span-3"></div>
+            <div class="w-0.5 rounded-full opacity-30 group-hover:opacity-90 transition col-span-3" style="background: linear-gradient(180deg, var(--accent) 0%, rgba(124,58,237,0.65) 100%);"></div>
             <div class="flex h-4 items-center justify-center text-[12px] leading-none col-start-1 col-span-1 z-10" style="color:${c.base};">
               ${iconHtml}
             </div>
-            <div class="text-[12px] font-normal leading-snug text-slate-100 break-words col-start-2 col-span-1">
+            <div class="text-[13px] font-normal leading-snug break-words col-start-2 col-span-1" style="color: var(--text-heading);">
               ${escapeHtml(item.name || "(no name)")}
             </div>
-            <div class="relative text-[11px] text-slate-400 font-mono break-all tabular-nums col-start-3 col-span-1 pr-7">
+            <div class="relative text-[11px] font-mono break-all tabular-nums col-start-3 col-span-1 pr-7" style="color: var(--text-muted);">
               ${escapeHtml(item.path)}
               ${item.note ? `
-                <span class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-[9px] text-slate-300 bg-slate-900/80">i</span>
+                <span class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-[9px] bg-slate-900/80" style="color: var(--text-muted);">i</span>
               ` : ""}
             </div>
           </li>
@@ -293,21 +396,21 @@
           const subMap = catMap[cat];
           const subLabels = sortJa(Object.keys(subMap));
           return `
-          <div class="rounded-lg border border-slate-800 bg-slate-950 shadow-lg ring-1 ring-slate-800/80 overflow-hidden" style="box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: ${color.alpha(0.45)};">
-            <div class="px-3 py-1.5 grid grid-cols-[18px_1fr] items-center gap-3 border-b border-slate-800" style="background-color: ${color.alpha(0.25)};">
+          <div class="rounded-xl border shadow-lg ring-1 overflow-hidden" style="background-color: var(--bg-layer); box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: var(--border);">
+            <div class="px-4 py-2 grid grid-cols-[18px_1fr] items-center gap-3 border-b" style="background-color: ${color.alpha(0.25)}; border-color: var(--border);">
               <span class="inline-block h-1.5 w-5 rounded-full" style="background-color:${color.base};"></span>
-              <div class="text-sm font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
+              <div class="text-base font-semibold leading-tight" style="color: var(--text-heading);">${escapeHtml(cat)}</div>
             </div>
-            <div class="p-1.5 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-1.5">
+            <div class="p-3 space-y-3">
               ${subLabels.map(sub => `
-                <div class="space-y-1">
+                <div class="space-y-1.5">
                   <div class="flex items-center gap-2 px-2 py-0.5">
                     <span class="inline-block h-1 w-3 rounded-full" style="background-color:${color.base};"></span>
-                    <span class="text-[12px] font-semibold text-white tracking-wide uppercase">
+                    <span class="text-sm font-semibold tracking-wide uppercase" style="color: var(--text-heading);">
                       ${escapeHtml(sub)}
                     </span>
                   </div>
-                  <ul class="space-y-0.5 pl-5 ml-3 border-l" style="border-color:${color.alpha(0.35)};">
+                  <ul class="space-y-0.75 pl-5 ml-3 border-l" style="border-color:${color.alpha(0.35)};">
                     ${subMap[sub].map(listRow).join("")}
                   </ul>
                 </div>
@@ -350,6 +453,7 @@
       };
 
       const renderAll = () => {
+        renderTabList();
         renderCategoryList();
         renderMain();
       };
