@@ -390,7 +390,7 @@
           const subMap = catMap[cat];
           const subLabels = sortJa(Object.keys(subMap));
           return `
-          <div class="rounded-lg border shadow-lg ring-1 overflow-hidden" style="background-color: var(--bg-layer); box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: var(--border);">
+          <div class="rounded-xl border shadow-lg ring-1 overflow-hidden" style="background-color: var(--bg-layer); box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: var(--border);">
             <div class="px-4 py-2 grid grid-cols-[18px_1fr] items-center gap-3 border-b" style="background-color: ${color.alpha(0.25)}; border-color: var(--border);">
               <span class="inline-block h-1.5 w-5 rounded-full" style="background-color:${color.base};"></span>
               <div class="text-base font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
