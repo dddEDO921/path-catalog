@@ -47,28 +47,45 @@ data.jsに表示したいパスを書いていきます。
 ```js
 const r = String.raw;
 window.PATH_CATALOG_DATA = [
-  { category: "申請", subCategory: "経費", name: "経費精算フォルダ", path: r`\\fileserver\share\finance\expense`, note: "" },
+  { tab: "共通", category: "申請", subCategory: "経費", name: "経費精算フォルダ", path: r`\\fileserver\share\finance\expense`, note: "" },
   // ...
 ];
 ```
 
 ### 書き方（階層形式）
 
-jsonらしく階層構造を利用した記載方法です。  
-カテゴリ単位でまとめて管理しやすいです。また、サブカテゴリやアイテムの追加・削除が構造的に行えます。
+タブ > カテゴリ > サブカテゴリ > アイテムの構造でまとめる方法です。  
+タブごとに複数カテゴリをまとめたいときに便利です。
 
 ```js
 const r = String.raw;
-const DATA_NESTED = {
-  categories: [
+const DATA = {
+  tabs: [
     {
-      name: "申請",
-      subCategories: [
+      name: "共通",
+      categories: [
         {
-          name: "経費",
-          items: [
-            { name: "経費精算フォルダ", path: r`\\fileserver\share\finance\expense`, note: "" },
-            { name: "旅費申請書式", path: r`\\fileserver\share\finance\travel\forms`, note: "" }
+          name: "申請",
+          subCategories: [
+            {
+              name: "経費",
+              items: [
+                { name: "経費精算フォルダ", path: r`\\fileserver\share\finance\expense`, note: "" },
+                { name: "旅費申請書式", path: r`\\fileserver\share\finance\travel\forms`, note: "" }
+              ]
+            }
+          ]
+        },
+        {
+          name: "共有",
+          subCategories: [
+            {
+              name: "テンプレート",
+              items: [
+                { name: "議事録テンプレート", path: r`\\fileserver\share\templates\minutes.docx`, note: "" },
+                { name: "契約書ドラフト", path: r`\\fileserver\share\templates\contract.docx`, note: "" }
+              ]
+            }
           ]
         }
       ]
@@ -76,12 +93,13 @@ const DATA_NESTED = {
   ]
 };
 // フラットに変換（data.js にサンプルあり）
-window.PATH_CATALOG_DATA = flatten(DATA_NESTED);
+window.PATH_CATALOG_DATA = flatten(DATA);
 ```
 
 ### 共通のポイント
 
 - `r`（`String.raw`）を使えばバックスラッシュをそのまま貼り付け可。
+- `tab` は任意。未指定の場合は `共通` タブにまとまります。フラット形式は各行に、階層形式はタブ配下にカテゴリを置く形で記載してください。
 - 階層形式を使う場合は、`data.js` の `flatten` を通して `window.PATH_CATALOG_DATA` に渡してください。
 
 ## 🔸使い方
