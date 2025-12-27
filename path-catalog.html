@@ -16,10 +16,60 @@
       --bg-base: #0f172a;
       --bg-layer: #111827;
       --border: #1f2937;
+      --accent: #7c3aed;
+      --accent-soft: rgba(124, 58, 237, 0.12);
+      --accent-soft-strong: rgba(124, 58, 237, 0.15);
     }
     body {
       font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg-base);
+    }
+    .tab-btn {
+      border: 1px solid transparent;
+      color: #cbd5e1;
+      background-color: transparent;
+      padding: 0.4rem 0.9rem;
+      border-radius: 0.75rem 0.75rem 0 0;
+      font-weight: 600;
+      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+    }
+    .tab-btn:hover {
+      background-color: var(--bg-layer);
+      border-color: var(--border);
+      color: #ffffff;
+    }
+    .tab-btn.active {
+      background-color: var(--bg-layer);
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 10px 30px -18px rgba(0,0,0,0.9);
+    }
+    .cat-btn {
+      background-color: var(--bg-layer);
+      border: 1px solid var(--border);
+      color: #e5e7eb;
+      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      position: relative;
+    }
+    .cat-btn:hover {
+      background-color: var(--accent-soft);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+    .cat-btn.active {
+      background-color: var(--bg-layer);
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 0 0 1px rgba(124,58,237,0.35);
+    }
+    .list-row {
+      background-color: transparent;
+      border: 1px solid transparent;
+    }
+    .list-row:hover {
+      background-color: var(--accent-soft);
+      border-color: var(--accent);
     }
     /* ちょい補助：テキスト省略 */
     .line-clamp-2{
@@ -224,9 +274,7 @@
           const isSel = current === tab;
           return `
             <button
-              class="rounded-t-lg px-4 py-1.5 text-sm font-semibold tracking-wide transition border ${isSel
-                ? "bg-slate-900 text-white border-slate-500 border-b-slate-900 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.9)]"
-                : "text-slate-300 border-transparent border-b-slate-700/60 hover:text-white hover:border-slate-600 hover:bg-slate-800/70"}"
+              class="tab-btn ${isSel ? "active" : ""}"
               data-tab="${escapeHtml(tab)}">
               ${escapeHtml(tab)}
             </button>
@@ -261,11 +309,7 @@
         }
 
         const allBtn = `
-          <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition mt-1 mb-1 ${
-            current === ""
-              ? "bg-purple-500/60 border-purple-400 text-white shadow-lg shadow-purple-500/25"
-              : "bg-purple-500/10 border-purple-400/40 text-white/90 hover:text-white"
-          }"
+          <button class="w-full text-left rounded-xl px-3 py-1.5 text-sm mt-1 mb-1 cat-btn ${current === "" ? "active" : ""}"
                   data-cat="">
             すべて
           </button>`;
@@ -273,14 +317,11 @@
         $("catList").innerHTML = allBtn + cats.map(c => {
           const color = colorForCat(c);
           const isSel = current === c;
-          const style = isSel
-            ? `background-color:${color.alpha(0.22)}; border-color:${color.alpha(0.55)}; color:#ffffff; box-shadow:0 0 0 1px ${color.alpha(0.35)}; margin-top:4px; margin-bottom:4px;`
-            : `background-color:${color.alpha(0.08)}; border-color:${color.alpha(0.15)}; color:#ffffff; margin-top:4px; margin-bottom:4px;`;
           return `
-            <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition hover:opacity-95"
-                    data-cat="${escapeHtml(c)}"
-                    style="${style}">
-              ${escapeHtml(c)}
+            <button class="w-full text-left rounded-xl px-3 py-1.5 text-sm mt-1 mb-1 cat-btn ${isSel ? "active" : ""}"
+                    data-cat="${escapeHtml(c)}">
+              <span class="inline-block h-1 w-3 rounded-full mr-2 align-middle" style="background-color:${color.alpha(0.6)};"></span>
+              <span class="align-middle">${escapeHtml(c)}</span>
             </button>
           `;
         }).join("");
@@ -299,10 +340,10 @@
         const c = colorForCat(item.category || "");
         const iconHtml = (meta.icon || "").trim();
         return `
-          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-1 rounded-md bg-purple-900/0 hover:bg-purple-900/20 border border-transparent hover:border-purple-500/60 shadow-sm grid grid-cols-[18px_150px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition overflow-visible"
+          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-1 rounded-md shadow-sm grid grid-cols-[18px_150px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition overflow-visible list-row"
               data-copy="${escapeHtml(item.path)}"
               data-note="${item.note ? escapeHtml(item.note) : ""}">
-            <div class="w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-purple-600 opacity-30 group-hover:opacity-90 transition col-span-3"></div>
+            <div class="w-0.5 rounded-full opacity-30 group-hover:opacity-90 transition col-span-3" style="background: linear-gradient(180deg, var(--accent) 0%, rgba(124,58,237,0.65) 100%);"></div>
             <div class="flex h-4 items-center justify-center text-[12px] leading-none col-start-1 col-span-1 z-10" style="color:${c.base};">
               ${iconHtml}
             </div>
@@ -350,7 +391,7 @@
           const subLabels = sortJa(Object.keys(subMap));
           return `
           <div class="rounded-lg border shadow-lg ring-1 overflow-hidden" style="background-color: var(--bg-layer); box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: var(--border);">
-            <div class="px-4 py-2 grid grid-cols-[18px_1fr] items-center gap-3 border-b" style="background-color: ${color.alpha(0.18)}; border-color: var(--border);">
+            <div class="px-4 py-2 grid grid-cols-[18px_1fr] items-center gap-3 border-b" style="background-color: ${color.alpha(0.25)}; border-color: var(--border);">
               <span class="inline-block h-1.5 w-5 rounded-full" style="background-color:${color.base};"></span>
               <div class="text-base font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
             </div>
