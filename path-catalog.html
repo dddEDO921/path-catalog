@@ -98,13 +98,6 @@
     </main>
   </div>
 
-  <script src="data.js"></script>
-  <script>
-    window.__LEGACY_ITEMS__ = Array.isArray(window.PATH_CATALOG_DATA)
-      ? window.PATH_CATALOG_DATA
-      : [];
-  </script>
-
   <script>
     (() => {
       const mode = (() => {
@@ -387,8 +380,6 @@
         const pickSourceItems = () => {
           const rawItems = Array.isArray(window.__RAW_ITEMS__) ? window.__RAW_ITEMS__ : [];
           if (rawItems.length > 0) return rawItems;
-          const legacyItems = Array.isArray(window.__LEGACY_ITEMS__) ? window.__LEGACY_ITEMS__ : [];
-          if (legacyItems.length > 0) return legacyItems;
           const fallback = window.PATH_CATALOG_DATA;
           return Array.isArray(fallback) ? fallback : [];
         };

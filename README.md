@@ -33,12 +33,12 @@
 ## ??セットアップ
 
 1. リポジトリを取得
-2. `path-catalog.html` をブラウザで開く
+2. `path-catalog.html?mode=beginner` をブラウザで開く
 
 ## ??データの編集
 
-`data/<mode>/tab-*.js` に表示したいパスを書いていきます。  
-読み込み順は `data/<mode>/index.js` の manifest で管理します。
+`data/beginner/tab-*.js` に表示したいパスを書いていきます。  
+新しいタブを追加する場合は `data/beginner/index.js` の `PATH_CATALOG_SOURCES` に追記します。
 
 ### 書き方（beginner 形式）
 
@@ -48,14 +48,14 @@
 ```js
 const r = String.raw;
 
-addTagPaths("メイン", {
-  "申請": {
-    "経費": [
+addTagPaths("申請", [
+  ["申請", [
+    ["経費", [
       ["経費精算フォルダ", r`\\fileserver\share\finance\expense`, ""],
       ["旅費申請書式", r`\\fileserver\share\finance\travel\forms`, "出張手当含む"]
-    ]
-  }
-});
+    ]]
+  ]]
+]);
 ```
 
 ### 読み込み順（index.js）
@@ -63,8 +63,8 @@ addTagPaths("メイン", {
 ローカル環境ではディレクトリの自動列挙ができないため、`index.js` が必須です。
 
 ```js
-const manifest = [
-  "./tab-main.js",
+window.PATH_CATALOG_SOURCES = [
+  "./tab-shinsei.js",
   "./tab-extra.js"
 ];
 ```
@@ -73,6 +73,7 @@ const manifest = [
 
 - `r`（`String.raw`）を使えばバックスラッシュをそのまま貼り付け可。
 - `category` / `subCategory` は空でもOK（UI側でまとめて表示）。
+- 記法は `addTagPaths(tag, [カテゴリ → サブカテゴリ → [name, path, note]])`。
 - JSONモードは将来対応予定。現状は beginner 形式のみ。
 
 ## ??使い方
