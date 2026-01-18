@@ -56,9 +56,17 @@
   window.addTagPaths = addTagPaths;
   window.PATH_CATALOG_DATA = data;
 
-  const manifest = [
-    "./tab-main.js"
+  const defaultSources = [
+    "./tab-main.js",
+    "./tab-sample.js"
   ];
+
+  if (!window.PATH_CATALOG_SOURCES) {
+    window.PATH_CATALOG_SOURCES = defaultSources;
+  } else if (!Array.isArray(window.PATH_CATALOG_SOURCES)) {
+    warn("PATH_CATALOG_SOURCES must be an array");
+    window.PATH_CATALOG_SOURCES = defaultSources;
+  }
 
   const baseUrl = new URL(".", (document.currentScript && document.currentScript.src) || location.href);
   const resolveSrc = (src) => new URL(src, baseUrl).toString();
@@ -81,5 +89,5 @@
     Promise.resolve()
   );
 
-  window.PATH_CATALOG_READY = loadSequential(manifest).then(() => data);
+  window.PATH_CATALOG_READY = loadSequential(window.PATH_CATALOG_SOURCES).then(() => data);
 })();
