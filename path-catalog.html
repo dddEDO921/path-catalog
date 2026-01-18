@@ -79,7 +79,7 @@
     <!-- Main -->
     <main class="p-5">
 
-      <div class="mb-2"></div>
+      <div class="mb-2 flex flex-wrap gap-2" id="tabList"></div>
 
       <section id="list" class="space-y-2"></section>
 
@@ -91,7 +91,7 @@
     </main>
   </div>
 
-  <script src="data.js"></script>
+  <script src="data/beginner/index.js"></script>
 
   <script>
     (() => {
@@ -101,8 +101,16 @@
       const escapeHtml = (str) => str.replace(/[&<>"']/g, (m)=>({
         "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
       }[m]));
-      const uniq = (arr) => Array.from(new Set(arr));
-      const sortJa = (arr) => arr.slice().sort((a,b)=>a.localeCompare(b, "ja"));
+      const uniqueInOrder = (arr) => {
+        const seen = new Set();
+        const out = [];
+        arr.forEach((item) => {
+          if (seen.has(item)) return;
+          seen.add(item);
+          out.push(item);
+        });
+        return out;
+      };
       const typeIcon = {
         url: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5 7 17a4 4 0 1 1-5.7-5.6l4-4a4 4 0 0 1 5.6 0M13.5 10.5 17 7a4 4 0 0 1 5.7 5.6l-4 4a4 4 0 0 1-5.6 0"/><path d="m8 16 8-8"/></svg>`,
         file: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>`,
@@ -183,6 +191,7 @@
       // 外部データを安全な形に正規化
       const normalize = (items) => (items || []).map((x, i) => ({
         id: i + 1,
+        tab: safe(x.tab),
         category: safe(x.category),
         subCategory: safe(x.subCategory),
         name: safe(x.name),
@@ -190,171 +199,224 @@
         note: safe(x.note)
       }));
 
-      const state = {
-        all: normalize(window.PATH_CATALOG_DATA || []),
-        cat: "",
-      };
+      const boot = () => {
+        const state = {
+          all: normalize(window.PATH_CATALOG_DATA || []),
+          tab: "",
+          cat: ""
+        };
 
-      const filtered = () => state.all.filter(x => {
-        if (state.cat && x.category !== state.cat) return false;
-        return true;
-      });
+        const tabs = uniqueInOrder(state.all.map(x => x.tab));
+        state.tab = tabs[0] ?? "";
 
-      const renderCategoryList = () => {
-        const cats = sortJa(uniq(state.all.map(x => x.category).filter(Boolean)));
-        const current = state.cat;
+        const itemsInTab = () => state.all.filter(x => x.tab === state.tab);
 
-        const allBtn = `
-          <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition mt-1 mb-1 ${
-            current === ""
-              ? "bg-purple-500/60 border-purple-400 text-white shadow-lg shadow-purple-500/25"
-              : "bg-purple-500/10 border-purple-400/40 text-white/90 hover:text-white"
-          }"
-                  data-cat="">
-            すべて
-          </button>`;
+        const filtered = () => itemsInTab().filter(x => {
+          if (state.cat && x.category !== state.cat) return false;
+          return true;
+        });
 
-        $("catList").innerHTML = allBtn + cats.map(c => {
-          const color = colorForCat(c);
-          const isSel = current === c;
-          const style = isSel
-            ? `background-color:${color.alpha(0.22)}; border-color:${color.alpha(0.55)}; color:#ffffff; box-shadow:0 0 0 1px ${color.alpha(0.35)}; margin-top:4px; margin-bottom:4px;`
-            : `background-color:${color.alpha(0.08)}; border-color:${color.alpha(0.15)}; color:#ffffff; margin-top:4px; margin-bottom:4px;`;
-          return `
-            <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition hover:opacity-95"
-                    data-cat="${escapeHtml(c)}"
-                    style="${style}">
-              ${escapeHtml(c)}
-            </button>
-          `;
-        }).join("");
+        const renderTabList = () => {
+          const tabList = $("tabList");
+          if (!tabList) return;
+          if (tabs.length === 0) {
+            tabList.classList.add("hidden");
+            tabList.innerHTML = "";
+            return;
+          }
+          tabList.classList.remove("hidden");
+          tabList.innerHTML = tabs.map(tab => {
+            const isSel = state.tab === tab;
+            const label = tab || "(未設定タブ)";
+            return `
+              <button class="rounded-xl border px-3 py-1.5 text-sm transition ${
+                isSel
+                  ? "bg-purple-500/60 border-purple-400 text-white shadow-lg shadow-purple-500/25"
+                  : "bg-purple-500/10 border-purple-400/40 text-white/90 hover:text-white"
+              }"
+                      data-tab="${escapeHtml(tab)}">
+                ${escapeHtml(label)}
+              </button>
+            `;
+          }).join("");
 
-        $("catList").querySelectorAll("button[data-cat]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            state.cat = btn.getAttribute("data-cat") || "";
-            renderCategoryList();
-            renderMain();
+          tabList.querySelectorAll("button[data-tab]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              state.tab = btn.getAttribute("data-tab") ?? "";
+              state.cat = "";
+              renderCategoryList();
+              renderMain();
+              renderTabList();
+            });
           });
-        });
-      };
+        };
 
-      const listRow = (item) => {
-        const meta = classifyPath(item.path);
-        const c = colorForCat(item.category || "");
-        const iconHtml = (meta.icon || "").trim();
-        return `
-          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-1 rounded-md bg-purple-900/0 hover:bg-purple-900/20 border border-transparent hover:border-purple-500/60 shadow-sm grid grid-cols-[18px_150px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition overflow-visible"
-              data-copy="${escapeHtml(item.path)}"
-              data-note="${item.note ? escapeHtml(item.note) : ""}">
-            <div class="w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-purple-600 opacity-30 group-hover:opacity-90 transition col-span-3"></div>
-            <div class="flex h-4 items-center justify-center text-[12px] leading-none col-start-1 col-span-1 z-10" style="color:${c.base};">
-              ${iconHtml}
-            </div>
-            <div class="text-[12px] font-normal leading-snug text-slate-100 break-words col-start-2 col-span-1">
-              ${escapeHtml(item.name || "(no name)")}
-            </div>
-            <div class="relative text-[11px] text-slate-400 font-mono break-all tabular-nums col-start-3 col-span-1 pr-7">
-              ${escapeHtml(item.path)}
-              ${item.note ? `
-                <span class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-[9px] text-slate-300 bg-slate-900/80">i</span>
-              ` : ""}
-            </div>
-          </li>
-        `;
-      };
+        const renderCategoryList = () => {
+          const cats = uniqueInOrder(itemsInTab().map(x => x.category).filter(Boolean));
+          const current = state.cat;
 
-      const renderMain = () => {
-        const items = filtered();
-        const list = $("list");
-        const empty = $("empty");
+          const allBtn = `
+            <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition mt-1 mb-1 ${
+              current === ""
+                ? "bg-purple-500/60 border-purple-400 text-white shadow-lg shadow-purple-500/25"
+                : "bg-purple-500/10 border-purple-400/40 text-white/90 hover:text-white"
+            }"
+                    data-cat="">
+              すべて
+            </button>`;
 
-        const s1 = $("stats");
-        if (s1) s1.textContent = "";
+          $("catList").innerHTML = allBtn + cats.map(c => {
+            const color = colorForCat(c);
+            const isSel = current === c;
+            const style = isSel
+              ? `background-color:${color.alpha(0.22)}; border-color:${color.alpha(0.55)}; color:#ffffff; box-shadow:0 0 0 1px ${color.alpha(0.35)}; margin-top:4px; margin-bottom:4px;`
+              : `background-color:${color.alpha(0.08)}; border-color:${color.alpha(0.15)}; color:#ffffff; margin-top:4px; margin-bottom:4px;`;
+            return `
+              <button class="w-full text-left rounded-xl border px-3 py-1.5 text-sm transition hover:opacity-95"
+                      data-cat="${escapeHtml(c)}"
+                      style="${style}">
+                ${escapeHtml(c)}
+              </button>
+            `;
+          }).join("");
 
-        if (items.length === 0) {
-          list.innerHTML = "";
-          empty.classList.remove("hidden");
-          return;
-        }
-        empty.classList.add("hidden");
+          $("catList").querySelectorAll("button[data-cat]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              state.cat = btn.getAttribute("data-cat") || "";
+              renderCategoryList();
+              renderMain();
+            });
+          });
+        };
 
-        const catMap = {};
-        items.forEach(item => {
-          const cat = item.category || "(未設定カテゴリ)";
-          const sub = item.subCategory || "(未設定)";
-          if (!catMap[cat]) catMap[cat] = {};
-          if (!catMap[cat][sub]) catMap[cat][sub] = [];
-          catMap[cat][sub].push(item);
-        });
-        const catLabels = sortJa(Object.keys(catMap));
-
-        list.innerHTML = catLabels.map(cat => {
-          const color = colorForCat(cat);
-          const subMap = catMap[cat];
-          const subLabels = sortJa(Object.keys(subMap));
+        const listRow = (item) => {
+          const meta = classifyPath(item.path);
+          const c = colorForCat(item.category || "");
+          const iconHtml = (meta.icon || "").trim();
           return `
-          <div class="rounded-lg border border-slate-800 bg-slate-950 shadow-lg ring-1 ring-slate-800/80 overflow-hidden" style="box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: ${color.alpha(0.45)};">
-            <div class="px-3 py-1.5 grid grid-cols-[18px_1fr] items-center gap-3 border-b border-slate-800" style="background-color: ${color.alpha(0.25)};">
-              <span class="inline-block h-1.5 w-5 rounded-full" style="background-color:${color.base};"></span>
-              <div class="text-sm font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
-            </div>
-            <div class="p-1.5 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-1.5">
-              ${subLabels.map(sub => `
-                <div class="space-y-1">
-                  <div class="flex items-center gap-2 px-2 py-0.5">
-                    <span class="inline-block h-1 w-3 rounded-full" style="background-color:${color.base};"></span>
-                    <span class="text-[12px] font-semibold text-white tracking-wide uppercase">
-                      ${escapeHtml(sub)}
-                    </span>
+            <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-1 rounded-md bg-purple-900/0 hover:bg-purple-900/20 border border-transparent hover:border-purple-500/60 shadow-sm grid grid-cols-[18px_150px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition overflow-visible"
+                data-copy="${escapeHtml(item.path)}"
+                data-note="${item.note ? escapeHtml(item.note) : ""}">
+              <div class="w-0.5 rounded-full bg-gradient-to-b from-purple-400 to-purple-600 opacity-30 group-hover:opacity-90 transition col-span-3"></div>
+              <div class="flex h-4 items-center justify-center text-[12px] leading-none col-start-1 col-span-1 z-10" style="color:${c.base};">
+                ${iconHtml}
+              </div>
+              <div class="text-[12px] font-normal leading-snug text-slate-100 break-words col-start-2 col-span-1">
+                ${escapeHtml(item.name || "(no name)")}
+              </div>
+              <div class="relative text-[11px] text-slate-400 font-mono break-all tabular-nums col-start-3 col-span-1 pr-7">
+                ${escapeHtml(item.path)}
+                ${item.note ? `
+                  <span class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-[9px] text-slate-300 bg-slate-900/80">i</span>
+                ` : ""}
+              </div>
+            </li>
+          `;
+        };
+
+        const renderMain = () => {
+          const items = filtered();
+          const list = $("list");
+          const empty = $("empty");
+
+          const s1 = $("stats");
+          if (s1) s1.textContent = "";
+
+          if (items.length === 0) {
+            list.innerHTML = "";
+            empty.classList.remove("hidden");
+            return;
+          }
+          empty.classList.add("hidden");
+
+          const catMap = new Map();
+          items.forEach(item => {
+            const cat = item.category || "(未設定カテゴリ)";
+            const sub = item.subCategory || "(未設定)";
+            if (!catMap.has(cat)) catMap.set(cat, new Map());
+            const subMap = catMap.get(cat);
+            if (!subMap.has(sub)) subMap.set(sub, []);
+            subMap.get(sub).push(item);
+          });
+
+          const catLabels = Array.from(catMap.keys());
+
+          list.innerHTML = catLabels.map(cat => {
+            const color = colorForCat(cat);
+            const subMap = catMap.get(cat);
+            const subLabels = Array.from(subMap.keys());
+            return `
+            <div class="rounded-lg border border-slate-800 bg-slate-950 shadow-lg ring-1 ring-slate-800/80 overflow-hidden" style="box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: ${color.alpha(0.45)};">
+              <div class="px-3 py-1.5 grid grid-cols-[18px_1fr] items-center gap-3 border-b border-slate-800" style="background-color: ${color.alpha(0.25)};">
+                <span class="inline-block h-1.5 w-5 rounded-full" style="background-color:${color.base};"></span>
+                <div class="text-sm font-semibold text-white leading-tight">${escapeHtml(cat)}</div>
+              </div>
+              <div class="p-1.5 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-1.5">
+                ${subLabels.map(sub => `
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2 px-2 py-0.5">
+                      <span class="inline-block h-1 w-3 rounded-full" style="background-color:${color.base};"></span>
+                      <span class="text-[12px] font-semibold text-white tracking-wide uppercase">
+                        ${escapeHtml(sub)}
+                      </span>
+                    </div>
+                    <ul class="space-y-0.5 pl-5 ml-3 border-l" style="border-color:${color.alpha(0.35)};">
+                      ${subMap.get(sub).map(listRow).join("")}
+                    </ul>
                   </div>
-                  <ul class="space-y-0.5 pl-5 ml-3 border-l" style="border-color:${color.alpha(0.35)};">
-                    ${subMap[sub].map(listRow).join("")}
-                  </ul>
-                </div>
-              `).join("")}
+                `).join("")}
+              </div>
             </div>
-          </div>
-          `;
-        }).join("");
+            `;
+          }).join("");
 
-        list.querySelectorAll("li[data-copy]").forEach(el => {
-          el.addEventListener("click", async () => {
-            const p = el.getAttribute("data-copy") || "";
-            try {
-              await copyText(p, el);
-            } catch (e) {
-              const ta = document.createElement("textarea");
-              ta.value = p;
-              document.body.appendChild(ta);
-              ta.select();
-              document.execCommand("copy");
-              ta.remove();
-              inlineToast(el, "コピーしました");
-            }
+          list.querySelectorAll("li[data-copy]").forEach(el => {
+            el.addEventListener("click", async () => {
+              const p = el.getAttribute("data-copy") || "";
+              try {
+                await copyText(p, el);
+              } catch (e) {
+                const ta = document.createElement("textarea");
+                ta.value = p;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                ta.remove();
+                inlineToast(el, "コピーしました");
+              }
+            });
           });
-        });
 
-        // ノートツールチップ（body直下で表示）
-        list.querySelectorAll("li[data-note]").forEach(el => {
-          const note = el.getAttribute("data-note") || "";
-          if (!note) return;
-          el.addEventListener("mouseenter", (e) => {
-            const rect = el.getBoundingClientRect();
-            noteTooltip.show(note, rect.right + 36, rect.bottom);
+          // ノートツールチップ（body直下で表示）
+          list.querySelectorAll("li[data-note]").forEach(el => {
+            const note = el.getAttribute("data-note") || "";
+            if (!note) return;
+            el.addEventListener("mouseenter", (e) => {
+              const rect = el.getBoundingClientRect();
+              noteTooltip.show(note, rect.right + 36, rect.bottom);
+            });
+            el.addEventListener("mousemove", (e) => {
+              noteTooltip.show(note, e.clientX + 36, e.clientY);
+            });
+            el.addEventListener("mouseleave", () => noteTooltip.hide());
           });
-          el.addEventListener("mousemove", (e) => {
-            noteTooltip.show(note, e.clientX + 36, e.clientY);
-          });
-          el.addEventListener("mouseleave", () => noteTooltip.hide());
-        });
+        };
+
+        const renderAll = () => {
+          renderTabList();
+          renderCategoryList();
+          renderMain();
+        };
+
+        renderAll();
       };
 
-      const renderAll = () => {
-        renderCategoryList();
-        renderMain();
-      };
-
-      renderAll();
+      const ready = window.PATH_CATALOG_READY;
+      if (ready && typeof ready.then === "function") {
+        ready.then(boot);
+      } else {
+        boot();
+      }
     })();
   </script>
 </body>
