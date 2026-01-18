@@ -79,6 +79,13 @@
     <!-- Main -->
     <main class="p-5">
 
+      <section id="loaderWarning" class="hidden mb-2">
+        <div class="rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+          <div class="font-semibold">データ読み込み警告</div>
+          <ul class="mt-1 list-disc space-y-1 pl-4" id="loaderWarningList"></ul>
+        </div>
+      </section>
+
       <div class="mb-2 flex flex-wrap gap-2" id="tabList"></div>
 
       <section id="list" class="space-y-2"></section>
@@ -92,6 +99,73 @@
   </div>
 
   <script src="data/beginner/index.js"></script>
+
+  <script>
+    (() => {
+      const mode = (() => {
+        const raw = new URLSearchParams(location.search).get("mode");
+        return raw === "json" ? "json" : "beginner";
+      })();
+
+      const warningList = document.getElementById("loaderWarningList");
+      const warningBox = document.getElementById("loaderWarning");
+      const warnOnScreen = (message) => {
+        if (!warningList || !warningBox) return;
+        const li = document.createElement("li");
+        li.textContent = message;
+        warningList.appendChild(li);
+        warningBox.classList.remove("hidden");
+      };
+
+      const normalizeUrl = (src) => new URL(src, location.href).toString();
+      const hasScript = (src) => Array.from(document.scripts).some((script) => {
+        if (!script.src) return false;
+        return normalizeUrl(script.src) === src;
+      });
+
+      const loadScript = (src) => new Promise((resolve) => {
+        const resolved = normalizeUrl(src);
+        if (hasScript(resolved)) {
+          resolve({ ok: true, src: resolved, skipped: true });
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = resolved;
+        script.async = false;
+        script.onload = () => resolve({ ok: true, src: resolved, skipped: false });
+        script.onerror = () => {
+          warnOnScreen(`読み込みに失敗: ${resolved}`);
+          resolve({ ok: false, src: resolved, skipped: false });
+        };
+        document.head.appendChild(script);
+      });
+
+      const loadAllData = async () => {
+        const baseDir = new URL(`./data/${mode}/`, location.href).toString();
+        const indexSrc = new URL("index.js", baseDir).toString();
+
+        const indexResult = await loadScript(indexSrc);
+        if (!indexResult.ok) {
+          warnOnScreen(`index.js を読み込めませんでした (${mode})`);
+        }
+
+        const sources = window.PATH_CATALOG_SOURCES;
+        if (!Array.isArray(sources)) {
+          warnOnScreen("PATH_CATALOG_SOURCES が未設定、または配列ではありません");
+          return;
+        }
+
+        for (const src of sources) {
+          const fullSrc = new URL(src, baseDir).toString();
+          await loadScript(fullSrc);
+        }
+      };
+
+      window.loadScript = loadScript;
+      window.loadAllData = loadAllData;
+      loadAllData();
+    })();
+  </script>
 
   <script>
     (() => {
