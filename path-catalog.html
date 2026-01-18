@@ -98,7 +98,12 @@
     </main>
   </div>
 
-  <script src="data/beginner/index.js"></script>
+  <script src="data.js"></script>
+  <script>
+    window.__LEGACY_ITEMS__ = Array.isArray(window.PATH_CATALOG_DATA)
+      ? window.PATH_CATALOG_DATA
+      : [];
+  </script>
 
   <script>
     (() => {
@@ -125,10 +130,10 @@
       const itemContext = (tag, category, subCategory, index) =>
         `${tag}/${category}/${subCategory} #${index + 1}`;
 
-      let legacyAddTagPaths = window.addTagPaths;
+      let legacyAddTagPaths = typeof window.addTagPaths === "function" ? window.addTagPaths : null;
 
       window.__RAW_ITEMS__ = [];
-      const addTagPaths = (tagName, blocks, opt) => {
+      const addTagPathsWrapper = (tagName, blocks, opt) => {
         if (mode !== "beginner") {
           warn("addTagPaths は beginner モード専用です", opt);
           return;
@@ -202,7 +207,24 @@
           });
         });
       };
-      window.addTagPaths = addTagPaths;
+
+      const installAddTagPaths = () => {
+        try {
+          Object.defineProperty(window, "addTagPaths", {
+            configurable: true,
+            get: () => addTagPathsWrapper,
+            set: (fn) => {
+              if (typeof fn === "function" && fn !== addTagPathsWrapper) {
+                legacyAddTagPaths = fn;
+              }
+            }
+          });
+        } catch (e) {
+          window.addTagPaths = addTagPathsWrapper;
+        }
+      };
+
+      installAddTagPaths();
 
       const normalizeUrl = (src) => new URL(src, location.href).toString();
       const hasScript = (src) => Array.from(document.scripts).some((script) => {
@@ -235,10 +257,6 @@
         if (!indexResult.ok) {
           warnOnScreen(`index.js を読み込めませんでした (${mode})`);
         }
-        if (typeof legacyAddTagPaths !== "function" || legacyAddTagPaths === addTagPaths) {
-          legacyAddTagPaths = window.addTagPaths;
-        }
-        window.addTagPaths = addTagPaths;
 
         const sources = window.PATH_CATALOG_SOURCES;
         if (!Array.isArray(sources)) {
@@ -252,9 +270,10 @@
         }
       };
 
+      const ready = loadAllData();
       window.loadScript = loadScript;
       window.loadAllData = loadAllData;
-      loadAllData();
+      window.PATH_CATALOG_READY = ready;
     })();
   </script>
 
@@ -356,7 +375,7 @@
       // 外部データを安全な形に正規化
       const normalize = (items) => (items || []).map((x, i) => ({
         id: i + 1,
-        tab: safe(x.tab),
+        tab: safe(x.tab ?? x.tag),
         category: safe(x.category),
         subCategory: safe(x.subCategory),
         name: safe(x.name),
@@ -365,8 +384,17 @@
       }));
 
       const boot = () => {
+        const pickSourceItems = () => {
+          const rawItems = Array.isArray(window.__RAW_ITEMS__) ? window.__RAW_ITEMS__ : [];
+          if (rawItems.length > 0) return rawItems;
+          const legacyItems = Array.isArray(window.__LEGACY_ITEMS__) ? window.__LEGACY_ITEMS__ : [];
+          if (legacyItems.length > 0) return legacyItems;
+          const fallback = window.PATH_CATALOG_DATA;
+          return Array.isArray(fallback) ? fallback : [];
+        };
+
         const state = {
-          all: normalize(window.PATH_CATALOG_DATA || []),
+          all: normalize(pickSourceItems()),
           tab: "",
           cat: ""
         };
@@ -384,7 +412,7 @@
         const renderTabList = () => {
           const tabList = $("tabList");
           if (!tabList) return;
-          if (tabs.length === 0) {
+          if (tabs.length === 0 || (tabs.length === 1 && !tabs[0])) {
             tabList.classList.add("hidden");
             tabList.innerHTML = "";
             return;
