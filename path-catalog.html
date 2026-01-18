@@ -117,6 +117,93 @@
         warningBox.classList.remove("hidden");
       };
 
+      const toStr = (value) => (value ?? "").toString();
+      const warn = (message, opt) => {
+        const fileLabel = opt && opt.file ? ` (${opt.file})` : "";
+        console.warn(`[PathCatalog]${fileLabel} ${message}`);
+      };
+      const itemContext = (tag, category, subCategory, index) =>
+        `${tag}/${category}/${subCategory} #${index + 1}`;
+
+      let legacyAddTagPaths = window.addTagPaths;
+
+      window.__RAW_ITEMS__ = [];
+      const addTagPaths = (tagName, blocks, opt) => {
+        if (mode !== "beginner") {
+          warn("addTagPaths は beginner モード専用です", opt);
+          return;
+        }
+
+        const tag = toStr(tagName);
+        if (!Array.isArray(blocks)) {
+          if (blocks && typeof blocks === "object" && typeof legacyAddTagPaths === "function") {
+            legacyAddTagPaths(tagName, blocks, opt);
+            return;
+          }
+          warn(`blocks が配列ではありません (${tag})`, opt);
+          return;
+        }
+
+        blocks.forEach((catBlock, catIndex) => {
+          if (!Array.isArray(catBlock)) {
+            warn(`カテゴリブロックが配列ではありません (${tag}) #${catIndex + 1}`, opt);
+            return;
+          }
+          const category = toStr(catBlock[0] ?? "");
+          const subBlocks = catBlock[1];
+          if (!Array.isArray(subBlocks)) {
+            warn(`サブカテゴリブロックが配列ではありません (${tag}/${category})`, opt);
+            return;
+          }
+
+          subBlocks.forEach((subBlock, subIndex) => {
+            if (!Array.isArray(subBlock)) {
+              warn(`サブカテゴリが配列ではありません (${tag}/${category}) #${subIndex + 1}`, opt);
+              return;
+            }
+            const subCategory = toStr(subBlock[0] ?? "");
+            const items = subBlock[1];
+            if (!Array.isArray(items)) {
+              warn(`items が配列ではありません (${tag}/${category}/${subCategory})`, opt);
+              return;
+            }
+
+            items.forEach((item, index) => {
+              let row = [];
+              if (Array.isArray(item)) {
+                row = item.slice(0, 3);
+                if (item.length !== 3) {
+                  warn(`列数が3ではありません (${itemContext(tag, category, subCategory, index)})`, opt);
+                }
+              } else {
+                row = [item];
+                warn(`アイテムが配列ではありません (${itemContext(tag, category, subCategory, index)})`, opt);
+              }
+
+              while (row.length < 3) row.push("");
+              const [name, path, note] = row.map(toStr);
+
+              if (!name) {
+                warn(`name が空です (${itemContext(tag, category, subCategory, index)})`, opt);
+              }
+              if (!path) {
+                warn(`path が空です (${itemContext(tag, category, subCategory, index)})`, opt);
+              }
+
+              window.__RAW_ITEMS__.push({
+                tag,
+                category,
+                subCategory,
+                name,
+                path,
+                note
+              });
+            });
+          });
+        });
+      };
+      window.addTagPaths = addTagPaths;
+
       const normalizeUrl = (src) => new URL(src, location.href).toString();
       const hasScript = (src) => Array.from(document.scripts).some((script) => {
         if (!script.src) return false;
@@ -148,6 +235,10 @@
         if (!indexResult.ok) {
           warnOnScreen(`index.js を読み込めませんでした (${mode})`);
         }
+        if (typeof legacyAddTagPaths !== "function" || legacyAddTagPaths === addTagPaths) {
+          legacyAddTagPaths = window.addTagPaths;
+        }
+        window.addTagPaths = addTagPaths;
 
         const sources = window.PATH_CATALOG_SOURCES;
         if (!Array.isArray(sources)) {
