@@ -57,7 +57,12 @@
   window.PATH_CATALOG_DATA = data;
 
   const defaultSources = [
-    "./tab-main.js",
+    "./tab-shinsei.js",
+    "./tab-sekkei.js",
+    "./tab-kaihatsu.js",
+    "./tab-unyo.js",
+    "./tab-kyoyu.js",
+    "./tab-kokyaku.js",
     "./tab-sample.js"
   ];
 
