@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -23,11 +24,13 @@
       --text-body: #cbd5e1;
       --text-muted: #9ca3af;
     }
+
     body {
       font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg-base);
       color: var(--text-body);
     }
+
     .tab-btn {
       border: 1px solid transparent;
       color: #cbd5e1;
@@ -37,50 +40,58 @@
       font-weight: 600;
       transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
     }
+
     .tab-btn:hover {
       background-color: var(--bg-layer);
       border-color: var(--border);
       color: #ffffff;
     }
+
     .tab-btn.active {
       background-color: var(--bg-layer);
       border-color: var(--accent);
       color: #ffffff;
-      box-shadow: 0 10px 30px -18px rgba(0,0,0,0.9);
+      box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.9);
     }
+
     .cat-btn {
       background-color: var(--bg-layer);
       border: 1px solid var(--border);
       color: #e5e7eb;
       transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
       position: relative;
     }
+
     .cat-btn:hover {
       background-color: var(--accent-soft);
       border-color: var(--accent);
       color: #ffffff;
     }
+
     .cat-btn.active {
       background-color: var(--bg-layer);
       border-color: var(--accent);
       color: #ffffff;
-      box-shadow: 0 0 0 1px rgba(124,58,237,0.35);
+      box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.35);
     }
+
     .list-row {
       background-color: transparent;
       border: 1px solid transparent;
     }
+
     .list-row:hover {
       background-color: var(--accent-soft);
       border-color: var(--accent);
     }
+
     /* ちょい補助：テキスト省略 */
-    .line-clamp-2{
-      display:-webkit-box;
-      -webkit-line-clamp:2;
-      -webkit-box-orient:vertical;
-      overflow:hidden;
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
   </style>
 </head>
@@ -88,25 +99,56 @@
 <body class="text-slate-100">
   <div class="min-h-dvh flex flex-col">
 
-    <header class="border-b backdrop-blur px-5 py-2" style="background-color: var(--bg-layer); border-color: var(--border);">
+    <header class="border-b backdrop-blur px-5 py-2"
+      style="background-color: var(--bg-layer); border-color: var(--border);">
       <div class="grid grid-cols-[260px_1fr] items-end">
         <div class="flex items-center gap-2.5" style="color: var(--text-heading);">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo" class="h-9 w-auto">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo"
+            class="h-9 w-auto">
             <defs>
               <style>
-                .badge { fill: #7c3aed; }
-                .sqFront { fill: #f8fafc; }
-                .sqBack  { fill: #e2e8f0; opacity: 0.55; }
-                .slash { stroke: #f8fafc; stroke-width: 22; stroke-linecap: round; fill: none; }
-                .wordMain { fill: #f8fafc; font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 700; letter-spacing: -0.02em; }
-                .wordSub { fill: #cbd5e1; font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 600; letter-spacing: -0.02em; }
+                .badge {
+                  fill: #7c3aed;
+                }
+
+                .sqFront {
+                  fill: #f8fafc;
+                }
+
+                .sqBack {
+                  fill: #e2e8f0;
+                  opacity: 0.55;
+                }
+
+                .slash {
+                  stroke: #f8fafc;
+                  stroke-width: 22;
+                  stroke-linecap: round;
+                  fill: none;
+                }
+
+                .wordMain {
+                  fill: #f8fafc;
+                  font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                  font-size: 88px;
+                  font-weight: 700;
+                  letter-spacing: -0.02em;
+                }
+
+                .wordSub {
+                  fill: #cbd5e1;
+                  font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                  font-size: 88px;
+                  font-weight: 600;
+                  letter-spacing: -0.02em;
+                }
               </style>
             </defs>
             <g transform="translate(24,24) scale(0.72)">
-              <rect class="badge" x="16" y="16" width="224" height="224" rx="64"/>
+              <rect class="badge" x="16" y="16" width="224" height="224" rx="64" />
               <path class="slash" d="M50 165 L94 91" />
-              <rect class="sqBack"  x="136" y="80" width="80" height="80" rx="12"/>
-              <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12"/>
+              <rect class="sqBack" x="136" y="80" width="80" height="80" rx="12" />
+              <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12" />
             </g>
             <g transform="translate(280,150)">
               <text x="0" y="0" class="wordMain">Path</text>
@@ -145,7 +187,8 @@
         <section id="list" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></section>
 
         <section id="empty" class="hidden mt-10">
-          <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center" style="color: var(--text-muted);">
+          <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center"
+            style="color: var(--text-muted);">
             条件に一致するデータがありません
           </div>
         </section>
@@ -160,11 +203,11 @@
       // DOM helper / 安全変換
       const $ = (id) => document.getElementById(id);
       const safe = (v) => (v ?? "").toString();
-      const escapeHtml = (str) => str.replace(/[&<>"']/g, (m)=>({
-        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+      const escapeHtml = (str) => str.replace(/[&<>"']/g, (m) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"
       }[m]));
       const uniq = (arr) => Array.from(new Set(arr));
-      const sortJa = (arr) => arr.slice().sort((a,b)=>a.localeCompare(b, "ja"));
+      const sortJa = (arr) => arr.slice().sort((a, b) => a.localeCompare(b, "ja"));
       const typeIcon = {
         url: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5 7 17a4 4 0 1 1-5.7-5.6l4-4a4 4 0 0 1 5.6 0M13.5 10.5 17 7a4 4 0 0 1 5.7 5.6l-4 4a4 4 0 0 1-5.6 0"/><path d="m8 16 8-8"/></svg>`,
         file: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>`,
@@ -190,7 +233,7 @@
       };
       // カテゴリ名から安定した色を生成
       const colorForCat = (cat) => {
-        const key = (cat || "").split("").reduce((n, c) => n + c.charCodeAt(0)*7, 0);
+        const key = (cat || "").split("").reduce((n, c) => n + c.charCodeAt(0) * 7, 0);
         const hue = key % 360;
         const saturation = 65;
         const lightness = 60;
@@ -257,8 +300,103 @@
         note: safe(x.note)
       }));
 
+      function normalizeCatalog(raw) {
+        const warnings = [];
+        const items = [];
+
+        const warn = (msg, meta) => warnings.push({ msg, meta });
+
+        if (!Array.isArray(raw)) {
+          warn("window.PATH_CATALOG が配列ではありません", { type: typeof raw });
+          return { items, warnings };
+        }
+
+        for (let t = 0; t < raw.length; t++) {
+          const tabBlock = raw[t];
+          if (!Array.isArray(tabBlock) || tabBlock.length < 2) {
+            warn("タブブロックが不正です", { t, tabBlock });
+            continue;
+          }
+          const tab = String(tabBlock[0] ?? "").trim();
+          const categories = tabBlock[1];
+
+          if (!Array.isArray(categories)) {
+            warn("カテゴリ配列が不正です", { t, tab });
+            continue;
+          }
+
+          for (let c = 0; c < categories.length; c++) {
+            const catBlock = categories[c];
+            if (!Array.isArray(catBlock) || catBlock.length < 2) {
+              warn("カテゴリブロックが不正です", { t, c, catBlock });
+              continue;
+            }
+            const category = String(catBlock[0] ?? "").trim();
+            const subs = catBlock[1];
+
+            if (!Array.isArray(subs)) {
+              warn("サブカテゴリ配列が不正です", { t, tab, c, category });
+              continue;
+            }
+
+            for (let s = 0; s < subs.length; s++) {
+              const subBlock = subs[s];
+              if (!Array.isArray(subBlock) || subBlock.length < 2) {
+                warn("サブカテゴリブロックが不正です", { t, c, s, subBlock });
+                continue;
+              }
+              const subCategory = String(subBlock[0] ?? "").trim(); // 空OK
+              const rows = subBlock[1];
+
+              if (!Array.isArray(rows)) {
+                warn("アイテム配列が不正です", { t, tab, c, category, s, subCategory });
+                continue;
+              }
+
+              for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                if (!Array.isArray(row)) {
+                  warn("アイテム行が配列ではありません", { t, c, s, i, row });
+                  continue;
+                }
+
+                // 3列固定だが、不足は補完（止めない）
+                if (row.length !== 3) {
+                  warn("アイテム行の列数が3ではありません（不足は空で補完）", { t, c, s, i, cols: row.length });
+                }
+
+                const name = String(row[0] ?? "").trim();
+                const path = row[1] ?? "";
+                const note = String(row[2] ?? ""); // 空OK
+
+                if (!name) warn("name が空です（表示は継続）", { t, c, s, i });
+                if (!path) warn("path が空です（表示は継続）", { t, c, s, i });
+
+                items.push({
+                  tab: tab || "未分類",
+                  category,
+                  subCategory,
+                  name,
+                  path,
+                  note,
+                  _meta: { t, c, s, i }
+                });
+              }
+            }
+          }
+        }
+
+        return { items, warnings };
+      };
+
+      const { items, warnings } = normalizeCatalog(window.PATH_CATALOG);
+
+      console.log("items:", items.length);
+console.table(warnings);
+console.log("sample item:", items[0]);
+
       const state = {
-        all: normalize(window.PATH_CATALOG_DATA || []),
+        all: normalize(items),
         tab: "",
         cat: "",
       };
@@ -462,4 +600,5 @@
     })();
   </script>
 </body>
+
 </html>
