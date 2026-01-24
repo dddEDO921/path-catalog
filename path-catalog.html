@@ -207,7 +207,6 @@
         "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"
       }[m]));
       const uniq = (arr) => Array.from(new Set(arr));
-      const sortJa = (arr) => arr.slice().sort((a, b) => a.localeCompare(b, "ja"));
       const typeIcon = {
         url: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5 7 17a4 4 0 1 1-5.7-5.6l4-4a4 4 0 0 1 5.6 0M13.5 10.5 17 7a4 4 0 0 1 5.7 5.6l-4 4a4 4 0 0 1-5.6 0"/><path d="m8 16 8-8"/></svg>`,
         file: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>`,
@@ -391,10 +390,6 @@
 
       const { items, warnings } = normalizeCatalog(window.PATH_CATALOG);
 
-      console.log("items:", items.length);
-console.table(warnings);
-console.log("sample item:", items[0]);
-
       const state = {
         all: normalize(items),
         tab: "",
@@ -410,7 +405,7 @@ console.log("sample item:", items[0]);
       const renderTabList = () => {
         const holder = $("tabNav");
         if (!holder) return;
-        const tabs = sortJa(uniq(state.all.map(x => x.tab || DEFAULT_TAB)));
+        const tabs = uniq(state.all.map(x => x.tab || DEFAULT_TAB));
         if (!state.tab && tabs.length) state.tab = tabs[0];
         const current = state.tab;
 
@@ -437,14 +432,13 @@ console.log("sample item:", items[0]);
       };
 
       const renderCategoryList = () => {
-        const cats = sortJa(
+        const cats =
           uniq(
             state.all
               .filter(x => !state.tab || x.tab === state.tab)
               .map(x => x.category)
               .filter(Boolean)
-          )
-        );
+          );
         if (state.cat && !cats.includes(state.cat)) state.cat = "";
         const current = state.cat;
         const tabBadge = $("tabIndicator");
@@ -527,12 +521,12 @@ console.log("sample item:", items[0]);
           if (!catMap[cat][sub]) catMap[cat][sub] = [];
           catMap[cat][sub].push(item);
         });
-        const catLabels = sortJa(Object.keys(catMap));
+        const catLabels = Object.keys(catMap);
 
         list.innerHTML = catLabels.map(cat => {
           const color = colorForCat(cat);
           const subMap = catMap[cat];
-          const subLabels = sortJa(Object.keys(subMap));
+          const subLabels = Object.keys(subMap);
           return `
           <div class="rounded-xl border shadow-lg ring-1 overflow-hidden" style="background-color: var(--bg-layer); box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: var(--border);">
             <div class="px-4 py-2 grid grid-cols-[18px_1fr] items-center gap-3 border-b" style="background-color: ${color.alpha(0.25)}; border-color: var(--border);">
