@@ -444,6 +444,7 @@
       });
 
       // 現在のタブに応じたカテゴリ一覧
+      const getTabs = () => uniq(state.all.map(x => x.tab || DEFAULT_TAB));
       const getCats = () =>
         uniq(
           state.all
@@ -465,7 +466,7 @@
       };
 
       const buildTabListHtml = () => {
-        const tabs = uniq(state.all.map(x => x.tab || DEFAULT_TAB));
+        const tabs = getTabs();
         const current = state.tab;
 
         return tabs.map(tab => {
@@ -645,6 +646,43 @@
         },
       };
 
+      const isEditableTarget = (target) => {
+        if (!target) return false;
+        if (target.isContentEditable) return true;
+        const tag = target.tagName;
+        return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+      };
+
+      const stepIndex = (list, current, delta) => {
+        if (list.length === 0) return current;
+        const index = list.indexOf(current);
+        const safeIndex = index === -1 ? 0 : index;
+        const next = (safeIndex + delta + list.length) % list.length;
+        return list[next];
+      };
+
+      const onKeydown = (event) => {
+        if (isEditableTarget(event.target)) return;
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          const tabs = getTabs();
+          if (!tabs.length) return;
+          const delta = event.key === "ArrowRight" ? 1 : -1;
+          actions.setTab(stepIndex(tabs, state.tab, delta));
+          event.preventDefault();
+          return;
+        }
+
+        if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+          const cats = [""].concat(getCats());
+          if (!cats.length) return;
+          const delta = event.key === "ArrowDown" ? 1 : -1;
+          actions.setCat(stepIndex(cats, state.cat, delta));
+          event.preventDefault();
+        }
+      };
+
       // イベント委譲: タブ切り替え
       const onTabClick = (event) => {
         const btn = event.target.closest("button[data-tab]");
@@ -707,6 +745,7 @@
 
         if (tabNav) tabNav.addEventListener("click", onTabClick);
         if (catList) catList.addEventListener("click", onCatClick);
+        document.addEventListener("keydown", onKeydown);
         if (list) {
           list.addEventListener("click", onListClick);
           list.addEventListener("mouseover", onNoteOver);
