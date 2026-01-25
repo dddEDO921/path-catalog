@@ -97,8 +97,26 @@
     }
 
     .list-row:hover {
-      background-color: var(--accent-soft);
-      border-color: var(--accent);
+      background-color: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .path-chip {
+      display: inline-block;
+      max-width: 100%;
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--path-chip-border, rgba(124, 58, 237, 0.35));
+      border-radius: 0.5rem;
+      background-color: rgba(15, 23, 42, 0.35);
+      color: #e2e8f0;
+      line-height: 1.45;
+      white-space: normal;
+      word-break: break-all;
+    }
+
+    .list-row:hover .path-chip {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
     }
 
     /* ちょい補助：テキスト省略 */
@@ -553,8 +571,8 @@
             <div class="text-[15px] font-normal leading-snug break-words col-start-2 col-span-1" style="color: var(--text-heading);">
               ${toHtml(displayName(item.name))}
             </div>
-            <div class="relative text-[13px] font-mono break-all tabular-nums col-start-3 col-span-1 pr-7" style="color: var(--text-muted);">
-              ${toHtml(item.path)}
+            <div class="relative text-[13px] font-mono tabular-nums col-start-3 col-span-1 pr-7" style="color: var(--text-muted);">
+              <span class="path-chip">${toHtml(item.path)}</span>
               ${noteBadge}
             </div>
           </li>
@@ -581,7 +599,7 @@
             </div>
             <div class="p-3 space-y-3">
               ${subLabels.map(sub => `
-                <div class="space-y-1.5">
+                <div class="space-y-1.5" style="--path-chip-border: ${color.alpha(0.4)};">
                   <div class="flex items-center gap-2 px-2 py-0.5">
                     <span class="inline-block h-1 w-3 rounded-full" style="background-color:${color.base};"></span>
                     <span class="text-[15px] font-semibold tracking-wide uppercase" style="color: var(--text-heading);">
