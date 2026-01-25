@@ -206,6 +206,8 @@
       const escapeHtml = (str) => str.replace(/[&<>"']/g, (m) => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"
       }[m]));
+      // HTML出力用の安全変換
+      const toHtml = (value) => escapeHtml(safe(value));
       const uniq = (arr) => Array.from(new Set(arr));
       const typeIcon = {
         url: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5 7 17a4 4 0 1 1-5.7-5.6l4-4a4 4 0 0 1 5.6 0M13.5 10.5 17 7a4 4 0 0 1 5.7 5.6l-4 4a4 4 0 0 1-5.6 0"/><path d="m8 16 8-8"/></svg>`,
@@ -263,8 +265,21 @@
       };
 
       // クリップボードコピー + インライン表示
+      const fallbackCopy = (text) => {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      };
+
       const copyText = async (text, targetEl) => {
-        await navigator.clipboard.writeText(text);
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (e) {
+          fallbackCopy(text);
+        }
         inlineToast(targetEl, "コピーしました");
       };
 
@@ -445,8 +460,8 @@
           return `
             <button
               class="tab-btn ${isSel ? "active" : ""}"
-              data-tab="${escapeHtml(tab)}">
-              ${escapeHtml(tab)}
+              data-tab="${toHtml(tab)}">
+              ${toHtml(tab)}
             </button>
           `;
         }).join("");
@@ -478,9 +493,9 @@
           const isSel = current === c;
           return `
             <button class="w-full text-left rounded-xl px-3 py-1.5 text-sm mt-1 mb-1 cat-btn ${isSel ? "active" : ""}"
-                    data-cat="${escapeHtml(c)}">
+                    data-cat="${toHtml(c)}">
               <span class="inline-block h-1 w-3 rounded-full mr-2 align-middle" style="background-color:${color.alpha(0.6)};"></span>
-              <span class="align-middle">${escapeHtml(c)}</span>
+              <span class="align-middle">${toHtml(c)}</span>
             </button>
           `;
         }).join("");
@@ -501,27 +516,35 @@
         applyCategoryList(buildCategoryListHtml());
       };
 
+      const displayName = (name) => (name ? name : "(no name)");
+      const buildNoteBadge = (note) => {
+        if (!note) return "";
+        return `
+          <span class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-[9px] bg-slate-900/80" style="color: var(--text-muted);">i</span>
+        `;
+      };
+
       // 一覧のカード生成
       const listRow = (item) => {
         const meta = classifyPath(item.path);
         const c = colorForCat(item.category || "");
         const iconHtml = (meta.icon || "").trim();
+        const noteText = item.note || "";
+        const noteBadge = buildNoteBadge(noteText);
         return `
           <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-1 rounded-md shadow-sm grid grid-cols-[18px_150px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition overflow-visible list-row"
-              data-copy="${escapeHtml(item.path)}"
-              data-note="${item.note ? escapeHtml(item.note) : ""}">
+              data-copy="${toHtml(item.path)}"
+              data-note="${toHtml(noteText)}">
             <div class="w-0.5 rounded-full opacity-30 group-hover:opacity-90 transition col-span-3" style="background: linear-gradient(180deg, var(--accent) 0%, rgba(124,58,237,0.65) 100%);"></div>
             <div class="flex h-4 items-center justify-center text-[12px] leading-none col-start-1 col-span-1 z-10" style="color:${c.base};">
               ${iconHtml}
             </div>
             <div class="text-[13px] font-normal leading-snug break-words col-start-2 col-span-1" style="color: var(--text-heading);">
-              ${escapeHtml(item.name || "(no name)")}
+              ${toHtml(displayName(item.name))}
             </div>
             <div class="relative text-[11px] font-mono break-all tabular-nums col-start-3 col-span-1 pr-7" style="color: var(--text-muted);">
-              ${escapeHtml(item.path)}
-              ${item.note ? `
-                <span class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-[9px] bg-slate-900/80" style="color: var(--text-muted);">i</span>
-              ` : ""}
+              ${toHtml(item.path)}
+              ${noteBadge}
             </div>
           </li>
         `;
@@ -543,7 +566,7 @@
           <div class="rounded-xl border shadow-lg ring-1 overflow-hidden" style="background-color: var(--bg-layer); box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: var(--border);">
             <div class="px-4 py-2 grid grid-cols-[18px_1fr] items-center gap-3 border-b" style="background-color: ${color.alpha(0.25)}; border-color: var(--border);">
               <span class="inline-block h-1.5 w-5 rounded-full" style="background-color:${color.base};"></span>
-              <div class="text-base font-semibold leading-tight" style="color: var(--text-heading);">${escapeHtml(cat)}</div>
+              <div class="text-base font-semibold leading-tight" style="color: var(--text-heading);">${toHtml(cat)}</div>
             </div>
             <div class="p-3 space-y-3">
               ${subLabels.map(sub => `
@@ -551,7 +574,7 @@
                   <div class="flex items-center gap-2 px-2 py-0.5">
                     <span class="inline-block h-1 w-3 rounded-full" style="background-color:${color.base};"></span>
                     <span class="text-sm font-semibold tracking-wide uppercase" style="color: var(--text-heading);">
-                      ${escapeHtml(sub)}
+                      ${toHtml(sub)}
                     </span>
                   </div>
                   <ul class="space-y-0.75 pl-5 ml-3 border-l" style="border-color:${color.alpha(0.35)};">
@@ -632,17 +655,7 @@
         const row = event.target.closest("li[data-copy]");
         if (!row) return;
         const p = row.getAttribute("data-copy") || "";
-        try {
-          await copyText(p, row);
-        } catch (e) {
-          const ta = document.createElement("textarea");
-          ta.value = p;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand("copy");
-          ta.remove();
-          inlineToast(row, "コピーしました");
-        }
+        await copyText(p, row);
       };
 
       // ノート表示のマウスイベント群
