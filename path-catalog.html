@@ -231,14 +231,20 @@
         return { type: "unknown", icon: typeIcon.unknown };
       };
       // カテゴリ名から安定した色を生成
+      const colorCache = new Map();
       const colorForCat = (cat) => {
-        const key = (cat || "").split("").reduce((n, c) => n + c.charCodeAt(0) * 7, 0);
+        const keyName = cat || "";
+        const cached = colorCache.get(keyName);
+        if (cached) return cached;
+        const key = keyName.split("").reduce((n, c) => n + c.charCodeAt(0) * 7, 0);
         const hue = key % 360;
         const saturation = 65;
         const lightness = 60;
         const base = `hsl(${hue}deg ${saturation}% ${lightness}%)`;
         const alpha = (a) => `hsl(${hue}deg ${saturation}% ${lightness}% / ${a})`;
-        return { base, alpha };
+        const value = { base, alpha };
+        colorCache.set(keyName, value);
+        return value;
       };
 
       // カード上に短時間出すミニトースト
@@ -414,6 +420,18 @@
             .filter(Boolean)
         );
 
+      const groupByCategory = (items) => {
+        const catMap = {};
+        items.forEach(item => {
+          const cat = item.category || "(未設定カテゴリ)";
+          const sub = item.subCategory || "(未設定)";
+          if (!catMap[cat]) catMap[cat] = {};
+          if (!catMap[cat][sub]) catMap[cat][sub] = [];
+          catMap[cat][sub].push(item);
+        });
+        return catMap;
+      };
+
       // タブのナビゲーション描画
       const renderTabList = () => {
         const holder = $("tabNav");
@@ -502,14 +520,7 @@
         }
         empty.classList.add("hidden");
 
-        const catMap = {};
-        items.forEach(item => {
-          const cat = item.category || "(未設定カテゴリ)";
-          const sub = item.subCategory || "(未設定)";
-          if (!catMap[cat]) catMap[cat] = {};
-          if (!catMap[cat][sub]) catMap[cat][sub] = [];
-          catMap[cat][sub].push(item);
-        });
+        const catMap = groupByCategory(items);
         const catLabels = Object.keys(catMap);
 
         list.innerHTML = catLabels.map(cat => {
