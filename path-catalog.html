@@ -270,7 +270,6 @@
         el.className = "max-w-md whitespace-pre-line rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-[10px] shadow-lg";
         el.style.color = "var(--text-heading)";
         document.body.appendChild(el);
-        let showTimer;
         return {
           show(text, x, y) {
             el.textContent = text;
@@ -278,7 +277,6 @@
             el.style.top = `${y}px`;
             el.style.opacity = "1";
             el.style.transform = "translate(-8px, 6px)";
-            clearTimeout(showTimer);
           },
           hide() {
             el.style.opacity = "0";
@@ -388,13 +386,16 @@
         return { items, warnings };
       };
 
-      const { items, warnings } = normalizeCatalog(window.PATH_CATALOG);
+      const { items } = normalizeCatalog(window.PATH_CATALOG);
 
       const state = {
         all: normalize(items),
         tab: "",
         cat: "",
       };
+      const initialTabs = uniq(state.all.map(x => x.tab || DEFAULT_TAB));
+      state.tab = initialTabs[0] || "";
+      let activeNoteRow = null;
 
       const filtered = () => state.all.filter(x => {
         if (state.tab && x.tab !== state.tab) return false;
@@ -402,11 +403,18 @@
         return true;
       });
 
+      const getCats = () =>
+        uniq(
+          state.all
+            .filter(x => !state.tab || x.tab === state.tab)
+            .map(x => x.category)
+            .filter(Boolean)
+        );
+
       const renderTabList = () => {
         const holder = $("tabNav");
         if (!holder) return;
         const tabs = uniq(state.all.map(x => x.tab || DEFAULT_TAB));
-        if (!state.tab && tabs.length) state.tab = tabs[0];
         const current = state.tab;
 
         holder.innerHTML = tabs.map(tab => {
@@ -420,26 +428,10 @@
           `;
         }).join("");
 
-        holder.querySelectorAll("button[data-tab]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            state.tab = btn.getAttribute("data-tab") || "";
-            state.cat = "";
-            renderTabList();
-            renderCategoryList();
-            renderMain();
-          });
-        });
       };
 
       const renderCategoryList = () => {
-        const cats =
-          uniq(
-            state.all
-              .filter(x => !state.tab || x.tab === state.tab)
-              .map(x => x.category)
-              .filter(Boolean)
-          );
-        if (state.cat && !cats.includes(state.cat)) state.cat = "";
+        const cats = getCats();
         const current = state.cat;
         const tabBadge = $("tabIndicator");
         if (tabBadge) {
@@ -464,13 +456,6 @@
           `;
         }).join("");
 
-        $("catList").querySelectorAll("button[data-cat]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            state.cat = btn.getAttribute("data-cat") || "";
-            renderCategoryList();
-            renderMain();
-          });
-        });
       };
 
       const listRow = (item) => {
@@ -502,9 +487,6 @@
         const items = filtered();
         const list = $("list");
         const empty = $("empty");
-
-        const s1 = $("stats");
-        if (s1) s1.textContent = "";
 
         if (items.length === 0) {
           list.innerHTML = "";
@@ -552,36 +534,6 @@
           `;
         }).join("");
 
-        list.querySelectorAll("li[data-copy]").forEach(el => {
-          el.addEventListener("click", async () => {
-            const p = el.getAttribute("data-copy") || "";
-            try {
-              await copyText(p, el);
-            } catch (e) {
-              const ta = document.createElement("textarea");
-              ta.value = p;
-              document.body.appendChild(ta);
-              ta.select();
-              document.execCommand("copy");
-              ta.remove();
-              inlineToast(el, "コピーしました");
-            }
-          });
-        });
-
-        // ノートツールチップ（body直下で表示）
-        list.querySelectorAll("li[data-note]").forEach(el => {
-          const note = el.getAttribute("data-note") || "";
-          if (!note) return;
-          el.addEventListener("mouseenter", (e) => {
-            const rect = el.getBoundingClientRect();
-            noteTooltip.show(note, rect.right + 36, rect.bottom);
-          });
-          el.addEventListener("mousemove", (e) => {
-            noteTooltip.show(note, e.clientX + 36, e.clientY);
-          });
-          el.addEventListener("mouseleave", () => noteTooltip.hide());
-        });
       };
 
       const renderAll = () => {
@@ -590,7 +542,107 @@
         renderMain();
       };
 
-      renderAll();
+      const actions = {
+        setTab: (tab) => {
+          if (tab === state.tab) return;
+          state.tab = tab;
+          state.cat = "";
+          activeNoteRow = null;
+          noteTooltip.hide();
+          renderAll();
+        },
+        setCat: (cat) => {
+          const cats = getCats();
+          state.cat = cats.includes(cat) ? cat : "";
+          activeNoteRow = null;
+          noteTooltip.hide();
+          renderAll();
+        },
+      };
+
+      const onTabClick = (event) => {
+        const btn = event.target.closest("button[data-tab]");
+        if (!btn) return;
+        actions.setTab(btn.getAttribute("data-tab") || "");
+      };
+
+      const onCatClick = (event) => {
+        const btn = event.target.closest("button[data-cat]");
+        if (!btn) return;
+        actions.setCat(btn.getAttribute("data-cat") || "");
+      };
+
+      const onListClick = async (event) => {
+        const row = event.target.closest("li[data-copy]");
+        if (!row) return;
+        const p = row.getAttribute("data-copy") || "";
+        try {
+          await copyText(p, row);
+        } catch (e) {
+          const ta = document.createElement("textarea");
+          ta.value = p;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+          inlineToast(row, "コピーしました");
+        }
+      };
+
+      const onNoteOver = (event) => {
+        const row = event.target.closest("li[data-note]");
+        if (!row) return;
+        const note = row.getAttribute("data-note") || "";
+        if (!note || activeNoteRow === row) return;
+        activeNoteRow = row;
+        const rect = row.getBoundingClientRect();
+        noteTooltip.show(note, rect.right + 36, rect.bottom);
+      };
+
+      const onNoteMove = (event) => {
+        if (!activeNoteRow) return;
+        const note = activeNoteRow.getAttribute("data-note") || "";
+        if (!note) return;
+        noteTooltip.show(note, event.clientX + 36, event.clientY);
+      };
+
+      const onNoteOut = (event) => {
+        const row = event.target.closest("li[data-note]");
+        if (!row || !activeNoteRow) return;
+        if (row.contains(event.relatedTarget)) return;
+        activeNoteRow = null;
+        noteTooltip.hide();
+      };
+
+      const onListLeave = () => {
+        if (!activeNoteRow) return;
+        activeNoteRow = null;
+        noteTooltip.hide();
+      };
+
+      const bind = () => {
+        const tabNav = $("tabNav");
+        const catList = $("catList");
+        const list = $("list");
+
+        if (tabNav) tabNav.addEventListener("click", onTabClick);
+        if (catList) catList.addEventListener("click", onCatClick);
+        if (list) {
+          list.addEventListener("click", onListClick);
+          list.addEventListener("mouseover", onNoteOver);
+          list.addEventListener("mousemove", onNoteMove);
+          list.addEventListener("mouseout", onNoteOut);
+          list.addEventListener("mouseleave", onListLeave);
+        }
+      };
+
+      const init = () => {
+        bind();
+        renderAll();
+      };
+
+      const App = { init };
+      App.init();
     })();
   </script>
 </body>
