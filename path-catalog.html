@@ -213,21 +213,25 @@
         folder: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>`,
         unknown: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 9a2.5 2.5 0 1 1 3.9 2 2.5 2.5 0 0 0-1.4 2.2V14"/><path d="M12 18.01l.01-.011"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>`
       };
+      const isUrlPath = (value) => /^https?:\/\//i.test(value);
+      const isUncPath = (value) => /^\\\\/.test(value);
+      const isDrivePath = (value) => /^[a-zA-Z]:\\/.test(value);
+      const hasExtension = (value) => /\.[a-z0-9]{1,5}$/i.test(value);
+      const hasSeparator = (value) => /[\\\/]/.test(value);
       // パス種別（UNC/ドライブもファイル・フォルダに分類）とバッジ情報
       const classifyPath = (path) => {
         const p = path || "";
-        const isUrl = /^https?:\/\//i.test(p);
-        if (isUrl) return { type: "url", icon: typeIcon.url };
-        const isUnc = /^\\\\/.test(p);
-        const isDrive = /^[a-zA-Z]:\\/.test(p);
-        const hasExt = /\.[a-z0-9]{1,5}$/i.test(p);
+        if (isUrlPath(p)) return { type: "url", icon: typeIcon.url };
+        const isUnc = isUncPath(p);
+        const isDrive = isDrivePath(p);
+        const hasExt = hasExtension(p);
         if (isUnc || isDrive) {
           return hasExt
             ? { type: "file", icon: typeIcon.file }
             : { type: "folder", icon: typeIcon.folder };
         }
         if (hasExt) return { type: "file", icon: typeIcon.file };
-        if (/[\\\/]/.test(p)) return { type: "folder", icon: typeIcon.folder };
+        if (hasSeparator(p)) return { type: "folder", icon: typeIcon.folder };
         return { type: "unknown", icon: typeIcon.unknown };
       };
       // カテゴリ名から安定した色を生成
@@ -432,14 +436,11 @@
         return catMap;
       };
 
-      // タブのナビゲーション描画
-      const renderTabList = () => {
-        const holder = $("tabNav");
-        if (!holder) return;
+      const buildTabListHtml = () => {
         const tabs = uniq(state.all.map(x => x.tab || DEFAULT_TAB));
         const current = state.tab;
 
-        holder.innerHTML = tabs.map(tab => {
+        return tabs.map(tab => {
           const isSel = current === tab;
           return `
             <button
@@ -449,17 +450,22 @@
             </button>
           `;
         }).join("");
-
       };
 
-      // サイドバーのカテゴリ描画
-      const renderCategoryList = () => {
+      const applyTabList = (html) => {
+        const holder = $("tabNav");
+        if (!holder) return;
+        holder.innerHTML = html;
+      };
+
+      // タブのナビゲーション描画
+      const renderTabList = () => {
+        applyTabList(buildTabListHtml());
+      };
+
+      const buildCategoryListHtml = () => {
         const cats = getCats();
         const current = state.cat;
-        const tabBadge = $("tabIndicator");
-        if (tabBadge) {
-          tabBadge.textContent = state.tab ? `タブ: ${state.tab}` : "";
-        }
 
         const allBtn = `
           <button class="w-full text-left rounded-xl px-3 py-1.5 text-sm mt-1 mb-1 cat-btn ${current === "" ? "active" : ""}"
@@ -467,7 +473,7 @@
             すべて
           </button>`;
 
-        $("catList").innerHTML = allBtn + cats.map(c => {
+        return allBtn + cats.map(c => {
           const color = colorForCat(c);
           const isSel = current === c;
           return `
@@ -478,7 +484,21 @@
             </button>
           `;
         }).join("");
+      };
 
+      const applyCategoryList = (html) => {
+        const tabBadge = $("tabIndicator");
+        if (tabBadge) {
+          tabBadge.textContent = state.tab ? `タブ: ${state.tab}` : "";
+        }
+        const catList = $("catList");
+        if (!catList) return;
+        catList.innerHTML = html;
+      };
+
+      // サイドバーのカテゴリ描画
+      const renderCategoryList = () => {
+        applyCategoryList(buildCategoryListHtml());
       };
 
       // 一覧のカード生成
@@ -507,23 +527,15 @@
         `;
       };
 
-      // メインの一覧描画
-      const renderMain = () => {
-        const items = filtered();
-        const list = $("list");
-        const empty = $("empty");
-
+      const buildMainHtml = (items) => {
         if (items.length === 0) {
-          list.innerHTML = "";
-          empty.classList.remove("hidden");
-          return;
+          return { html: "", isEmpty: true };
         }
-        empty.classList.add("hidden");
 
         const catMap = groupByCategory(items);
         const catLabels = Object.keys(catMap);
 
-        list.innerHTML = catLabels.map(cat => {
+        const html = catLabels.map(cat => {
           const color = colorForCat(cat);
           const subMap = catMap[cat];
           const subLabels = Object.keys(subMap);
@@ -552,6 +564,27 @@
           `;
         }).join("");
 
+        return { html, isEmpty: false };
+      };
+
+      const applyMain = ({ html, isEmpty }) => {
+        const list = $("list");
+        const empty = $("empty");
+        if (!list || !empty) return;
+
+        if (isEmpty) {
+          list.innerHTML = "";
+          empty.classList.remove("hidden");
+          return;
+        }
+        empty.classList.add("hidden");
+        list.innerHTML = html;
+      };
+
+      // メインの一覧描画
+      const renderMain = () => {
+        const items = filtered();
+        applyMain(buildMainHtml(items));
       };
 
       // まとめて再描画（状態変更後に呼ぶ）
