@@ -97,8 +97,8 @@
     }
 
     .list-row:hover {
-      background-color: rgba(255, 255, 255, 0.07);
-      border-color: rgba(255, 255, 255, 0.12);
+      background-color: rgba(255, 255, 255, 0.04);
+      border-color: transparent;
     }
 
     .path-chip {
@@ -115,8 +115,17 @@
     }
 
     .list-row:hover .path-chip {
-      border-color: rgba(255, 255, 255, 0.2);
+      background-color: rgba(255, 255, 255, 0.06);
       color: #ffffff;
+    }
+
+    .item-icon {
+      transition: color 140ms ease, transform 140ms ease;
+    }
+
+    .list-row:hover .item-icon {
+      color: var(--item-color-strong, #ffffff);
+      transform: translateY(-2px) scale(1.22);
     }
 
     /* ちょい補助：テキスト省略 */
@@ -565,7 +574,7 @@
               data-copy="${toHtml(item.path)}"
               data-note="${toHtml(noteText)}">
             <div class="w-0.5 rounded-full opacity-30 group-hover:opacity-90 transition col-span-3" style="background: linear-gradient(180deg, var(--accent) 0%, rgba(124,58,237,0.65) 100%);"></div>
-            <div class="flex h-4 items-center justify-center text-[13px] leading-none col-start-1 col-span-1 z-10" style="color:${c.base};">
+            <div class="item-icon flex h-4 items-center justify-center text-[13px] leading-none col-start-1 col-span-1 z-10" style="color:${c.base}; --item-color-strong: ${c.alpha(0.9)};">
               ${iconHtml}
             </div>
             <div class="text-[15px] font-normal leading-snug break-words col-start-2 col-span-1" style="color: var(--text-heading);">
@@ -593,8 +602,9 @@
           const subLabels = Object.keys(subMap);
           return `
           <div class="rounded-xl border shadow-lg ring-1 overflow-hidden" style="background-color: var(--bg-layer); box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: var(--border);">
-            <div class="px-4 py-2 grid grid-cols-[18px_1fr] items-center gap-3 border-b" style="background-color: ${color.alpha(0.25)}; border-color: var(--border);">
-              <span class="inline-block h-1.5 w-5 rounded-full" style="background-color:${color.base};"></span>
+            <div class="relative px-4 py-1.5 grid grid-cols-[18px_1fr] items-center gap-3 border-b" style="background-color: ${color.alpha(0.12)}; border-color: ${color.alpha(0.2)};">
+              <span class="absolute left-0 top-0 h-px w-full" style="background-color:${color.alpha(0.35)};"></span>
+              <span class="inline-block h-1 w-5 rounded-full" style="background-color:${color.base};"></span>
               <div class="text-lg font-semibold leading-tight" style="color: var(--text-heading);">${toHtml(cat)}</div>
             </div>
             <div class="p-3 space-y-3">
