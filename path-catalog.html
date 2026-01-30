@@ -560,8 +560,10 @@
 
         const allBtn = `
           <button class="w-full text-left rounded-none px-3 py-2 text-md cat-btn ${current === "" ? "active" : ""}"
-                  data-cat="">
-            すべて
+                  data-cat=""
+                  style="--cat-color: var(--accent);">
+            <span class="cat-line inline-block rounded-full"></span>
+            <span>すべて</span>
           </button>`;
 
         return allBtn + cats.map(c => {
