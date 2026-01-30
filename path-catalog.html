@@ -626,7 +626,7 @@
         const noteText = item.note || "";
         const noteBadge = buildNoteBadge(noteText);
         return `
-          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-1 rounded-md shadow-sm grid grid-cols-[18px_220px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition overflow-visible list-row"
+          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-0.5 rounded-md shadow-sm grid grid-cols-[18px_220px_minmax(0,1fr)] gap-x-3 gap-y-0 items-center transition overflow-visible list-row"
               data-copy="${toHtml(item.path)}"
               data-note="${toHtml(noteText)}">
             <div class="row-accent w-0.5 rounded-full opacity-30 group-hover:opacity-90 transition col-span-3"></div>
@@ -668,7 +668,7 @@
               ${toHtml(sub)}
             </span>
           </div>
-          <ul class="subcat-list space-y-0.75 pl-5 ml-3 border-l">
+          <ul class="subcat-list space-y-0.5 pl-5 ml-3 border-l">
             ${items.map(buildListRow).join("")}
           </ul>
         </div>
