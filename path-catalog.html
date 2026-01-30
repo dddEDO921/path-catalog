@@ -83,6 +83,9 @@
       color: var(--text-muted);
       transition: background-color 140ms ease, color 140ms ease;
       position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .cat-btn:hover {
@@ -97,22 +100,21 @@
     }
 
     .cat-line {
-      transform-origin: left center;
       width: 10px;
       height: 3px;
       background-color: var(--cat-color, var(--accent));
       opacity: 0.35;
-      transition: transform 140ms ease, opacity 140ms ease, height 140ms ease;
+      transition: width 140ms ease, opacity 140ms ease, height 140ms ease;
     }
 
     .cat-btn:hover .cat-line {
-      transform: scaleX(2);
+      width: 18px;
       height: 6px;
       opacity: 0.7;
     }
 
     .cat-btn.active .cat-line {
-      transform: scaleX(2);
+      width: 18px;
       height: 6px;
       opacity: 1;
     }
