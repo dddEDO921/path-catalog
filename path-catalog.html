@@ -140,11 +140,12 @@
       line-height: 1.45;
       white-space: normal;
       word-break: break-all;
+      transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
     }
 
+    .list-row .path-chip:hover,
     .list-row:hover .path-chip {
-      background-color: rgba(255, 255, 255, 0.06);
-      color: #ffffff;
+      transform: translateY(-1px);
     }
 
     .item-icon {
@@ -159,7 +160,10 @@
 
     .list-row:hover .item-name {
       color: #ffffff;
-      font-weight: 600;
+      transform: translateY(-1px);
+    }
+
+    .list-row:hover .path-chip {
       transform: translateY(-1px);
     }
 
@@ -956,5 +960,3 @@
 </body>
 
 </html>
-
-
