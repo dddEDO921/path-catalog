@@ -342,14 +342,35 @@
       };
       // カテゴリ名から安定した色を生成
       const colorCache = new Map();
+      const assignedHues = [];
+      const minHueDistance = 7;
+      const lightnessRange = { min: 52, max: 68 };
+      const hueDistance = (a, b) => {
+        const diff = Math.abs(a - b) % 360;
+        return Math.min(diff, 360 - diff);
+      };
+      const isHueFarEnough = (hue) =>
+        assignedHues.every((used) => hueDistance(hue, used) >= minHueDistance);
+      const pickHue = (seed) => {
+        const goldenAngle = 137.508;
+        let hue = seed % 360;
+        if (isHueFarEnough(hue)) return hue;
+        for (let i = 1; i <= 36; i++) {
+          const candidate = (seed + goldenAngle * i) % 360;
+          if (isHueFarEnough(candidate)) return candidate;
+        }
+        return hue;
+      };
       const colorForCat = (cat) => {
         const keyName = cat || "";
         const cached = colorCache.get(keyName);
         if (cached) return cached;
         const key = keyName.split("").reduce((n, c) => n + c.charCodeAt(0) * 7, 0);
-        const hue = key % 360;
+        const hue = pickHue(key);
+        assignedHues.push(hue);
         const saturation = 65;
-        const lightness = 60;
+        const lightnessSpan = lightnessRange.max - lightnessRange.min + 1;
+        const lightness = lightnessRange.min + (Math.abs(key * 13) % lightnessSpan);
         const base = `hsl(${hue}deg ${saturation}% ${lightness}%)`;
         const alpha = (a) => `hsl(${hue}deg ${saturation}% ${lightness}% / ${a})`;
         const value = { base, alpha };
