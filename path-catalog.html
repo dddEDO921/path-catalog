@@ -195,6 +195,27 @@
       background-color: var(--cat-color, var(--accent));
     }
 
+    .subcat-line {
+      display: inline-block;
+      height: 4px;
+      width: 12px;
+      border-radius: 999px;
+      opacity: 0.65;
+      transition: width 160ms ease, opacity 160ms ease, height 160ms ease;
+    }
+
+    .subcat-toggle[aria-expanded="true"] .subcat-line {
+      width: 12px;
+      height: 4px;
+      opacity: 0.8;
+    }
+
+    .subcat-toggle[aria-expanded="false"] .subcat-line {
+      width: 6px;
+      height: 6px;
+      opacity: 0.35;
+    }
+
     .subcat-list {
       border-color: var(--subcat-border, var(--border));
     }
@@ -732,11 +753,10 @@
                     data-subcat-toggle="${toHtml(key)}"
                     aria-expanded="${(!isCollapsed).toString()}"
                     aria-controls="${listId}">
-              <span class="subcat-line inline-block h-1 w-3 rounded-full"></span>
+              <span class="subcat-line"></span>
               <span class="text-md font-semibold tracking-wide uppercase" style="color: var(--text-heading);">
                 ${toHtml(sub)}
               </span>
-              <span class="ml-auto text-xs text-slate-400" data-subcat-icon>${isCollapsed ? "+" : "-"}</span>
             </button>
             <ul id="${listId}" class="subcat-list space-y-0.5 pl-5 ml-3 ${isCollapsed ? "hidden" : ""}">
               ${items.map(buildListRow).join("")}
@@ -945,12 +965,10 @@
         if (!btn) return;
         const key = btn.getAttribute("data-subcat-toggle") || "";
         const list = btn.nextElementSibling;
-        const icon = btn.querySelector("[data-subcat-icon]");
         if (!list || !list.classList.contains("subcat-list")) return;
         const willCollapse = !list.classList.contains("hidden");
         list.classList.toggle("hidden");
         btn.setAttribute("aria-expanded", (!willCollapse).toString());
-        if (icon) icon.textContent = willCollapse ? "+" : "-";
         if (key) {
           if (willCollapse) collapsedSubcats.add(key);
           else collapsedSubcats.delete(key);
