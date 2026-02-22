@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -7,6 +8,29 @@
 
   <!-- 開発・配布を簡単にするため CDN 版 Tailwind を利用 -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        fontSize: {
+          xxs: "10px",
+          xs: "11px",
+          sm: "12px",
+          base: "13px",
+          md: "14px",
+          lg: "16px",
+          xl: "20px",
+          "2xl": "24px",
+          "3xl": "30px",
+          "4xl": "36px",
+          "5xl": "48px",
+          "6xl": "60px",
+          "7xl": "72px",
+          "8xl": "96px",
+          "9xl": "128px"
+        }
+      }
+    };
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,90 +47,246 @@
       --text-body: #cbd5e1;
       --text-muted: #9ca3af;
     }
+
     body {
       font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg-base);
       color: var(--text-body);
     }
+
+
     .tab-btn {
-      border: 1px solid transparent;
-      color: #cbd5e1;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
       background-color: transparent;
       padding: 0.4rem 0.9rem;
-      border-radius: 0.75rem 0.75rem 0 0;
+      border-radius: 0.6rem 0.6rem 0 0;
       font-weight: 600;
-      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+      transition: border-color 120ms ease, color 120ms ease;
     }
+
     .tab-btn:hover {
-      background-color: var(--bg-layer);
-      border-color: var(--border);
+      border-bottom-color: var(--border);
       color: #ffffff;
     }
+
     .tab-btn.active {
-      background-color: var(--bg-layer);
-      border-color: var(--accent);
+      border-bottom-color: var(--accent);
       color: #ffffff;
-      box-shadow: 0 10px 30px -18px rgba(0,0,0,0.9);
     }
+
     .cat-btn {
-      background-color: var(--bg-layer);
-      border: 1px solid var(--border);
-      color: #e5e7eb;
-      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      background-color: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      transition: background-color 140ms ease, color 140ms ease;
       position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
+
     .cat-btn:hover {
-      background-color: var(--accent-soft);
-      border-color: var(--accent);
-      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.04);
+      color: var(--text-heading);
     }
+
     .cat-btn.active {
-      background-color: var(--bg-layer);
-      border-color: var(--accent);
+      background-color: rgba(255, 255, 255, 0.07);
       color: #ffffff;
-      box-shadow: 0 0 0 1px rgba(124,58,237,0.35);
+      font-weight: 700;
     }
+
+    .cat-line {
+      width: 10px;
+      height: 3px;
+      background-color: var(--cat-color, var(--accent));
+      opacity: 0.35;
+      transition: width 140ms ease, opacity 140ms ease, height 140ms ease;
+    }
+
+    .cat-btn:hover .cat-line {
+      width: 18px;
+      height: 6px;
+      opacity: 0.7;
+    }
+
+    .cat-btn.active .cat-line {
+      width: 18px;
+      height: 6px;
+      opacity: 1;
+    }
+
     .list-row {
       background-color: transparent;
       border: 1px solid transparent;
     }
+
     .list-row:hover {
-      background-color: var(--accent-soft);
-      border-color: var(--accent);
+      background-color: rgba(255, 255, 255, 0.02);
+      border-color: transparent;
     }
-    /* ちょい補助：テキスト省略 */
-    .line-clamp-2{
-      display:-webkit-box;
-      -webkit-line-clamp:2;
-      -webkit-box-orient:vertical;
-      overflow:hidden;
+
+    .path-chip {
+      display: inline-block;
+      max-width: 100%;
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--path-chip-border, rgba(124, 58, 237, 0.35));
+      border-radius: 0.5rem;
+      background-color: rgba(15, 23, 42, 0.35);
+      color: #e2e8f0;
+      line-height: 1.45;
+      white-space: normal;
+      word-break: break-all;
+      transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
     }
+
+    .list-row .path-chip:hover,
+    .list-row:hover .path-chip {
+      transform: translateY(-1px);
+    }
+
+    .item-icon {
+      color: var(--item-color, var(--accent));
+      transition: color 140ms ease, transform 140ms ease;
+    }
+
+    .list-row:hover .item-icon {
+      color: var(--item-color-strong, #ffffff);
+      transform: translateY(-1px) scale(1.12);
+    }
+
+    .list-row:hover .item-name {
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .list-row:hover .path-chip {
+      transform: translateY(-1px);
+    }
+
+    .row-accent {
+      background: linear-gradient(180deg, var(--accent) 0%, rgba(124, 58, 237, 0.65) 100%);
+    }
+
+    .note-badge {
+      color: var(--text-muted);
+    }
+
+    .cat-card {
+      background-color: var(--bg-layer);
+      border-color: var(--border);
+      box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--cat-glow, transparent);
+    }
+
+    .cat-card__header {
+      background-color: var(--cat-header-bg, transparent);
+      border-color: var(--cat-header-border, var(--border));
+    }
+
+    .cat-card__topline {
+      background-color: var(--cat-line, transparent);
+    }
+
+    .cat-card__pill,
+    .subcat-line {
+      background-color: var(--cat-color, var(--accent));
+    }
+
+    .subcat-line {
+      display: inline-block;
+      height: 4px;
+      width: 12px;
+      border-radius: 999px;
+      opacity: 0.65;
+      transition: width 160ms ease, opacity 160ms ease, height 160ms ease;
+    }
+
+    .subcat-toggle[aria-expanded="true"] .subcat-line {
+      width: 12px;
+      height: 4px;
+      opacity: 0.8;
+    }
+
+    .subcat-toggle[aria-expanded="false"] .subcat-line {
+      width: 6px;
+      height: 6px;
+      opacity: 0.35;
+    }
+
+    .subcat-list {
+      border-color: var(--subcat-border, var(--border));
+    }
+
+    .subcat-toggle {
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+    }
+
+    .subcat-toggle:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      transform: translateY(-1px);
+    }
+
   </style>
 </head>
 
 <body class="text-slate-100">
   <div class="min-h-dvh flex flex-col">
 
-    <header class="border-b backdrop-blur px-5 py-2" style="background-color: var(--bg-layer); border-color: var(--border);">
+    <header class="border-b backdrop-blur px-5 py-2"
+      style="background-color: var(--bg-layer); border-color: var(--border);">
       <div class="grid grid-cols-[260px_1fr] items-end">
         <div class="flex items-center gap-2.5" style="color: var(--text-heading);">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo" class="h-9 w-auto">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo"
+            class="h-9 w-auto">
             <defs>
               <style>
-                .badge { fill: #7c3aed; }
-                .sqFront { fill: #f8fafc; }
-                .sqBack  { fill: #e2e8f0; opacity: 0.55; }
-                .slash { stroke: #f8fafc; stroke-width: 22; stroke-linecap: round; fill: none; }
-                .wordMain { fill: #f8fafc; font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 700; letter-spacing: -0.02em; }
-                .wordSub { fill: #cbd5e1; font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 88px; font-weight: 600; letter-spacing: -0.02em; }
+                .badge {
+                  fill: #7c3aed;
+                }
+
+                .sqFront {
+                  fill: #f8fafc;
+                }
+
+                .sqBack {
+                  fill: #e2e8f0;
+                  opacity: 0.55;
+                }
+
+                .slash {
+                  stroke: #f8fafc;
+                  stroke-width: 22;
+                  stroke-linecap: round;
+                  fill: none;
+                }
+
+                .wordMain {
+                  fill: #f8fafc;
+                  font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                  font-size: 88px;
+                  font-weight: 700;
+                  letter-spacing: -0.02em;
+                }
+
+                .wordSub {
+                  fill: #cbd5e1;
+                  font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                  font-size: 88px;
+                  font-weight: 600;
+                  letter-spacing: -0.02em;
+                }
               </style>
             </defs>
             <g transform="translate(24,24) scale(0.72)">
-              <rect class="badge" x="16" y="16" width="224" height="224" rx="64"/>
+              <rect class="badge" x="16" y="16" width="224" height="224" rx="64" />
               <path class="slash" d="M50 165 L94 91" />
-              <rect class="sqBack"  x="136" y="80" width="80" height="80" rx="12"/>
-              <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12"/>
+              <rect class="sqBack" x="136" y="80" width="80" height="80" rx="12" />
+              <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12" />
             </g>
             <g transform="translate(280,150)">
               <text x="0" y="0" class="wordMain">Path</text>
@@ -124,28 +304,30 @@
       <aside class="border-r" style="background-color: var(--bg-base); border-color: var(--border);">
         <div class="p-4 sticky top-0">
           <div class="flex items-center justify-between">
-            <h2 class="text-xs font-semibold" style="color: var(--text-heading);">カテゴリ</h2>
-            <span id="tabIndicator" class="text-[10px]" style="color: var(--text-muted);"></span>
+            <h2 class="text-base font-semibold" style="color: var(--text-heading);">カテゴリ</h2>
           </div>
 
-          <nav class="mt-2 space-y-1" id="catList"></nav>
+          <nav class="mt-2 space-y-0" id="catList"></nav>
 
-          <div class="mt-4 text-[11px]" style="color: var(--text-muted);">
+          <div class="mt-4 text-sm" style="color: var(--text-muted);">
             <p>操作:</p>
             <ul class="list-disc ml-4 mt-1 space-y-1">
-              <li>カテゴリで絞り込み</li>
-              <li>カードをクリックするとパスをコピー</li>
+              <li>一覧のパスをクリックでコピー</li>
+              <li>キー: ←/→ タブ、↑/↓ カテゴリ</li>
             </ul>
           </div>
+
+          <div id="warningPanel" class="mt-4 hidden"></div>
         </div>
       </aside>
 
       <!-- Main -->
       <main class="p-5 space-y-4" style="background-color: var(--bg-base);">
-        <section id="list" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></section>
+        <section id="list" class="grid grid-cols-1 gap-4"></section>
 
         <section id="empty" class="hidden mt-10">
-          <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center" style="color: var(--text-muted);">
+          <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center"
+            style="color: var(--text-muted);">
             条件に一致するデータがありません
           </div>
         </section>
@@ -157,53 +339,496 @@
 
   <script>
     (() => {
-      // DOM helper / 安全変換
+      // 基本ユーティリティ（DOM取得・文字列安全化）
       const $ = (id) => document.getElementById(id);
-      const safe = (v) => (v ?? "").toString();
-      const escapeHtml = (str) => str.replace(/[&<>"']/g, (m)=>({
-        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+      const toSafeString = (value) => (value ?? "").toString();
+      const escapeHtml = (str) => str.replace(/[&<>"']/g, (m) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"
       }[m]));
-      const uniq = (arr) => Array.from(new Set(arr));
-      const sortJa = (arr) => arr.slice().sort((a,b)=>a.localeCompare(b, "ja"));
-      const typeIcon = {
-        url: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5 7 17a4 4 0 1 1-5.7-5.6l4-4a4 4 0 0 1 5.6 0M13.5 10.5 17 7a4 4 0 0 1 5.7 5.6l-4 4a4 4 0 0 1-5.6 0"/><path d="m8 16 8-8"/></svg>`,
-        file: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>`,
-        folder: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>`,
-        unknown: `<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 9a2.5 2.5 0 1 1 3.9 2 2.5 2.5 0 0 0-1.4 2.2V14"/><path d="M12 18.01l.01-.011"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>`
+      // HTML出力用の安全変換
+      const toHtml = (value) => escapeHtml(toSafeString(value));
+      const dedupe = (arr) => Array.from(new Set(arr));
+      // パス種別の判定用アイコン
+      const typeIcons = {
+        url: `<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5 7 17a4 4 0 1 1-5.7-5.6l4-4a4 4 0 0 1 5.6 0M13.5 10.5 17 7a4 4 0 0 1 5.7 5.6l-4 4a4 4 0 0 1-5.6 0"/><path d="m8 16 8-8"/></svg>`,
+        file: `<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></svg>`,
+        folder: `<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>`,
+        unknown: `<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 9a2.5 2.5 0 1 1 3.9 2 2.5 2.5 0 0 0-1.4 2.2V14"/><path d="M12 18.01l.01-.011"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>`
       };
-      // パス種別（UNC/ドライブもファイル・フォルダに分類）とバッジ情報
+      // パス判定用の小関数（テストしやすい粒度）
+      const isUrlPath = (value) => /^https?:\/\//i.test(value);
+      const isUncPath = (value) => /^\\\\/.test(value);
+      const isDrivePath = (value) => /^[a-zA-Z]:\\/.test(value);
+      const hasExtension = (value) => /\.[a-z0-9]{1,5}$/i.test(value);
+      const hasSeparator = (value) => /[\\\/]/.test(value);
+      // パス種別（UNC/ドライブもファイル・フォルダに分類）とアイコン情報
       const classifyPath = (path) => {
         const p = path || "";
-        const isUrl = /^https?:\/\//i.test(p);
-        if (isUrl) return { type: "url", icon: typeIcon.url };
-        const isUnc = /^\\\\/.test(p);
-        const isDrive = /^[a-zA-Z]:\\/.test(p);
-        const hasExt = /\.[a-z0-9]{1,5}$/i.test(p);
+        if (isUrlPath(p)) return { type: "url", icon: typeIcons.url };
+        const isUnc = isUncPath(p);
+        const isDrive = isDrivePath(p);
+        const hasExt = hasExtension(p);
         if (isUnc || isDrive) {
           return hasExt
-            ? { type: "file", icon: typeIcon.file }
-            : { type: "folder", icon: typeIcon.folder };
+            ? { type: "file", icon: typeIcons.file }
+            : { type: "folder", icon: typeIcons.folder };
         }
-        if (hasExt) return { type: "file", icon: typeIcon.file };
-        if (/[\\\/]/.test(p)) return { type: "folder", icon: typeIcon.folder };
-        return { type: "unknown", icon: typeIcon.unknown };
+        if (hasExt) return { type: "file", icon: typeIcons.file };
+        if (hasSeparator(p)) return { type: "folder", icon: typeIcons.folder };
+        return { type: "unknown", icon: typeIcons.unknown };
       };
       // カテゴリ名から安定した色を生成
+      const colorCache = new Map();
+      const assignedHues = [];
+      const minHueDistance = 7;
+      const lightnessRange = { min: 52, max: 68 };
+      const hueDistance = (a, b) => {
+        const diff = Math.abs(a - b) % 360;
+        return Math.min(diff, 360 - diff);
+      };
+      const isHueFarEnough = (hue) =>
+        assignedHues.every((used) => hueDistance(hue, used) >= minHueDistance);
+      const pickHue = (seed) => {
+        const goldenAngle = 137.508;
+        let hue = seed % 360;
+        if (isHueFarEnough(hue)) return hue;
+        for (let i = 1; i <= 36; i++) {
+          const candidate = (seed + goldenAngle * i) % 360;
+          if (isHueFarEnough(candidate)) return candidate;
+        }
+        return hue;
+      };
       const colorForCat = (cat) => {
-        const key = (cat || "").split("").reduce((n, c) => n + c.charCodeAt(0)*7, 0);
-        const hue = key % 360;
+        const keyName = cat || "";
+        const cached = colorCache.get(keyName);
+        if (cached) return cached;
+        const key = keyName.split("").reduce((n, c) => n + c.charCodeAt(0) * 7, 0);
+        const hue = pickHue(key);
+        assignedHues.push(hue);
         const saturation = 65;
-        const lightness = 60;
+        const lightnessSpan = lightnessRange.max - lightnessRange.min + 1;
+        const lightness = lightnessRange.min + (Math.abs(key * 13) % lightnessSpan);
         const base = `hsl(${hue}deg ${saturation}% ${lightness}%)`;
         const alpha = (a) => `hsl(${hue}deg ${saturation}% ${lightness}% / ${a})`;
-        return { base, alpha };
+        const value = { base, alpha };
+        colorCache.set(keyName, value);
+        return value;
+      };
+
+      // タブ未指定時に使うデフォルト名
+      const DEFAULT_TAB = "共通";
+      const SUBCAT_STORAGE_KEY = "pathCatalog.subcatCollapsed.v1";
+      const subcatKeyFor = (tab, cat, sub) =>
+        JSON.stringify([tab || "", cat || "", sub || ""]);
+      const loadCollapsedSubcats = () => {
+        try {
+          const raw = localStorage.getItem(SUBCAT_STORAGE_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          return new Set(Array.isArray(parsed) ? parsed : []);
+        } catch (e) {
+          return new Set();
+        }
+      };
+      const saveCollapsedSubcats = (set) => {
+        try {
+          localStorage.setItem(SUBCAT_STORAGE_KEY, JSON.stringify(Array.from(set)));
+        } catch (e) {
+          // ストレージが使えない場合は無視
+        }
+      };
+      const collapsedSubcats = loadCollapsedSubcats();
+
+      // 外部データを安全な形に正規化（空や未定義を文字列化）
+      const normalize = (items) => (items || []).map((x, i) => ({
+        id: i + 1,
+        tab: toSafeString(x.tab || DEFAULT_TAB),
+        category: toSafeString(x.category),
+        subCategory: toSafeString(x.subCategory),
+        name: toSafeString(x.name),
+        path: toSafeString(x.path),
+        note: toSafeString(x.note)
+      }));
+
+      // 階層データをフラット化し、問題点は warnings に収集
+      function normalizeCatalog(raw) {
+        const warnings = [];
+        const items = [];
+
+        const warn = (msg, meta) => warnings.push({ msg, meta });
+
+        if (!Array.isArray(raw)) {
+          warn("window.PATH_CATALOG が配列ではありません", { type: typeof raw });
+          return { items, warnings };
+        }
+
+        for (let t = 0; t < raw.length; t++) {
+          const tabBlock = raw[t];
+          if (!Array.isArray(tabBlock) || tabBlock.length < 2) {
+            warn("タブブロックが不正です", { t, tabBlock });
+            continue;
+          }
+          const tab = String(tabBlock[0] ?? "").trim();
+          const categories = tabBlock[1];
+
+          if (!Array.isArray(categories)) {
+            warn("カテゴリ配列が不正です", { t, tab });
+            continue;
+          }
+
+          for (let c = 0; c < categories.length; c++) {
+            const catBlock = categories[c];
+            if (!Array.isArray(catBlock) || catBlock.length < 2) {
+              warn("カテゴリブロックが不正です", { t, c, catBlock });
+              continue;
+            }
+            const category = String(catBlock[0] ?? "").trim();
+            const subs = catBlock[1];
+
+            if (!Array.isArray(subs)) {
+              warn("サブカテゴリ配列が不正です", { t, tab, c, category });
+              continue;
+            }
+
+            for (let s = 0; s < subs.length; s++) {
+              const subBlock = subs[s];
+              if (!Array.isArray(subBlock) || subBlock.length < 2) {
+                warn("サブカテゴリブロックが不正です", { t, c, s, subBlock });
+                continue;
+              }
+              const subCategory = String(subBlock[0] ?? "").trim(); // 空OK
+              const rows = subBlock[1];
+
+              if (!Array.isArray(rows)) {
+                warn("アイテム配列が不正です", { t, tab, c, category, s, subCategory });
+                continue;
+              }
+
+              for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                if (!Array.isArray(row)) {
+                  warn("アイテム行が配列ではありません", { t, c, s, i, row });
+                  continue;
+                }
+
+                // 3列固定だが、不足は補完（止めない）
+                if (row.length !== 3) {
+                  warn("アイテム行の列数が3ではありません（不足は空で補完）", { t, c, s, i, cols: row.length });
+                }
+
+                const name = String(row[0] ?? "").trim();
+                const path = row[1] ?? "";
+                const note = String(row[2] ?? ""); // 空OK
+
+                if (!name) warn("name が空です（表示は継続）", { t, c, s, i });
+                if (!path) warn("path が空です（表示は継続）", { t, c, s, i });
+
+                items.push({
+                  tab: tab || "未分類",
+                  category,
+                  subCategory,
+                  name,
+                  path,
+                  note,
+                  _meta: { t, c, s, i }
+                });
+              }
+            }
+          }
+        }
+
+        return { items, warnings };
+      };
+
+      // 外部データをフラット化して取り出す
+      const { items, warnings } = normalizeCatalog(window.PATH_CATALOG);
+
+      // UIの選択状態
+      const state = {
+        all: normalize(items),
+        tab: "",
+        cat: "",
+      };
+      const initialTabs = dedupe(state.all.map(x => x.tab || DEFAULT_TAB));
+      state.tab = initialTabs[0] || "";
+      let activeNoteRow = null;
+
+      // 現在の選択状態で絞り込み
+      const getFilteredItems = () => state.all.filter(x => {
+        if (state.tab && x.tab !== state.tab) return false;
+        if (state.cat && x.category !== state.cat) return false;
+        return true;
+      });
+
+      // 現在のタブに応じたカテゴリ一覧
+      const getTabs = () => dedupe(state.all.map(x => x.tab || DEFAULT_TAB));
+      const getCats = () =>
+        dedupe(
+          state.all
+            .filter(x => !state.tab || x.tab === state.tab)
+            .map(x => x.category)
+            .filter(Boolean)
+        );
+
+      // メイン描画用にカテゴリ→サブカテゴリへグルーピング
+      const groupByCategory = (items) => {
+        const catMap = {};
+        items.forEach(item => {
+          const cat = item.category || "(未設定カテゴリ)";
+          const sub = item.subCategory || "(未設定)";
+          if (!catMap[cat]) catMap[cat] = {};
+          if (!catMap[cat][sub]) catMap[cat][sub] = [];
+          catMap[cat][sub].push(item);
+        });
+        return catMap;
+      };
+
+      // タブナビのHTML生成
+      const buildTabListHtml = () => {
+        const tabs = getTabs();
+        const current = state.tab;
+
+        return tabs.map(tab => {
+          const isSel = current === tab;
+          return `
+            <button
+              class="tab-btn text-lg ${isSel ? "active" : ""}"
+              data-tab="${toHtml(tab)}">
+              ${toHtml(tab)}
+            </button>
+          `;
+        }).join("");
+      };
+
+      const applyTabList = (html) => {
+        const holder = $("tabNav");
+        if (!holder) return;
+        holder.innerHTML = html;
+      };
+
+      // タブのナビゲーション描画
+      const renderTabList = () => {
+        applyTabList(buildTabListHtml());
+      };
+
+      // サイドバーカテゴリのHTML生成
+      const buildCategoryListHtml = () => {
+        const cats = getCats();
+        const current = state.cat;
+
+        const allBtn = `
+          <button class="w-full text-left rounded-none px-3 py-2 text-md cat-btn ${current === "" ? "active" : ""}"
+                  data-cat=""
+                  style="--cat-color: var(--accent);">
+            <span class="cat-line inline-block rounded-full"></span>
+            <span>すべて</span>
+          </button>`;
+
+        return allBtn + cats.map(c => {
+          const color = colorForCat(c);
+          const isSel = current === c;
+          return `
+            <button class="w-full text-left rounded-none px-3 py-2 text-md cat-btn ${isSel ? "active" : ""}"
+                    data-cat="${toHtml(c)}"
+                    style="--cat-color: ${color.base};">
+              <span class="cat-line inline-block rounded-full mr-2 align-middle"></span>
+              <span class="align-middle">${toHtml(c)}</span>
+            </button>
+          `;
+        }).join("");
+      };
+
+      const applyCategoryList = (html) => {
+        const catList = $("catList");
+        if (!catList) return;
+        catList.innerHTML = html;
+      };
+
+      // サイドバーのカテゴリ描画
+      const renderCategoryList = () => {
+        applyCategoryList(buildCategoryListHtml());
+      };
+
+      // 警告メタ情報の短い表示テキストを作る
+      const formatWarningMeta = (meta) => {
+        if (!meta) return "";
+        const entries = Object.entries(meta);
+        if (!entries.length) return "";
+        return entries.map(([key, value]) => `${key}:${value}`).join(" ");
+      };
+
+      const buildWarningListItem = (warning) => {
+        const metaText = formatWarningMeta(warning.meta);
+        return `
+          <li class="flex flex-col gap-0.5">
+            <span>${toHtml(warning.msg)}</span>
+            ${metaText ? `<span class="text-rose-300/80 font-mono">${toHtml(metaText)}</span>` : ""}
+          </li>
+        `;
+      };
+
+      // 警告パネルのHTML生成
+      const buildWarningListHtml = (warningList) => `
+        <div class="rounded-lg border border-rose-900/40 bg-rose-950/25 p-3">
+          <div class="flex items-center justify-between text-sm font-semibold text-rose-200">
+            <span>警告</span>
+            <span class="text-rose-300/80">${warningList.length}件</span>
+          </div>
+          <ul class="mt-2 space-y-1.5 text-xs text-rose-100/80">
+            ${warningList.map(buildWarningListItem).join("")}
+          </ul>
+        </div>
+      `;
+
+      // 警告パネルの描画
+      const renderWarnings = (warningList) => {
+        const panel = $("warningPanel");
+        if (!panel) return;
+        if (!warningList.length) {
+          panel.classList.add("hidden");
+          panel.innerHTML = "";
+          return;
+        }
+        panel.classList.remove("hidden");
+        panel.innerHTML = buildWarningListHtml(warningList);
+      };
+
+      // 空欄の表示名はプレースホルダで補完
+      const formatDisplayName = (name) => (name ? name : "(no name)");
+      const buildNoteBadge = (note) => {
+        if (!note) return "";
+        return `
+          <span class="note-badge absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-xxs bg-slate-900/80">i</span>
+        `;
+      };
+
+      // 一覧の1行分HTML生成
+      const buildListRow = (item) => {
+        const meta = classifyPath(item.path);
+        const iconHtml = (meta.icon || "").trim();
+        const noteText = item.note || "";
+        const noteBadge = buildNoteBadge(noteText);
+        return `
+          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-0.5 rounded-md shadow-sm grid grid-cols-[18px_220px_minmax(0,1fr)] gap-x-3 gap-y-0 items-center transition overflow-visible list-row"
+              data-copy="${toHtml(item.path)}"
+              data-note="${toHtml(noteText)}">
+            <div class="row-accent w-0.5 rounded-full opacity-30 group-hover:opacity-90 transition col-span-3"></div>
+            <div class="item-icon flex h-4 items-center justify-center text-base leading-none col-start-1 col-span-1 z-10">
+              ${iconHtml}
+            </div>
+            <div class="item-name text-base font-normal leading-snug break-words col-start-2 col-span-1 transition" style="color: var(--text-heading);">
+              ${toHtml(formatDisplayName(item.name))}
+            </div>
+            <div class="relative text-xs font-mono tabular-nums col-start-3 col-span-1 pr-7" style="color: var(--text-muted);">
+              <span class="path-chip">${toHtml(item.path)}</span>
+              ${noteBadge}
+            </div>
+          </li>
+        `;
+      };
+
+      // カテゴリごとのテーマ色をCSS変数に束ねる
+      const buildCategoryStyleVars = (color) => {
+        const vars = [
+          ["--cat-color", color.base],
+          ["--cat-header-bg", color.alpha(0.12)],
+          ["--cat-header-border", color.alpha(0.2)],
+          ["--cat-line", color.alpha(0.35)],
+          ["--cat-glow", color.alpha(0.15)],
+          ["--subcat-border", color.alpha(0.35)],
+          ["--path-chip-border", color.alpha(0.4)],
+          ["--item-color", color.base],
+          ["--item-color-strong", color.alpha(0.9)],
+        ];
+        return vars.map(([key, value]) => `${key}: ${value}`).join("; ");
+      };
+
+      let subcatIdCounter = 0;
+      const buildSubCategoryHtml = (tab, cat, sub, items) => {
+        const key = subcatKeyFor(tab, cat, sub);
+        const isCollapsed = collapsedSubcats.has(key);
+        const listId = `subcat-${subcatIdCounter++}`;
+        return `
+          <div class="space-y-0">
+            <button class="subcat-toggle flex items-center gap-2 px-2 py-2 w-full text-left"
+                    data-subcat-toggle="${toHtml(key)}"
+                    aria-expanded="${(!isCollapsed).toString()}"
+                    aria-controls="${listId}">
+              <span class="subcat-line"></span>
+              <span class="text-md font-semibold tracking-wide" style="color: var(--text-heading);">
+                ${toHtml(sub)}
+              </span>
+            </button>
+            <ul id="${listId}" class="subcat-list space-y-0.5 pl-5 ml-3 ${isCollapsed ? "hidden" : ""}">
+              ${items.map(buildListRow).join("")}
+            </ul>
+          </div>
+        `;
+      };
+
+      // カテゴリカード単位のHTML生成
+      const buildCategoryCardHtml = (cat, subMap) => {
+        const color = colorForCat(cat);
+        const subLabels = Object.keys(subMap);
+        return `
+          <div class="cat-card rounded-xl border shadow-lg overflow-hidden" style="${buildCategoryStyleVars(color)}">
+            <div class="cat-card__header relative px-4 py-1.5 grid grid-cols-[18px_1fr] items-center gap-3 border-b">
+              <span class="cat-card__topline absolute left-0 top-0 h-px w-full"></span>
+              <span class="cat-card__pill inline-block h-1 w-5 rounded-full"></span>
+              <div class="text-lg font-semibold leading-tight" style="color: var(--text-heading);">${toHtml(cat)}</div>
+            </div>
+            <div class="p-3 space-y-3">
+              ${subLabels.map(sub => buildSubCategoryHtml(state.tab, cat, sub, subMap[sub])).join("")}
+            </div>
+          </div>
+        `;
+      };
+
+      // メイン領域のHTML生成
+      const buildMainHtml = (items) => {
+        if (items.length === 0) {
+          return { html: "", isEmpty: true };
+        }
+
+        subcatIdCounter = 0;
+        const catMap = groupByCategory(items);
+        const catLabels = Object.keys(catMap);
+        const html = catLabels.map(cat => buildCategoryCardHtml(cat, catMap[cat])).join("");
+
+        return { html, isEmpty: false };
+      };
+
+      const applyMain = ({ html, isEmpty }) => {
+        const list = $("list");
+        const empty = $("empty");
+        if (!list || !empty) return;
+
+        if (isEmpty) {
+          list.innerHTML = "";
+          empty.classList.remove("hidden");
+          return;
+        }
+        empty.classList.add("hidden");
+        list.innerHTML = html;
+      };
+
+      // メインの一覧描画
+      const renderMain = () => {
+        const items = getFilteredItems();
+        applyMain(buildMainHtml(items));
+      };
+
+      // まとめて再描画（状態変更後に呼ぶ）
+      const renderAll = () => {
+        renderTabList();
+        renderCategoryList();
+        renderMain();
       };
 
       // カード上に短時間出すミニトースト
-      const inlineToast = (parent, msg) => {
+      const showInlineToast = (parent, msg) => {
         if (!parent) return;
         const tag = document.createElement("span");
-        tag.className = "absolute right-2 top-1/2 -translate-y-1/2 transform rounded-full bg-slate-900/90 text-[10px] px-2 py-0.5 border border-slate-700 shadow";
+        tag.className = "absolute right-2 top-1/2 -translate-y-1/2 transform rounded-full bg-slate-900/90 text-xs px-2 py-0.5 border border-slate-700 shadow";
         tag.style.color = "var(--text-heading)";
         tag.textContent = msg;
         parent.appendChild(tag);
@@ -211,9 +836,22 @@
       };
 
       // クリップボードコピー + インライン表示
-      const copyText = async (text, targetEl) => {
-        await navigator.clipboard.writeText(text);
-        inlineToast(targetEl, "コピーしました");
+      const fallbackCopyText = (text) => {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      };
+
+      const copyTextToClipboard = async (text, targetEl) => {
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (e) {
+          fallbackCopyText(text);
+        }
+        showInlineToast(targetEl, "コピーしました");
       };
 
       // ノート用ツールチップ（行外に出すため body 直下に生成）
@@ -225,10 +863,9 @@
         el.style.pointerEvents = "none";
         el.style.opacity = "0";
         el.style.transition = "opacity 120ms ease, transform 120ms ease";
-        el.className = "max-w-md whitespace-pre-line rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-[10px] shadow-lg";
+        el.className = "max-w-md whitespace-pre-line rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs shadow-lg";
         el.style.color = "var(--text-heading)";
         document.body.appendChild(el);
-        let showTimer;
         return {
           show(text, x, y) {
             el.textContent = text;
@@ -236,7 +873,6 @@
             el.style.top = `${y}px`;
             el.style.opacity = "1";
             el.style.transform = "translate(-8px, 6px)";
-            clearTimeout(showTimer);
           },
           hide() {
             el.style.opacity = "0";
@@ -244,222 +880,164 @@
         };
       })();
 
-      const DEFAULT_TAB = "共通";
-
-      // 外部データを安全な形に正規化
-      const normalize = (items) => (items || []).map((x, i) => ({
-        id: i + 1,
-        tab: safe(x.tab || DEFAULT_TAB),
-        category: safe(x.category),
-        subCategory: safe(x.subCategory),
-        name: safe(x.name),
-        path: safe(x.path),
-        note: safe(x.note)
-      }));
-
-      const state = {
-        all: normalize(window.PATH_CATALOG_DATA || []),
-        tab: "",
-        cat: "",
+      // 状態変更はここに集約
+      const actions = {
+        setTab: (tab) => {
+          if (tab === state.tab) return;
+          state.tab = tab;
+          state.cat = "";
+          activeNoteRow = null;
+          noteTooltip.hide();
+          renderAll();
+        },
+        setCat: (cat) => {
+          const cats = getCats();
+          state.cat = cats.includes(cat) ? cat : "";
+          activeNoteRow = null;
+          noteTooltip.hide();
+          renderAll();
+        },
       };
 
-      const filtered = () => state.all.filter(x => {
-        if (state.tab && x.tab !== state.tab) return false;
-        if (state.cat && x.category !== state.cat) return false;
-        return true;
-      });
-
-      const renderTabList = () => {
-        const holder = $("tabNav");
-        if (!holder) return;
-        const tabs = sortJa(uniq(state.all.map(x => x.tab || DEFAULT_TAB)));
-        if (!state.tab && tabs.length) state.tab = tabs[0];
-        const current = state.tab;
-
-        holder.innerHTML = tabs.map(tab => {
-          const isSel = current === tab;
-          return `
-            <button
-              class="tab-btn ${isSel ? "active" : ""}"
-              data-tab="${escapeHtml(tab)}">
-              ${escapeHtml(tab)}
-            </button>
-          `;
-        }).join("");
-
-        holder.querySelectorAll("button[data-tab]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            state.tab = btn.getAttribute("data-tab") || "";
-            state.cat = "";
-            renderTabList();
-            renderCategoryList();
-            renderMain();
-          });
-        });
+      const isEditableTarget = (target) => {
+        if (!target) return false;
+        if (target.isContentEditable) return true;
+        const tag = target.tagName;
+        return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
       };
 
-      const renderCategoryList = () => {
-        const cats = sortJa(
-          uniq(
-            state.all
-              .filter(x => !state.tab || x.tab === state.tab)
-              .map(x => x.category)
-              .filter(Boolean)
-          )
-        );
-        if (state.cat && !cats.includes(state.cat)) state.cat = "";
-        const current = state.cat;
-        const tabBadge = $("tabIndicator");
-        if (tabBadge) {
-          tabBadge.textContent = state.tab ? `タブ: ${state.tab}` : "";
-        }
-
-        const allBtn = `
-          <button class="w-full text-left rounded-xl px-3 py-1.5 text-sm mt-1 mb-1 cat-btn ${current === "" ? "active" : ""}"
-                  data-cat="">
-            すべて
-          </button>`;
-
-        $("catList").innerHTML = allBtn + cats.map(c => {
-          const color = colorForCat(c);
-          const isSel = current === c;
-          return `
-            <button class="w-full text-left rounded-xl px-3 py-1.5 text-sm mt-1 mb-1 cat-btn ${isSel ? "active" : ""}"
-                    data-cat="${escapeHtml(c)}">
-              <span class="inline-block h-1 w-3 rounded-full mr-2 align-middle" style="background-color:${color.alpha(0.6)};"></span>
-              <span class="align-middle">${escapeHtml(c)}</span>
-            </button>
-          `;
-        }).join("");
-
-        $("catList").querySelectorAll("button[data-cat]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            state.cat = btn.getAttribute("data-cat") || "";
-            renderCategoryList();
-            renderMain();
-          });
-        });
+      const getSteppedItem = (list, current, delta) => {
+        if (list.length === 0) return current;
+        const index = list.indexOf(current);
+        const safeIndex = index === -1 ? 0 : index;
+        const next = (safeIndex + delta + list.length) % list.length;
+        return list[next];
       };
 
-      const listRow = (item) => {
-        const meta = classifyPath(item.path);
-        const c = colorForCat(item.category || "");
-        const iconHtml = (meta.icon || "").trim();
-        return `
-          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-1 rounded-md shadow-sm grid grid-cols-[18px_150px_minmax(0,1fr)] gap-x-3 gap-y-0.5 items-center transition overflow-visible list-row"
-              data-copy="${escapeHtml(item.path)}"
-              data-note="${item.note ? escapeHtml(item.note) : ""}">
-            <div class="w-0.5 rounded-full opacity-30 group-hover:opacity-90 transition col-span-3" style="background: linear-gradient(180deg, var(--accent) 0%, rgba(124,58,237,0.65) 100%);"></div>
-            <div class="flex h-4 items-center justify-center text-[12px] leading-none col-start-1 col-span-1 z-10" style="color:${c.base};">
-              ${iconHtml}
-            </div>
-            <div class="text-[13px] font-normal leading-snug break-words col-start-2 col-span-1" style="color: var(--text-heading);">
-              ${escapeHtml(item.name || "(no name)")}
-            </div>
-            <div class="relative text-[11px] font-mono break-all tabular-nums col-start-3 col-span-1 pr-7" style="color: var(--text-muted);">
-              ${escapeHtml(item.path)}
-              ${item.note ? `
-                <span class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-[9px] bg-slate-900/80" style="color: var(--text-muted);">i</span>
-              ` : ""}
-            </div>
-          </li>
-        `;
-      };
+      // キー操作（左右でタブ、上下でカテゴリ）
+      const onKeydown = (event) => {
+        if (isEditableTarget(event.target)) return;
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
 
-      const renderMain = () => {
-        const items = filtered();
-        const list = $("list");
-        const empty = $("empty");
-
-        const s1 = $("stats");
-        if (s1) s1.textContent = "";
-
-        if (items.length === 0) {
-          list.innerHTML = "";
-          empty.classList.remove("hidden");
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          const tabs = getTabs();
+          if (!tabs.length) return;
+          const delta = event.key === "ArrowRight" ? 1 : -1;
+          actions.setTab(getSteppedItem(tabs, state.tab, delta));
+          event.preventDefault();
           return;
         }
-        empty.classList.add("hidden");
 
-        const catMap = {};
-        items.forEach(item => {
-          const cat = item.category || "(未設定カテゴリ)";
-          const sub = item.subCategory || "(未設定)";
-          if (!catMap[cat]) catMap[cat] = {};
-          if (!catMap[cat][sub]) catMap[cat][sub] = [];
-          catMap[cat][sub].push(item);
-        });
-        const catLabels = sortJa(Object.keys(catMap));
-
-        list.innerHTML = catLabels.map(cat => {
-          const color = colorForCat(cat);
-          const subMap = catMap[cat];
-          const subLabels = sortJa(Object.keys(subMap));
-          return `
-          <div class="rounded-xl border shadow-lg ring-1 overflow-hidden" style="background-color: var(--bg-layer); box-shadow: 0 8px 24px -12px rgba(0,0,0,0.8), 0 0 0 1px ${color.alpha(0.15)}; border-color: var(--border);">
-            <div class="px-4 py-2 grid grid-cols-[18px_1fr] items-center gap-3 border-b" style="background-color: ${color.alpha(0.25)}; border-color: var(--border);">
-              <span class="inline-block h-1.5 w-5 rounded-full" style="background-color:${color.base};"></span>
-              <div class="text-base font-semibold leading-tight" style="color: var(--text-heading);">${escapeHtml(cat)}</div>
-            </div>
-            <div class="p-3 space-y-3">
-              ${subLabels.map(sub => `
-                <div class="space-y-1.5">
-                  <div class="flex items-center gap-2 px-2 py-0.5">
-                    <span class="inline-block h-1 w-3 rounded-full" style="background-color:${color.base};"></span>
-                    <span class="text-sm font-semibold tracking-wide uppercase" style="color: var(--text-heading);">
-                      ${escapeHtml(sub)}
-                    </span>
-                  </div>
-                  <ul class="space-y-0.75 pl-5 ml-3 border-l" style="border-color:${color.alpha(0.35)};">
-                    ${subMap[sub].map(listRow).join("")}
-                  </ul>
-                </div>
-              `).join("")}
-            </div>
-          </div>
-          `;
-        }).join("");
-
-        list.querySelectorAll("li[data-copy]").forEach(el => {
-          el.addEventListener("click", async () => {
-            const p = el.getAttribute("data-copy") || "";
-            try {
-              await copyText(p, el);
-            } catch (e) {
-              const ta = document.createElement("textarea");
-              ta.value = p;
-              document.body.appendChild(ta);
-              ta.select();
-              document.execCommand("copy");
-              ta.remove();
-              inlineToast(el, "コピーしました");
-            }
-          });
-        });
-
-        // ノートツールチップ（body直下で表示）
-        list.querySelectorAll("li[data-note]").forEach(el => {
-          const note = el.getAttribute("data-note") || "";
-          if (!note) return;
-          el.addEventListener("mouseenter", (e) => {
-            const rect = el.getBoundingClientRect();
-            noteTooltip.show(note, rect.right + 36, rect.bottom);
-          });
-          el.addEventListener("mousemove", (e) => {
-            noteTooltip.show(note, e.clientX + 36, e.clientY);
-          });
-          el.addEventListener("mouseleave", () => noteTooltip.hide());
-        });
+        if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+          const cats = [""].concat(getCats());
+          if (!cats.length) return;
+          const delta = event.key === "ArrowDown" ? 1 : -1;
+          actions.setCat(getSteppedItem(cats, state.cat, delta));
+          event.preventDefault();
+        }
       };
 
-      const renderAll = () => {
-        renderTabList();
-        renderCategoryList();
-        renderMain();
+      // イベント委譲: タブ切り替え
+      const onTabClick = (event) => {
+        const btn = event.target.closest("button[data-tab]");
+        if (!btn) return;
+        actions.setTab(btn.getAttribute("data-tab") || "");
       };
 
-      renderAll();
+      // イベント委譲: カテゴリ切り替え
+      const onCatClick = (event) => {
+        const btn = event.target.closest("button[data-cat]");
+        if (!btn) return;
+        actions.setCat(btn.getAttribute("data-cat") || "");
+      };
+
+      // イベント委譲: クリックでコピー
+      const onListClick = async (event) => {
+        const row = event.target.closest("li[data-copy]");
+        if (!row) return;
+        const p = row.getAttribute("data-copy") || "";
+        await copyTextToClipboard(p, row);
+      };
+
+      // イベント委譲: サブカテゴリの折りたたみ
+      const onSubcatToggle = (event) => {
+        const btn = event.target.closest("[data-subcat-toggle]");
+        if (!btn) return;
+        const key = btn.getAttribute("data-subcat-toggle") || "";
+        const list = btn.nextElementSibling;
+        if (!list || !list.classList.contains("subcat-list")) return;
+        const willCollapse = !list.classList.contains("hidden");
+        list.classList.toggle("hidden");
+        btn.setAttribute("aria-expanded", (!willCollapse).toString());
+        if (key) {
+          if (willCollapse) collapsedSubcats.add(key);
+          else collapsedSubcats.delete(key);
+          saveCollapsedSubcats(collapsedSubcats);
+        }
+      };
+
+      // ノート表示のマウスイベント群
+      const onNoteOver = (event) => {
+        const row = event.target.closest("li[data-note]");
+        if (!row) return;
+        const note = row.getAttribute("data-note") || "";
+        if (!note || activeNoteRow === row) return;
+        activeNoteRow = row;
+        const rect = row.getBoundingClientRect();
+        noteTooltip.show(note, rect.right + 36, rect.bottom);
+      };
+
+      const onNoteMove = (event) => {
+        if (!activeNoteRow) return;
+        const note = activeNoteRow.getAttribute("data-note") || "";
+        if (!note) return;
+        noteTooltip.show(note, event.clientX + 36, event.clientY);
+      };
+
+      const onNoteOut = (event) => {
+        const row = event.target.closest("li[data-note]");
+        if (!row || !activeNoteRow) return;
+        if (row.contains(event.relatedTarget)) return;
+        activeNoteRow = null;
+        noteTooltip.hide();
+      };
+
+      const onListLeave = () => {
+        if (!activeNoteRow) return;
+        activeNoteRow = null;
+        noteTooltip.hide();
+      };
+
+      // 1回だけイベント登録
+      const bind = () => {
+        const tabNav = $("tabNav");
+        const catList = $("catList");
+        const list = $("list");
+
+        if (tabNav) tabNav.addEventListener("click", onTabClick);
+        if (catList) catList.addEventListener("click", onCatClick);
+        document.addEventListener("keydown", onKeydown);
+        if (list) {
+          list.addEventListener("click", onSubcatToggle);
+          list.addEventListener("click", onListClick);
+          list.addEventListener("mouseover", onNoteOver);
+          list.addEventListener("mousemove", onNoteMove);
+          list.addEventListener("mouseout", onNoteOut);
+          list.addEventListener("mouseleave", onListLeave);
+        }
+      };
+
+      // 初期化エントリポイント
+      const init = () => {
+        bind();
+        renderAll();
+        renderWarnings(warnings);
+      };
+
+      const App = { init };
+      App.init();
     })();
   </script>
 </body>
+
 </html>
