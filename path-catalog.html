@@ -841,17 +841,29 @@
         ta.value = text;
         document.body.appendChild(ta);
         ta.select();
-        document.execCommand("copy");
+        const copied = document.execCommand("copy");
         ta.remove();
+        return copied;
       };
 
       const copyTextToClipboard = async (text, targetEl) => {
+        let copied = false;
         try {
-          await navigator.clipboard.writeText(text);
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+            copied = true;
+          }
         } catch (e) {
-          fallbackCopyText(text);
+          copied = false;
         }
-        showInlineToast(targetEl, "コピーしました");
+        if (!copied) {
+          try {
+            copied = fallbackCopyText(text);
+          } catch (e) {
+            copied = false;
+          }
+        }
+        showInlineToast(targetEl, copied ? "コピーしました" : "コピーできませんでした");
       };
 
       // ノート用ツールチップ（行外に出すため body 直下に生成）
