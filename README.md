@@ -1,6 +1,6 @@
 # Path Catalog
 
-パスやURLをカテゴリ別に整理し、クリックでコピーできる単一HTMLのビューアです。
+パスやURLをカテゴリ別に整理し、クリックでコピーできる静的ビューアです。
 
 ![Path Catalog sample](docs/path-catalog-sample-capture.png)
 
@@ -29,7 +29,8 @@ HTML+JSだけで動作する軽量ビューアです。
 ## セットアップ
 
 1. リポジトリを取得
-2. `path-catalog.html` をブラウザで開く
+2. `path-catalog.html` と `data.js` を同じフォルダに置く
+3. `path-catalog.html` をブラウザで開く
 
 社内ネットワークやオフライン環境で外部 CDN に接続できない場合、機能は動作してもスタイルやフォントが正しく適用されないことがあります。
 
