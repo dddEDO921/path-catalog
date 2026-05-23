@@ -56,8 +56,8 @@ window.PATH_CATALOG = [
   ["共通", [
     ["申請", [
       ["経費", [
-        ["経費精算フォルダ", r`\\fileserver\\share\\finance\\expense`, ""],
-        ["旅費申請書式", r`\\fileserver\\share\\finance\\travel\\forms`, "出張手当含む"]
+        ["経費精算フォルダ", r`\\fileserver\share\finance\expense`, ""],
+        ["旅費申請書式", r`\\fileserver\share\finance\travel\forms`, "出張手当含む"]
       ]]
     ]]
   ]]
