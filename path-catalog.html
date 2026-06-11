@@ -757,19 +757,12 @@
           const color = colorForCat(c);
           const isSel = current === c;
           return `
-            <div class="flex items-center border-b" style="border-color: var(--border);">
-              <button class="flex-1 text-left rounded-none px-3 py-2 text-md cat-btn ${isSel ? "active" : ""}"
-                      data-cat="${toHtml(c)}"
-                      style="--cat-color: ${color.base}; border-bottom: none;">
-                <span class="cat-line inline-block rounded-full mr-2 align-middle"></span>
-                <span class="align-middle">${toHtml(c)}</span>
-              </button>
-              <button type="button" class="add-inline-btn mr-1"
-                      data-add-tab="${toHtml(state.tab)}"
-                      data-add-category="${toHtml(c)}"
-                      title="${toHtml(c)}にパスを追加"
-                      aria-label="${toHtml(c)}にパスを追加">＋</button>
-            </div>
+            <button class="w-full text-left rounded-none px-3 py-2 text-md cat-btn ${isSel ? "active" : ""}"
+                    data-cat="${toHtml(c)}"
+                    style="--cat-color: ${color.base};">
+              <span class="cat-line inline-block rounded-full mr-2 align-middle"></span>
+              <span class="align-middle">${toHtml(c)}</span>
+            </button>
           `;
         }).join("");
       };
@@ -916,10 +909,15 @@
         const subLabels = Object.keys(subMap);
         return `
           <div class="cat-card rounded-xl border shadow-lg overflow-hidden" style="${buildCategoryStyleVars(color)}">
-            <div class="cat-card__header relative px-4 py-1.5 grid grid-cols-[18px_1fr] items-center gap-3 border-b">
+            <div class="cat-card__header relative px-4 py-1.5 grid grid-cols-[18px_1fr_auto] items-center gap-3 border-b">
               <span class="cat-card__topline absolute left-0 top-0 h-px w-full"></span>
               <span class="cat-card__pill inline-block h-1 w-5 rounded-full"></span>
               <div class="text-lg font-semibold leading-tight" style="color: var(--text-heading);">${toHtml(cat)}</div>
+              <button type="button" class="add-inline-btn"
+                      data-add-tab="${toHtml(state.tab)}"
+                      data-add-category="${toHtml(cat)}"
+                      title="${toHtml(cat)}にパスを追加"
+                      aria-label="${toHtml(cat)}にパスを追加">＋</button>
             </div>
             <div class="p-3 space-y-3">
               ${subLabels.map(sub => buildSubCategoryHtml(state.tab, cat, sub, subMap[sub])).join("")}
