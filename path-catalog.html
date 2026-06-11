@@ -231,6 +231,29 @@
       transform: translateY(-1px);
     }
 
+    .add-inline-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      flex: 0 0 auto;
+      border: 1px solid transparent;
+      border-radius: 0.45rem;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      line-height: 1;
+      transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+    }
+
+    .add-inline-btn:hover,
+    .add-inline-btn:focus-visible {
+      border-color: rgba(139, 92, 246, 0.55);
+      background-color: rgba(124, 58, 237, 0.14);
+      color: #ffffff;
+      outline: none;
+    }
+
     dialog::backdrop {
       background: rgba(2, 6, 23, 0.78);
       backdrop-filter: blur(3px);
@@ -691,11 +714,17 @@
         return tabs.map(tab => {
           const isSel = current === tab;
           return `
-            <button
-              class="tab-btn text-lg ${isSel ? "active" : ""}"
-              data-tab="${toHtml(tab)}">
-              ${toHtml(tab)}
-            </button>
+            <div class="flex items-center">
+              <button
+                class="tab-btn text-lg ${isSel ? "active" : ""}"
+                data-tab="${toHtml(tab)}">
+                ${toHtml(tab)}
+              </button>
+              <button type="button" class="add-inline-btn"
+                      data-add-tab="${toHtml(tab)}"
+                      title="${toHtml(tab)}にパスを追加"
+                      aria-label="${toHtml(tab)}にパスを追加">＋</button>
+            </div>
           `;
         }).join("");
       };
@@ -728,12 +757,19 @@
           const color = colorForCat(c);
           const isSel = current === c;
           return `
-            <button class="w-full text-left rounded-none px-3 py-2 text-md cat-btn ${isSel ? "active" : ""}"
-                    data-cat="${toHtml(c)}"
-                    style="--cat-color: ${color.base};">
-              <span class="cat-line inline-block rounded-full mr-2 align-middle"></span>
-              <span class="align-middle">${toHtml(c)}</span>
-            </button>
+            <div class="flex items-center border-b" style="border-color: var(--border);">
+              <button class="flex-1 text-left rounded-none px-3 py-2 text-md cat-btn ${isSel ? "active" : ""}"
+                      data-cat="${toHtml(c)}"
+                      style="--cat-color: ${color.base}; border-bottom: none;">
+                <span class="cat-line inline-block rounded-full mr-2 align-middle"></span>
+                <span class="align-middle">${toHtml(c)}</span>
+              </button>
+              <button type="button" class="add-inline-btn mr-1"
+                      data-add-tab="${toHtml(state.tab)}"
+                      data-add-category="${toHtml(c)}"
+                      title="${toHtml(c)}にパスを追加"
+                      aria-label="${toHtml(c)}にパスを追加">＋</button>
+            </div>
           `;
         }).join("");
       };
@@ -850,15 +886,23 @@
         const listId = `subcat-${subcatIdCounter++}`;
         return `
           <div class="space-y-0">
-            <button class="subcat-toggle flex items-center gap-2 px-2 py-2 w-full text-left"
-                    data-subcat-toggle="${toHtml(key)}"
-                    aria-expanded="${(!isCollapsed).toString()}"
-                    aria-controls="${listId}">
-              <span class="subcat-line"></span>
-              <span class="text-md font-semibold tracking-wide" style="color: var(--text-heading);">
-                ${toHtml(sub)}
-              </span>
-            </button>
+            <div class="flex items-center gap-1">
+              <button class="subcat-toggle flex flex-1 items-center gap-2 px-2 py-2 text-left"
+                      data-subcat-toggle="${toHtml(key)}"
+                      aria-expanded="${(!isCollapsed).toString()}"
+                      aria-controls="${listId}">
+                <span class="subcat-line"></span>
+                <span class="text-md font-semibold tracking-wide" style="color: var(--text-heading);">
+                  ${toHtml(sub)}
+                </span>
+              </button>
+              <button type="button" class="add-inline-btn"
+                      data-add-tab="${toHtml(tab)}"
+                      data-add-category="${toHtml(cat)}"
+                      data-add-sub-category="${toHtml(sub)}"
+                      title="${toHtml(sub)}にパスを追加"
+                      aria-label="${toHtml(sub)}にパスを追加">＋</button>
+            </div>
             <ul id="${listId}" class="subcat-list space-y-0.5 pl-5 ml-3 ${isCollapsed ? "hidden" : ""}">
               ${items.map(buildListRow).join("")}
             </ul>
@@ -962,19 +1006,52 @@
           .join("");
       };
 
-      const prepareAddDialog = () => {
+      const refreshAddDialogOptions = () => {
+        const tab = $("addTab")?.value.trim() || "";
+        const category = $("addCategory")?.value.trim() || "";
+        setDatalistOptions("tabOptions", state.all.map((item) => item.tab));
+        setDatalistOptions(
+          "categoryOptions",
+          state.all.filter((item) => !tab || item.tab === tab).map((item) => item.category)
+        );
+        setDatalistOptions(
+          "subCategoryOptions",
+          state.all
+            .filter((item) => (!tab || item.tab === tab) && (!category || item.category === category))
+            .map((item) => item.subCategory)
+        );
+      };
+
+      const prepareAddDialog = (presets = {}) => {
         const form = $("addPathForm");
         const dialog = $("addPathDialog");
         if (!form || !dialog) return;
         form.reset();
         $("addPathError")?.classList.add("hidden");
-        $("addTab").value = state.tab || DEFAULT_TAB;
-        $("addCategory").value = state.cat || "";
-        setDatalistOptions("tabOptions", state.all.map((item) => item.tab));
-        setDatalistOptions("categoryOptions", state.all.map((item) => item.category));
-        setDatalistOptions("subCategoryOptions", state.all.map((item) => item.subCategory));
+        const tab = toSafeString(presets.tab);
+        const category = toSafeString(presets.category);
+        const subCategory = toSafeString(presets.subCategory);
+        $("addTab").value = tab;
+        $("addCategory").value = category;
+        $("addSubCategory").value = subCategory;
+        refreshAddDialogOptions();
         dialog.showModal();
-        $("addCategory")?.focus();
+        const firstEmptyField = ["addTab", "addCategory", "addSubCategory", "addName", "addPath"]
+          .map($)
+          .find((field) => field && !field.value);
+        firstEmptyField?.focus();
+      };
+
+      const onAddShortcutClick = (event) => {
+        const button = event.target.closest("[data-add-tab]");
+        if (!button) return;
+        event.preventDefault();
+        event.stopPropagation();
+        prepareAddDialog({
+          tab: button.dataset.addTab || "",
+          category: button.dataset.addCategory || "",
+          subCategory: button.dataset.addSubCategory || ""
+        });
       };
 
       const showAddPathError = (message) => {
@@ -1181,7 +1258,7 @@
         const btn = event.target.closest("[data-subcat-toggle]");
         if (!btn) return;
         const key = btn.getAttribute("data-subcat-toggle") || "";
-        const list = btn.nextElementSibling;
+        const list = btn.parentElement?.nextElementSibling;
         if (!list || !list.classList.contains("subcat-list")) return;
         const willCollapse = !list.classList.contains("hidden");
         list.classList.toggle("hidden");
@@ -1234,13 +1311,18 @@
         const addPathDialog = $("addPathDialog");
 
         if (tabNav) tabNav.addEventListener("click", onTabClick);
+        if (tabNav) tabNav.addEventListener("click", onAddShortcutClick);
         if (catList) catList.addEventListener("click", onCatClick);
-        $("openAddDialogButton")?.addEventListener("click", prepareAddDialog);
+        if (catList) catList.addEventListener("click", onAddShortcutClick);
+        $("openAddDialogButton")?.addEventListener("click", () => prepareAddDialog());
         $("exportJsonButton")?.addEventListener("click", exportCatalogJson);
         $("cancelAddPathButton")?.addEventListener("click", () => addPathDialog?.close());
+        $("addTab")?.addEventListener("input", refreshAddDialogOptions);
+        $("addCategory")?.addEventListener("input", refreshAddDialogOptions);
         if (addPathForm) addPathForm.addEventListener("submit", onAddPathSubmit);
         document.addEventListener("keydown", onKeydown);
         if (list) {
+          list.addEventListener("click", onAddShortcutClick);
           list.addEventListener("click", onSubcatToggle);
           list.addEventListener("click", onListClick);
           list.addEventListener("mouseover", onNoteOver);
