@@ -254,6 +254,11 @@
       outline: none;
     }
 
+    .group-add-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+
     dialog::backdrop {
       background: rgba(2, 6, 23, 0.78);
       backdrop-filter: blur(3px);
@@ -361,10 +366,16 @@
 
       <!-- Main -->
       <main class="p-5 space-y-4 overflow-y-auto" style="background-color: var(--bg-base);">
+        <div class="flex justify-end">
+          <button id="openAddCategoryDialogButton" type="button" data-add-group="category"
+            class="group-add-btn rounded-md border border-slate-700 px-3 py-1.5 text-sm font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+            ＋ カテゴリを追加
+          </button>
+        </div>
         <section id="list" class="grid grid-cols-1 gap-4"></section>
 
         <section id="empty" class="hidden mt-10">
-          <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center"
+          <div id="emptyMessage" class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center"
             style="color: var(--text-muted);">
             条件に一致するデータがありません
           </div>
@@ -427,6 +438,34 @@
     <datalist id="tabOptions"></datalist>
     <datalist id="categoryOptions"></datalist>
     <datalist id="subCategoryOptions"></datalist>
+  </dialog>
+
+  <dialog id="addGroupDialog"
+    class="w-[min(440px,calc(100vw-2rem))] rounded-xl border border-slate-700 bg-slate-900 p-0 text-slate-100 shadow-2xl">
+    <form id="addGroupForm" method="dialog">
+      <div class="border-b border-slate-700 px-5 py-4">
+        <h2 id="addGroupTitle" class="text-lg font-semibold"></h2>
+        <p id="addGroupDescription" class="mt-1 text-sm text-slate-400"></p>
+      </div>
+      <div class="px-5 py-4">
+        <label class="text-sm text-slate-300">
+          名前
+          <input id="addGroupName" name="name" required
+            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500">
+        </label>
+        <p id="addGroupError" class="mt-3 hidden text-sm text-rose-300"></p>
+      </div>
+      <div class="flex justify-end gap-2 border-t border-slate-700 px-5 py-4">
+        <button id="cancelAddGroupButton" type="button"
+          class="rounded-md border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+          キャンセル
+        </button>
+        <button type="submit"
+          class="rounded-md border border-violet-500 bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+          追加
+        </button>
+      </div>
+    </form>
   </dialog>
 
   <script src="data.js"></script>
@@ -666,13 +705,22 @@
       let normalizedCatalog = normalizeCatalog(catalog);
       let warnings = initialCatalog.storageWarnings.concat(normalizedCatalog.warnings);
 
+      const getTabBlocks = () => catalog.filter((block) => Array.isArray(block) && block.length >= 2);
+      const getTabBlock = (tab) => getTabBlocks().find((block) => toSafeString(block[0]).trim() === tab);
+      const getCategoryBlocks = (tab) => {
+        const tabBlock = getTabBlock(tab);
+        return Array.isArray(tabBlock?.[1])
+          ? tabBlock[1].filter((block) => Array.isArray(block) && block.length >= 2)
+          : [];
+      };
+
       // UIの選択状態
       const state = {
         all: normalize(normalizedCatalog.items),
         tab: "",
         cat: "",
       };
-      const initialTabs = dedupe(state.all.map(x => x.tab || DEFAULT_TAB));
+      const initialTabs = dedupe(getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
       state.tab = initialTabs[0] || "";
       let activeNoteRow = null;
 
@@ -684,18 +732,17 @@
       });
 
       // 現在のタブに応じたカテゴリ一覧
-      const getTabs = () => dedupe(state.all.map(x => x.tab || DEFAULT_TAB));
+      const getTabs = () =>
+        dedupe(getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
       const getCats = () =>
-        dedupe(
-          state.all
-            .filter(x => !state.tab || x.tab === state.tab)
-            .map(x => x.category)
-            .filter(Boolean)
-        );
+        dedupe(getCategoryBlocks(state.tab).map((block) => toSafeString(block[0]).trim()).filter(Boolean));
 
       // メイン描画用にカテゴリ→サブカテゴリへグルーピング
-      const groupByCategory = (items) => {
+      const groupByCategory = (items, categories) => {
         const catMap = {};
+        categories.forEach((category) => {
+          catMap[category] = {};
+        });
         items.forEach(item => {
           const cat = item.category || "(未設定カテゴリ)";
           const sub = item.subCategory || "(未設定)";
@@ -711,7 +758,7 @@
         const tabs = getTabs();
         const current = state.tab;
 
-        return tabs.map(tab => {
+        const tabHtml = tabs.map(tab => {
           const isSel = current === tab;
           return `
             <div class="flex items-center">
@@ -729,6 +776,13 @@
             </div>
           `;
         }).join("");
+
+        return tabHtml + `
+          <button id="openAddTabDialogButton" type="button" data-add-group="tab"
+                  class="rounded-md px-2 py-1.5 text-sm font-semibold text-slate-400 hover:bg-slate-800 hover:text-white">
+            ＋ タブ
+          </button>
+        `;
       };
 
       const applyTabList = (html) => {
@@ -922,7 +976,9 @@
                       aria-label="${toHtml(cat)}にパスを追加">＋</button>
             </div>
             <div class="p-3 space-y-3">
-              ${subLabels.map(sub => buildSubCategoryHtml(state.tab, cat, sub, subMap[sub])).join("")}
+              ${subLabels.length
+                ? subLabels.map(sub => buildSubCategoryHtml(state.tab, cat, sub, subMap[sub])).join("")
+                : `<p class="px-2 py-3 text-sm" style="color: var(--text-muted);">このカテゴリにはパスがありません</p>`}
             </div>
           </div>
         `;
@@ -930,12 +986,13 @@
 
       // メイン領域のHTML生成
       const buildMainHtml = (items) => {
-        if (items.length === 0) {
+        const categories = state.cat ? [state.cat] : getCats();
+        if (categories.length === 0) {
           return { html: "", isEmpty: true };
         }
 
         subcatIdCounter = 0;
-        const catMap = groupByCategory(items);
+        const catMap = groupByCategory(items, categories);
         const catLabels = Object.keys(catMap);
         const html = catLabels.map(cat => buildCategoryCardHtml(cat, catMap[cat])).join("");
 
@@ -949,6 +1006,12 @@
 
         if (isEmpty) {
           list.innerHTML = "";
+          const message = $("emptyMessage");
+          if (message) {
+            message.textContent = state.tab
+              ? "このタブにはカテゴリがありません。上の「カテゴリを追加」から作成できます。"
+              : "タブがありません。上の「＋ タブ」から作成できます。";
+          }
           empty.classList.remove("hidden");
           return;
         }
@@ -967,6 +1030,8 @@
         renderTabList();
         renderCategoryList();
         renderMain();
+        const addCategoryButton = $("openAddCategoryDialogButton");
+        if (addCategoryButton) addCategoryButton.disabled = !state.tab;
       };
 
       const findOrCreateBlock = (blocks, label) => {
@@ -986,6 +1051,15 @@
         subCategoryBlock[1].push([name, path, note]);
       };
 
+      const addTab = (name) => {
+        catalog.push([name, []]);
+      };
+
+      const addCategory = (tab, name) => {
+        const tabBlock = findOrCreateBlock(catalog, tab);
+        tabBlock[1].push([name, []]);
+      };
+
       const refreshCatalog = ({ tab = state.tab, cat = state.cat } = {}) => {
         normalizedCatalog = normalizeCatalog(catalog);
         warnings = normalizedCatalog.warnings;
@@ -996,6 +1070,69 @@
         state.cat = cats.includes(cat) ? cat : "";
         renderAll();
         renderWarnings(warnings);
+      };
+
+      let addGroupMode = "";
+      const openAddGroupDialog = (mode) => {
+        if (mode === "category" && !state.tab) return;
+        addGroupMode = mode;
+        $("addGroupForm")?.reset();
+        $("addGroupError")?.classList.add("hidden");
+        $("addGroupTitle").textContent = mode === "tab" ? "タブを追加" : "カテゴリを追加";
+        $("addGroupDescription").textContent = mode === "tab"
+          ? "空のタブを作成します。作成後にカテゴリやパスを追加できます。"
+          : `「${state.tab}」に空のカテゴリを作成します。`;
+        $("addGroupDialog")?.showModal();
+        $("addGroupName")?.focus();
+      };
+
+      const showAddGroupError = (message) => {
+        const error = $("addGroupError");
+        if (!error) return;
+        error.textContent = message;
+        error.classList.remove("hidden");
+      };
+
+      const onAddGroupSubmit = (event) => {
+        event.preventDefault();
+        const name = $("addGroupName")?.value.trim() || "";
+        if (!name) {
+          showAddGroupError("名前を入力してください。");
+          return;
+        }
+        if (addGroupMode === "tab" && getTabs().includes(name)) {
+          showAddGroupError("同じ名前のタブがすでにあります。");
+          return;
+        }
+        if (addGroupMode === "category" && getCats().includes(name)) {
+          showAddGroupError("同じ名前のカテゴリがすでにあります。");
+          return;
+        }
+
+        const previousCatalog = cloneCatalog(catalog);
+        if (addGroupMode === "tab") addTab(name);
+        else if (addGroupMode === "category") addCategory(state.tab, name);
+        else return;
+
+        try {
+          saveCatalog(catalog);
+        } catch (e) {
+          catalog = previousCatalog;
+          showAddGroupError("ローカルストレージに保存できませんでした。");
+          return;
+        }
+
+        const nextState = addGroupMode === "tab"
+          ? { tab: name, cat: "" }
+          : { tab: state.tab, cat: name };
+        $("addGroupDialog")?.close();
+        refreshCatalog(nextState);
+      };
+
+      const onOpenAddGroupClick = (event) => {
+        const button = event.target.closest("[data-add-group]");
+        if (!button || button.disabled) return;
+        openAddGroupDialog(button.dataset.addGroup || "");
       };
 
       const setDatalistOptions = (id, values) => {
@@ -1009,10 +1146,15 @@
       const refreshAddDialogOptions = () => {
         const tab = $("addTab")?.value.trim() || "";
         const category = $("addCategory")?.value.trim() || "";
-        setDatalistOptions("tabOptions", state.all.map((item) => item.tab));
+        const categoryOptions = tab
+          ? getCategoryBlocks(tab).map((block) => toSafeString(block[0]).trim())
+          : getTabBlocks().flatMap((block) =>
+            (Array.isArray(block[1]) ? block[1] : []).map((categoryBlock) => toSafeString(categoryBlock?.[0]).trim())
+          );
+        setDatalistOptions("tabOptions", getTabs());
         setDatalistOptions(
           "categoryOptions",
-          state.all.filter((item) => !tab || item.tab === tab).map((item) => item.category)
+          categoryOptions
         );
         setDatalistOptions(
           "subCategoryOptions",
@@ -1309,17 +1451,23 @@
         const list = $("list");
         const addPathForm = $("addPathForm");
         const addPathDialog = $("addPathDialog");
+        const addGroupForm = $("addGroupForm");
+        const addGroupDialog = $("addGroupDialog");
 
         if (tabNav) tabNav.addEventListener("click", onTabClick);
         if (tabNav) tabNav.addEventListener("click", onAddShortcutClick);
+        if (tabNav) tabNav.addEventListener("click", onOpenAddGroupClick);
         if (catList) catList.addEventListener("click", onCatClick);
         if (catList) catList.addEventListener("click", onAddShortcutClick);
+        $("openAddCategoryDialogButton")?.addEventListener("click", onOpenAddGroupClick);
         $("openAddDialogButton")?.addEventListener("click", () => prepareAddDialog());
         $("exportJsonButton")?.addEventListener("click", exportCatalogJson);
         $("cancelAddPathButton")?.addEventListener("click", () => addPathDialog?.close());
+        $("cancelAddGroupButton")?.addEventListener("click", () => addGroupDialog?.close());
         $("addTab")?.addEventListener("input", refreshAddDialogOptions);
         $("addCategory")?.addEventListener("input", refreshAddDialogOptions);
         if (addPathForm) addPathForm.addEventListener("submit", onAddPathSubmit);
+        if (addGroupForm) addGroupForm.addEventListener("submit", onAddGroupSubmit);
         document.addEventListener("keydown", onKeydown);
         if (list) {
           list.addEventListener("click", onAddShortcutClick);
