@@ -720,10 +720,12 @@
                 data-tab="${toHtml(tab)}">
                 ${toHtml(tab)}
               </button>
-              <button type="button" class="add-inline-btn"
-                      data-add-tab="${toHtml(tab)}"
-                      title="${toHtml(tab)}にパスを追加"
-                      aria-label="${toHtml(tab)}にパスを追加">＋</button>
+              ${isSel ? `
+                <button type="button" class="add-inline-btn"
+                        data-add-tab="${toHtml(tab)}"
+                        title="${toHtml(tab)}にパスを追加"
+                        aria-label="${toHtml(tab)}にパスを追加">＋</button>
+              ` : ""}
             </div>
           `;
         }).join("");
