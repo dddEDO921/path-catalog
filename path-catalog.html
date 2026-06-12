@@ -231,6 +231,66 @@
       transform: translateY(-1px);
     }
 
+    .add-inline-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      flex: 0 0 auto;
+      border: 1px solid transparent;
+      border-radius: 0.45rem;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      line-height: 1;
+      transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+    }
+
+    .add-inline-btn:hover,
+    .add-inline-btn:focus-visible {
+      border-color: rgba(139, 92, 246, 0.55);
+      background-color: rgba(124, 58, 237, 0.14);
+      color: #ffffff;
+      outline: none;
+    }
+
+    .add-menu {
+      min-width: 240px;
+      background-color: #0f172a;
+      border: 1px solid var(--border);
+    }
+
+    .add-menu-item {
+      display: block;
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      border-radius: 0.4rem;
+      color: var(--text-body);
+      text-align: left;
+    }
+
+    .add-menu-item:hover,
+    .add-menu-item:focus-visible {
+      background-color: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+      outline: none;
+    }
+
+    .add-menu-item:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+
+    .context-locked {
+      color: var(--text-muted);
+      background-color: rgba(15, 23, 42, 0.55);
+    }
+
+    dialog::backdrop {
+      background: rgba(2, 6, 23, 0.78);
+      backdrop-filter: blur(3px);
+    }
+
   </style>
 </head>
 
@@ -239,7 +299,7 @@
 
     <header class="sticky top-0 z-30 border-b backdrop-blur px-5 py-2"
       style="background-color: var(--bg-layer); border-color: var(--border);">
-      <div class="grid grid-cols-[260px_1fr] items-end">
+      <div class="grid grid-cols-[260px_1fr_auto] items-end gap-3">
         <div class="flex items-center gap-2.5" style="color: var(--text-heading);">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo"
             class="h-9 w-auto">
@@ -295,6 +355,40 @@
           </svg>
         </div>
         <div id="tabNav" class="flex flex-wrap items-end gap-1.5 pt-1 pb-1 -mb-[1px]"></div>
+        <div class="relative flex items-center gap-2 pb-1">
+          <button id="openDataMenuButton" type="button" aria-expanded="false" aria-controls="dataMenu"
+            class="rounded-md border border-slate-700 px-3 py-1.5 text-sm font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+            データ管理
+          </button>
+          <div id="dataMenu" class="add-menu absolute right-[76px] top-full z-40 mt-2 hidden rounded-lg p-1.5 shadow-2xl">
+            <button type="button" class="add-menu-item" data-data-action="import">
+              <span class="block font-semibold">データを読み込む</span>
+              <span class="block text-xs text-slate-400">data.jsから現在の内容を置き換え</span>
+            </button>
+            <button type="button" class="add-menu-item" data-data-action="export">
+              <span class="block font-semibold">データを書き出す</span>
+              <span class="block text-xs text-slate-400">そのまま使えるdata.jsを保存</span>
+            </button>
+          </div>
+          <input id="importDataInput" type="file" accept=".js,text/javascript" class="hidden">
+          <button id="openAddMenuButton" type="button" aria-expanded="false" aria-controls="addMenu"
+            class="rounded-md border border-violet-500 bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-violet-500">
+            ＋ 追加
+          </button>
+          <div id="addMenu" class="add-menu absolute right-0 top-full z-40 mt-2 hidden rounded-lg p-1.5 shadow-2xl">
+            <button type="button" class="add-menu-item" data-add-action="path">
+              <span class="block font-semibold">パスを一から追加</span>
+              <span class="block text-xs text-slate-400">追加先を入力して登録</span>
+            </button>
+            <button type="button" class="add-menu-item" data-add-action="category">
+              <span class="block font-semibold">カテゴリを追加</span>
+              <span id="addCategoryMenuHint" class="block text-xs text-slate-400"></span>
+            </button>
+            <button type="button" class="add-menu-item" data-add-action="tab">
+              <span class="block font-semibold">タブを追加</span>
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -326,7 +420,7 @@
         <section id="list" class="grid grid-cols-1 gap-4"></section>
 
         <section id="empty" class="hidden mt-10">
-          <div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center"
+          <div id="emptyMessage" class="rounded-2xl border border-dashed border-slate-800 bg-slate-900 p-10 text-center"
             style="color: var(--text-muted);">
             条件に一致するデータがありません
           </div>
@@ -334,6 +428,90 @@
       </main>
     </div>
   </div>
+
+  <dialog id="addPathDialog"
+    class="w-[min(560px,calc(100vw-2rem))] rounded-xl border border-slate-700 bg-slate-900 p-0 text-slate-100 shadow-2xl">
+    <form id="addPathForm" method="dialog">
+      <div class="border-b border-slate-700 px-5 py-4">
+        <h2 class="text-lg font-semibold">パスを追加</h2>
+        <p class="mt-1 text-sm text-slate-400">既存または新しい分類を入力して、ブラウザに保存します。</p>
+      </div>
+      <div class="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
+        <label class="text-sm text-slate-300">
+          タブ
+          <input id="addTab" name="tab" list="tabOptions" required
+            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500">
+        </label>
+        <label class="text-sm text-slate-300">
+          カテゴリ
+          <input id="addCategory" name="category" list="categoryOptions" required
+            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500">
+        </label>
+        <label class="text-sm text-slate-300 sm:col-span-2">
+          サブカテゴリ
+          <input id="addSubCategory" name="subCategory" list="subCategoryOptions" required
+            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500">
+        </label>
+        <label class="text-sm text-slate-300 sm:col-span-2">
+          表示名
+          <input id="addName" name="name" required
+            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500">
+        </label>
+        <label class="text-sm text-slate-300 sm:col-span-2">
+          パス / URL
+          <input id="addPath" name="path" required
+            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-slate-100 outline-none focus:border-violet-500">
+        </label>
+        <label class="text-sm text-slate-300 sm:col-span-2">
+          ノート（任意）
+          <textarea id="addNote" name="note" rows="2"
+            class="mt-1 w-full resize-y rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500"></textarea>
+        </label>
+        <p id="addPathError" class="hidden text-sm text-rose-300 sm:col-span-2"></p>
+      </div>
+      <div class="flex justify-end gap-2 border-t border-slate-700 px-5 py-4">
+        <button id="cancelAddPathButton" type="button"
+          class="rounded-md border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+          キャンセル
+        </button>
+        <button type="submit"
+          class="rounded-md border border-violet-500 bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+          保存
+        </button>
+      </div>
+    </form>
+    <datalist id="tabOptions"></datalist>
+    <datalist id="categoryOptions"></datalist>
+    <datalist id="subCategoryOptions"></datalist>
+  </dialog>
+
+  <dialog id="addGroupDialog"
+    class="w-[min(440px,calc(100vw-2rem))] rounded-xl border border-slate-700 bg-slate-900 p-0 text-slate-100 shadow-2xl">
+    <form id="addGroupForm" method="dialog">
+      <div class="border-b border-slate-700 px-5 py-4">
+        <h2 id="addGroupTitle" class="text-lg font-semibold"></h2>
+        <p id="addGroupDescription" class="mt-1 text-sm text-slate-400"></p>
+      </div>
+      <div class="px-5 py-4">
+        <label class="text-sm text-slate-300">
+          名前
+          <input id="addGroupName" name="name" required
+            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500">
+        </label>
+        <p id="addGroupError" class="mt-3 hidden text-sm text-rose-300"></p>
+      </div>
+      <div class="flex justify-end gap-2 border-t border-slate-700 px-5 py-4">
+        <button id="cancelAddGroupButton" type="button"
+          class="rounded-md border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+          キャンセル
+        </button>
+        <button type="submit"
+          class="rounded-md border border-violet-500 bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+          追加
+        </button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="data.js"></script>
 
@@ -417,6 +595,7 @@
 
       // タブ未指定時に使うデフォルト名
       const DEFAULT_TAB = "共通";
+      const CATALOG_STORAGE_KEY = "pathCatalog.catalog.v1";
       const SUBCAT_STORAGE_KEY = "pathCatalog.subcatCollapsed.v1";
       const subcatKeyFor = (tab, cat, sub) =>
         JSON.stringify([tab || "", cat || "", sub || ""]);
@@ -539,16 +718,62 @@
         return { items, warnings };
       };
 
-      // 外部データをフラット化して取り出す
-      const { items, warnings } = normalizeCatalog(window.PATH_CATALOG);
+      const cloneCatalog = (catalog) => JSON.parse(JSON.stringify(catalog));
+      const saveCatalog = (catalog) => {
+        localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(catalog));
+      };
+      const loadCatalog = () => {
+        const storageWarnings = [];
+        try {
+          const saved = localStorage.getItem(CATALOG_STORAGE_KEY);
+          if (saved !== null) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) return { catalog: parsed, storageWarnings };
+            storageWarnings.push({ msg: "保存データが配列ではないため、初期データを使用しました", meta: {} });
+          }
+        } catch (e) {
+          storageWarnings.push({ msg: "保存データを読み込めないため、初期データを使用しました", meta: {} });
+        }
+
+        const seed = Array.isArray(window.PATH_CATALOG) ? cloneCatalog(window.PATH_CATALOG) : [];
+        try {
+          saveCatalog(seed);
+        } catch (e) {
+          storageWarnings.push({ msg: "ローカルストレージへ初期データを保存できませんでした", meta: {} });
+        }
+        return { catalog: seed, storageWarnings };
+      };
+
+      // 初回は data.js を展開し、以後はローカルストレージを正本にする
+      const initialCatalog = loadCatalog();
+      let catalog = initialCatalog.catalog;
+      let normalizedCatalog = normalizeCatalog(catalog);
+      let warnings = initialCatalog.storageWarnings.concat(normalizedCatalog.warnings);
+
+      const getTabBlocks = () => catalog.filter((block) => Array.isArray(block) && block.length >= 2);
+      const getTabBlock = (tab) => getTabBlocks().find((block) => toSafeString(block[0]).trim() === tab);
+      const getCategoryBlocks = (tab) => {
+        const tabBlock = getTabBlock(tab);
+        return Array.isArray(tabBlock?.[1])
+          ? tabBlock[1].filter((block) => Array.isArray(block) && block.length >= 2)
+          : [];
+      };
+      const getCategoryBlock = (tab, category) =>
+        getCategoryBlocks(tab).find((block) => toSafeString(block[0]).trim() === category);
+      const getSubCategoryBlocks = (tab, category) => {
+        const categoryBlock = getCategoryBlock(tab, category);
+        return Array.isArray(categoryBlock?.[1])
+          ? categoryBlock[1].filter((block) => Array.isArray(block) && block.length >= 2)
+          : [];
+      };
 
       // UIの選択状態
       const state = {
-        all: normalize(items),
+        all: normalize(normalizedCatalog.items),
         tab: "",
         cat: "",
       };
-      const initialTabs = dedupe(state.all.map(x => x.tab || DEFAULT_TAB));
+      const initialTabs = dedupe(getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
       state.tab = initialTabs[0] || "";
       let activeNoteRow = null;
 
@@ -560,18 +785,21 @@
       });
 
       // 現在のタブに応じたカテゴリ一覧
-      const getTabs = () => dedupe(state.all.map(x => x.tab || DEFAULT_TAB));
+      const getTabs = () =>
+        dedupe(getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
       const getCats = () =>
-        dedupe(
-          state.all
-            .filter(x => !state.tab || x.tab === state.tab)
-            .map(x => x.category)
-            .filter(Boolean)
-        );
+        dedupe(getCategoryBlocks(state.tab).map((block) => toSafeString(block[0]).trim()).filter(Boolean));
 
       // メイン描画用にカテゴリ→サブカテゴリへグルーピング
-      const groupByCategory = (items) => {
+      const groupByCategory = (items, categories) => {
         const catMap = {};
+        categories.forEach((category) => {
+          catMap[category] = {};
+          getSubCategoryBlocks(state.tab, category).forEach((subBlock) => {
+            const subCategory = toSafeString(subBlock[0]).trim();
+            if (subCategory) catMap[category][subCategory] = [];
+          });
+        });
         items.forEach(item => {
           const cat = item.category || "(未設定カテゴリ)";
           const sub = item.subCategory || "(未設定)";
@@ -587,16 +815,20 @@
         const tabs = getTabs();
         const current = state.tab;
 
-        return tabs.map(tab => {
+        const tabHtml = tabs.map(tab => {
           const isSel = current === tab;
           return `
-            <button
-              class="tab-btn text-lg ${isSel ? "active" : ""}"
-              data-tab="${toHtml(tab)}">
-              ${toHtml(tab)}
-            </button>
+            <div class="flex items-center">
+              <button
+                class="tab-btn text-lg ${isSel ? "active" : ""}"
+                data-tab="${toHtml(tab)}">
+                ${toHtml(tab)}
+              </button>
+            </div>
           `;
         }).join("");
+
+        return tabHtml;
       };
 
       const applyTabList = (html) => {
@@ -749,17 +981,28 @@
         const listId = `subcat-${subcatIdCounter++}`;
         return `
           <div class="space-y-0">
-            <button class="subcat-toggle flex items-center gap-2 px-2 py-2 w-full text-left"
-                    data-subcat-toggle="${toHtml(key)}"
-                    aria-expanded="${(!isCollapsed).toString()}"
-                    aria-controls="${listId}">
-              <span class="subcat-line"></span>
-              <span class="text-md font-semibold tracking-wide" style="color: var(--text-heading);">
-                ${toHtml(sub)}
-              </span>
-            </button>
+            <div class="flex items-center gap-1">
+              <button class="subcat-toggle flex flex-1 items-center gap-2 px-2 py-2 text-left"
+                      data-subcat-toggle="${toHtml(key)}"
+                      aria-expanded="${(!isCollapsed).toString()}"
+                      aria-controls="${listId}">
+                <span class="subcat-line"></span>
+                <span class="text-md font-semibold tracking-wide" style="color: var(--text-heading);">
+                  ${toHtml(sub)}
+                </span>
+              </button>
+              <button type="button" class="add-inline-btn"
+                      data-add-path
+                      data-add-tab="${toHtml(tab)}"
+                      data-add-category="${toHtml(cat)}"
+                      data-add-sub-category="${toHtml(sub)}"
+                      title="${toHtml(sub)}にパスを追加"
+                      aria-label="${toHtml(sub)}にパスを追加">＋</button>
+            </div>
             <ul id="${listId}" class="subcat-list space-y-0.5 pl-5 ml-3 ${isCollapsed ? "hidden" : ""}">
-              ${items.map(buildListRow).join("")}
+              ${items.length
+                ? items.map(buildListRow).join("")
+                : `<li class="px-2 py-2 text-sm" style="color: var(--text-muted);">このサブカテゴリにはパスがありません</li>`}
             </ul>
           </div>
         `;
@@ -771,13 +1014,21 @@
         const subLabels = Object.keys(subMap);
         return `
           <div class="cat-card rounded-xl border shadow-lg overflow-hidden" style="${buildCategoryStyleVars(color)}">
-            <div class="cat-card__header relative px-4 py-1.5 grid grid-cols-[18px_1fr] items-center gap-3 border-b">
+            <div class="cat-card__header relative px-4 py-1.5 grid grid-cols-[18px_1fr_auto] items-center gap-3 border-b">
               <span class="cat-card__topline absolute left-0 top-0 h-px w-full"></span>
               <span class="cat-card__pill inline-block h-1 w-5 rounded-full"></span>
               <div class="text-lg font-semibold leading-tight" style="color: var(--text-heading);">${toHtml(cat)}</div>
+              <button type="button" class="add-inline-btn"
+                      data-add-group="subCategory"
+                      data-add-tab="${toHtml(state.tab)}"
+                      data-add-category="${toHtml(cat)}"
+                      title="${toHtml(cat)}にサブカテゴリを追加"
+                      aria-label="${toHtml(cat)}にサブカテゴリを追加">＋</button>
             </div>
             <div class="p-3 space-y-3">
-              ${subLabels.map(sub => buildSubCategoryHtml(state.tab, cat, sub, subMap[sub])).join("")}
+              ${subLabels.length
+                ? subLabels.map(sub => buildSubCategoryHtml(state.tab, cat, sub, subMap[sub])).join("")
+                : `<p class="px-2 py-3 text-sm" style="color: var(--text-muted);">このカテゴリにはサブカテゴリがありません</p>`}
             </div>
           </div>
         `;
@@ -785,12 +1036,13 @@
 
       // メイン領域のHTML生成
       const buildMainHtml = (items) => {
-        if (items.length === 0) {
+        const categories = state.cat ? [state.cat] : getCats();
+        if (categories.length === 0) {
           return { html: "", isEmpty: true };
         }
 
         subcatIdCounter = 0;
-        const catMap = groupByCategory(items);
+        const catMap = groupByCategory(items, categories);
         const catLabels = Object.keys(catMap);
         const html = catLabels.map(cat => buildCategoryCardHtml(cat, catMap[cat])).join("");
 
@@ -804,6 +1056,12 @@
 
         if (isEmpty) {
           list.innerHTML = "";
+          const message = $("emptyMessage");
+          if (message) {
+            message.textContent = state.tab
+              ? "このタブにはカテゴリがありません。ヘッダーの「追加」から作成できます。"
+              : "タブがありません。ヘッダーの「追加」から作成できます。";
+          }
           empty.classList.remove("hidden");
           return;
         }
@@ -822,6 +1080,395 @@
         renderTabList();
         renderCategoryList();
         renderMain();
+        const categoryMenuItem = document.querySelector('[data-add-action="category"]');
+        if (categoryMenuItem) categoryMenuItem.disabled = !state.tab;
+        const categoryHint = $("addCategoryMenuHint");
+        if (categoryHint) categoryHint.textContent = state.tab ? `「${state.tab}」へ追加` : "タブがありません";
+      };
+
+      const findOrCreateBlock = (blocks, label) => {
+        let block = blocks.find((entry) => Array.isArray(entry) && entry[0] === label);
+        if (!block) {
+          block = [label, []];
+          blocks.push(block);
+        }
+        if (!Array.isArray(block[1])) block[1] = [];
+        return block;
+      };
+
+      const appendCatalogItem = ({ tab, category, subCategory, name, path, note }) => {
+        const tabBlock = findOrCreateBlock(catalog, tab);
+        const categoryBlock = findOrCreateBlock(tabBlock[1], category);
+        const subCategoryBlock = findOrCreateBlock(categoryBlock[1], subCategory);
+        subCategoryBlock[1].push([name, path, note]);
+      };
+
+      const addTab = (name) => {
+        catalog.push([name, []]);
+      };
+
+      const addCategory = (tab, name) => {
+        const tabBlock = findOrCreateBlock(catalog, tab);
+        tabBlock[1].push([name, []]);
+      };
+
+      const addSubCategory = (tab, category, name) => {
+        const tabBlock = findOrCreateBlock(catalog, tab);
+        const categoryBlock = findOrCreateBlock(tabBlock[1], category);
+        categoryBlock[1].push([name, []]);
+      };
+
+      const refreshCatalog = ({ tab = state.tab, cat = state.cat } = {}) => {
+        normalizedCatalog = normalizeCatalog(catalog);
+        warnings = normalizedCatalog.warnings;
+        state.all = normalize(normalizedCatalog.items);
+        const tabs = getTabs();
+        state.tab = tabs.includes(tab) ? tab : (tabs[0] || "");
+        const cats = getCats();
+        state.cat = cats.includes(cat) ? cat : "";
+        renderAll();
+        renderWarnings(warnings);
+      };
+
+      let addGroupMode = "";
+      let addGroupContext = {};
+      const openAddGroupDialog = (mode, context = {}) => {
+        if (mode === "category" && !state.tab) return;
+        addGroupMode = mode;
+        addGroupContext = context;
+        $("addGroupForm")?.reset();
+        $("addGroupError")?.classList.add("hidden");
+        const isTab = mode === "tab";
+        const isCategory = mode === "category";
+        $("addGroupTitle").textContent = isTab ? "タブを追加" : isCategory ? "カテゴリを追加" : "サブカテゴリを追加";
+        $("addGroupDescription").textContent = isTab
+          ? "新しいタブ名を入力します。"
+          : isCategory
+            ? `「${state.tab}」にカテゴリを追加します。`
+            : `「${context.category}」にサブカテゴリを追加します。`;
+        $("addGroupDialog")?.showModal();
+        $("addGroupName")?.focus();
+      };
+
+      const showAddGroupError = (message) => {
+        const error = $("addGroupError");
+        if (!error) return;
+        error.textContent = message;
+        error.classList.remove("hidden");
+      };
+
+      const onAddGroupSubmit = (event) => {
+        event.preventDefault();
+        const name = $("addGroupName")?.value.trim() || "";
+        if (!name) {
+          showAddGroupError("名前を入力してください。");
+          return;
+        }
+        if (addGroupMode === "tab" && getTabs().includes(name)) {
+          showAddGroupError("同じ名前のタブがすでにあります。");
+          return;
+        }
+        if (addGroupMode === "category" && getCats().includes(name)) {
+          showAddGroupError("同じ名前のカテゴリがすでにあります。");
+          return;
+        }
+        if (
+          addGroupMode === "subCategory"
+          && getSubCategoryBlocks(addGroupContext.tab, addGroupContext.category)
+            .some((block) => toSafeString(block[0]).trim() === name)
+        ) {
+          showAddGroupError("同じ名前のサブカテゴリがすでにあります。");
+          return;
+        }
+
+        const previousCatalog = cloneCatalog(catalog);
+        if (addGroupMode === "tab") addTab(name);
+        else if (addGroupMode === "category") addCategory(state.tab, name);
+        else if (addGroupMode === "subCategory") {
+          addSubCategory(addGroupContext.tab, addGroupContext.category, name);
+        }
+        else return;
+
+        try {
+          saveCatalog(catalog);
+        } catch (e) {
+          catalog = previousCatalog;
+          showAddGroupError("ローカルストレージに保存できませんでした。");
+          return;
+        }
+
+        const nextState = addGroupMode === "tab"
+          ? { tab: name, cat: "" }
+          : addGroupMode === "category"
+            ? { tab: state.tab, cat: name }
+            : { tab: addGroupContext.tab, cat: addGroupContext.category };
+        $("addGroupDialog")?.close();
+        refreshCatalog(nextState);
+      };
+
+      const onOpenAddGroupClick = (event) => {
+        const button = event.target.closest("[data-add-group]");
+        if (!button || button.disabled) return;
+        openAddGroupDialog(button.dataset.addGroup || "", {
+          tab: button.dataset.addTab || state.tab,
+          category: button.dataset.addCategory || ""
+        });
+      };
+
+      const setDatalistOptions = (id, values) => {
+        const holder = $(id);
+        if (!holder) return;
+        holder.innerHTML = dedupe(values.filter(Boolean))
+          .map((value) => `<option value="${toHtml(value)}"></option>`)
+          .join("");
+      };
+
+      const refreshAddDialogOptions = () => {
+        const tab = $("addTab")?.value.trim() || "";
+        const category = $("addCategory")?.value.trim() || "";
+        const categoryOptions = tab
+          ? getCategoryBlocks(tab).map((block) => toSafeString(block[0]).trim())
+          : getTabBlocks().flatMap((block) =>
+            (Array.isArray(block[1]) ? block[1] : []).map((categoryBlock) => toSafeString(categoryBlock?.[0]).trim())
+          );
+        setDatalistOptions("tabOptions", getTabs());
+        setDatalistOptions(
+          "categoryOptions",
+          categoryOptions
+        );
+        setDatalistOptions(
+          "subCategoryOptions",
+          tab && category
+            ? getSubCategoryBlocks(tab, category).map((block) => toSafeString(block[0]).trim())
+            : state.all
+              .filter((item) => (!tab || item.tab === tab) && (!category || item.category === category))
+              .map((item) => item.subCategory)
+        );
+      };
+
+      const prepareAddDialog = (presets = {}, lockContext = false) => {
+        const form = $("addPathForm");
+        const dialog = $("addPathDialog");
+        if (!form || !dialog) return;
+        form.reset();
+        $("addPathError")?.classList.add("hidden");
+        const tab = toSafeString(presets.tab);
+        const category = toSafeString(presets.category);
+        const subCategory = toSafeString(presets.subCategory);
+        $("addTab").value = tab;
+        $("addCategory").value = category;
+        $("addSubCategory").value = subCategory;
+        ["addTab", "addCategory", "addSubCategory"].forEach((id) => {
+          const field = $(id);
+          const shouldLock = lockContext && Boolean(field.value);
+          field.readOnly = shouldLock;
+          field.classList.toggle("context-locked", shouldLock);
+        });
+        refreshAddDialogOptions();
+        dialog.showModal();
+        const firstEmptyField = ["addTab", "addCategory", "addSubCategory", "addName", "addPath"]
+          .map($)
+          .find((field) => field && !field.value);
+        firstEmptyField?.focus();
+      };
+
+      const onAddShortcutClick = (event) => {
+        const button = event.target.closest("[data-add-path]");
+        if (!button) return;
+        event.preventDefault();
+        event.stopPropagation();
+        prepareAddDialog({
+          tab: button.dataset.addTab || "",
+          category: button.dataset.addCategory || "",
+          subCategory: button.dataset.addSubCategory || ""
+        }, true);
+      };
+
+      const closeAddMenu = () => {
+        $("addMenu")?.classList.add("hidden");
+        $("openAddMenuButton")?.setAttribute("aria-expanded", "false");
+      };
+
+      const closeDataMenu = () => {
+        $("dataMenu")?.classList.add("hidden");
+        $("openDataMenuButton")?.setAttribute("aria-expanded", "false");
+      };
+
+      const toggleAddMenu = () => {
+        const menu = $("addMenu");
+        const button = $("openAddMenuButton");
+        if (!menu || !button) return;
+        const willOpen = menu.classList.contains("hidden");
+        closeDataMenu();
+        menu.classList.toggle("hidden", !willOpen);
+        button.setAttribute("aria-expanded", willOpen.toString());
+      };
+
+      const toggleDataMenu = () => {
+        const menu = $("dataMenu");
+        const button = $("openDataMenuButton");
+        if (!menu || !button) return;
+        const willOpen = menu.classList.contains("hidden");
+        closeAddMenu();
+        menu.classList.toggle("hidden", !willOpen);
+        button.setAttribute("aria-expanded", willOpen.toString());
+      };
+
+      const onAddMenuAction = (event) => {
+        const button = event.target.closest("[data-add-action]");
+        if (!button || button.disabled) return;
+        const action = button.dataset.addAction || "";
+        closeAddMenu();
+        if (action === "path") prepareAddDialog();
+        else if (action === "category") openAddGroupDialog("category");
+        else if (action === "tab") openAddGroupDialog("tab");
+      };
+
+      const onDataMenuAction = (event) => {
+        const button = event.target.closest("[data-data-action]");
+        if (!button) return;
+        const action = button.dataset.dataAction || "";
+        closeDataMenu();
+        if (action === "import") $("importDataInput")?.click();
+        else if (action === "export") exportCatalogData();
+      };
+
+      const onDocumentClick = (event) => {
+        const addMenu = $("addMenu");
+        const addButton = $("openAddMenuButton");
+        if (addMenu && !addMenu.classList.contains("hidden")
+          && !addMenu.contains(event.target) && !addButton?.contains(event.target)) {
+          closeAddMenu();
+        }
+        const dataMenu = $("dataMenu");
+        const dataButton = $("openDataMenuButton");
+        if (dataMenu && !dataMenu.classList.contains("hidden")
+          && !dataMenu.contains(event.target) && !dataButton?.contains(event.target)) {
+          closeDataMenu();
+        }
+      };
+
+      const showAddPathError = (message) => {
+        const error = $("addPathError");
+        if (!error) return;
+        error.textContent = message;
+        error.classList.remove("hidden");
+      };
+
+      const onAddPathSubmit = (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const values = Object.fromEntries(new FormData(form).entries());
+        const item = {
+          tab: toSafeString(values.tab).trim(),
+          category: toSafeString(values.category).trim(),
+          subCategory: toSafeString(values.subCategory).trim(),
+          name: toSafeString(values.name).trim(),
+          path: toSafeString(values.path).trim(),
+          note: toSafeString(values.note)
+        };
+        if (!item.tab || !item.category || !item.subCategory || !item.name || !item.path) {
+          showAddPathError("必須項目を入力してください。");
+          return;
+        }
+
+        appendCatalogItem(item);
+        try {
+          saveCatalog(catalog);
+        } catch (e) {
+          catalog = loadCatalog().catalog;
+          showAddPathError("ローカルストレージに保存できませんでした。");
+          return;
+        }
+
+        refreshCatalog({ tab: item.tab, cat: item.category });
+        $("addPathDialog")?.close();
+        showInlineToast($("openAddMenuButton")?.parentElement, "保存しました");
+      };
+
+      const DATA_FILE_PREFIX = [
+        "// Path Catalog data",
+        "// ブラウザからの登録・読み込み・書き出しを推奨します。",
+        ""
+      ].join("\n");
+
+      const buildDataJs = (value) =>
+        `${DATA_FILE_PREFIX}window.PATH_CATALOG = ${JSON.stringify(value, null, 2)};\n`;
+
+      const exportCatalogData = () => {
+        const blob = new Blob([buildDataJs(catalog)], { type: "text/javascript;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "data.js";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showInlineToast($("openDataMenuButton")?.parentElement, "書き出しました");
+      };
+
+      const validateCatalogData = (value) => {
+        if (!Array.isArray(value)) throw new Error("カタログ全体が配列ではありません。");
+        value.forEach((tabBlock, t) => {
+          if (!Array.isArray(tabBlock) || tabBlock.length !== 2 || typeof tabBlock[0] !== "string" || !tabBlock[0].trim()) {
+            throw new Error(`タブ ${t + 1} の形式が不正です。`);
+          }
+          if (!Array.isArray(tabBlock[1])) throw new Error(`タブ「${tabBlock[0]}」のカテゴリが配列ではありません。`);
+          tabBlock[1].forEach((categoryBlock, c) => {
+            if (!Array.isArray(categoryBlock) || categoryBlock.length !== 2 || typeof categoryBlock[0] !== "string" || !categoryBlock[0].trim()) {
+              throw new Error(`タブ「${tabBlock[0]}」のカテゴリ ${c + 1} の形式が不正です。`);
+            }
+            if (!Array.isArray(categoryBlock[1])) throw new Error(`カテゴリ「${categoryBlock[0]}」のサブカテゴリが配列ではありません。`);
+            categoryBlock[1].forEach((subBlock, s) => {
+              if (!Array.isArray(subBlock) || subBlock.length !== 2 || typeof subBlock[0] !== "string" || !subBlock[0].trim()) {
+                throw new Error(`カテゴリ「${categoryBlock[0]}」のサブカテゴリ ${s + 1} の形式が不正です。`);
+              }
+              if (!Array.isArray(subBlock[1])) throw new Error(`サブカテゴリ「${subBlock[0]}」のパスが配列ではありません。`);
+              subBlock[1].forEach((row, i) => {
+                if (!Array.isArray(row) || row.length !== 3 || row.some((cell) => typeof cell !== "string")) {
+                  throw new Error(`サブカテゴリ「${subBlock[0]}」のパス ${i + 1} の形式が不正です。`);
+                }
+                if (!row[0].trim() || !row[1].trim()) {
+                  throw new Error(`サブカテゴリ「${subBlock[0]}」のパス ${i + 1} に必須項目がありません。`);
+                }
+              });
+            });
+          });
+        });
+        return value;
+      };
+
+      const parseDataJs = (text) => {
+        const match = text.match(
+          /^\uFEFF?(?:\s*\/\/[^\r\n]*(?:\r?\n|$))*\s*window\.PATH_CATALOG\s*=\s*([\s\S]*?)\s*;\s*$/
+        );
+        if (!match) {
+          throw new Error("Path Catalogから書き出したJSON互換形式のdata.jsではありません。");
+        }
+        return validateCatalogData(JSON.parse(match[1]));
+      };
+
+      const importCatalogData = async (file) => {
+        if (!file) return;
+        try {
+          const imported = parseDataJs(await file.text());
+          const importedItems = normalizeCatalog(imported).items.length;
+          const confirmed = window.confirm(
+            `${file.name}を読み込み、現在のデータを置き換えます。\n`
+            + `タブ: ${imported.length}件 / パス: ${importedItems}件\n\n続行しますか？`
+          );
+          if (!confirmed) return;
+          saveCatalog(imported);
+          catalog = cloneCatalog(imported);
+          refreshCatalog({ tab: "", cat: "" });
+          showInlineToast($("openDataMenuButton")?.parentElement, "読み込みました");
+        } catch (e) {
+          window.alert(`データを読み込めませんでした。\n${e.message || e}`);
+        } finally {
+          const input = $("importDataInput");
+          if (input) input.value = "";
+        }
       };
 
       // カード上に短時間出すミニトースト
@@ -976,7 +1623,7 @@
         const btn = event.target.closest("[data-subcat-toggle]");
         if (!btn) return;
         const key = btn.getAttribute("data-subcat-toggle") || "";
-        const list = btn.nextElementSibling;
+        const list = btn.parentElement?.nextElementSibling;
         if (!list || !list.classList.contains("subcat-list")) return;
         const willCollapse = !list.classList.contains("hidden");
         list.classList.toggle("hidden");
@@ -1025,11 +1672,29 @@
         const tabNav = $("tabNav");
         const catList = $("catList");
         const list = $("list");
+        const addPathForm = $("addPathForm");
+        const addPathDialog = $("addPathDialog");
+        const addGroupForm = $("addGroupForm");
+        const addGroupDialog = $("addGroupDialog");
 
         if (tabNav) tabNav.addEventListener("click", onTabClick);
         if (catList) catList.addEventListener("click", onCatClick);
+        $("openAddMenuButton")?.addEventListener("click", toggleAddMenu);
+        $("addMenu")?.addEventListener("click", onAddMenuAction);
+        $("openDataMenuButton")?.addEventListener("click", toggleDataMenu);
+        $("dataMenu")?.addEventListener("click", onDataMenuAction);
+        $("importDataInput")?.addEventListener("change", (event) => importCatalogData(event.target.files?.[0]));
+        $("cancelAddPathButton")?.addEventListener("click", () => addPathDialog?.close());
+        $("cancelAddGroupButton")?.addEventListener("click", () => addGroupDialog?.close());
+        $("addTab")?.addEventListener("input", refreshAddDialogOptions);
+        $("addCategory")?.addEventListener("input", refreshAddDialogOptions);
+        if (addPathForm) addPathForm.addEventListener("submit", onAddPathSubmit);
+        if (addGroupForm) addGroupForm.addEventListener("submit", onAddGroupSubmit);
         document.addEventListener("keydown", onKeydown);
+        document.addEventListener("click", onDocumentClick);
         if (list) {
+          list.addEventListener("click", onAddShortcutClick);
+          list.addEventListener("click", onOpenAddGroupClick);
           list.addEventListener("click", onSubcatToggle);
           list.addEventListener("click", onListClick);
           list.addEventListener("mouseover", onNoteOver);
