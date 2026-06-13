@@ -1,12 +1,12 @@
 <div align="center">
 
-![パスノート](docs/path-catalog-readme-banner.svg)
+![パスノート](docs/path-note-readme-banner.svg)
 
 パスをまとめて、見つけやすく。
 
 </div>
 
-![パスノートの画面](docs/path-catalog-sample-capture.png)
+![パスノートの画面](docs/path-note-sample-capture.png)
 
 ## 特長
 
@@ -17,8 +17,8 @@
 
 ## 始め方
 
-1. `path-catalog.html`と`data.js`を同じフォルダーに置く
-2. `path-catalog.html`をブラウザで開く
+1. `path-note.html`と`data.js`を同じフォルダーに置く
+2. `path-note.html`をブラウザで開く
 
 インストールやサーバーは不要です。
 
