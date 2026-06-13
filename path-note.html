@@ -1059,13 +1059,12 @@
       };
 
       // UIの選択状態
+      const initialTabs = dedupe(getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
       const state = {
         all: normalize(normalizedCatalog.items),
-        tab: "",
+        tab: initialTabs[0] || "",
         cat: "",
       };
-      const initialTabs = dedupe(getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
-      state.tab = initialTabs[0] || "";
       let activeNoteRow = null;
 
       // 現在の選択状態で絞り込み
@@ -1446,10 +1445,7 @@
         normalizedCatalog = normalizeCatalog(catalog);
         warnings = normalizedCatalog.warnings;
         state.all = normalize(normalizedCatalog.items);
-        const tabs = getTabs();
-        state.tab = tabs.includes(tab) ? tab : (tabs[0] || "");
-        const cats = getCats();
-        state.cat = cats.includes(cat) ? cat : "";
+        setSelection({ tab, cat }, { render: false, hideNote: false });
         renderAll();
         renderWarnings(warnings);
       };
@@ -1884,23 +1880,26 @@
         };
       })();
 
-      // 状態変更はここに集約
+      const setSelection = ({ tab = state.tab, cat = state.cat } = {},
+        { render = true, hideNote = true } = {}) => {
+        const tabs = getTabs();
+        state.tab = tabs.includes(tab) ? tab : (tabs[0] || "");
+        const cats = getCats();
+        state.cat = cats.includes(cat) ? cat : "";
+        if (hideNote) {
+          activeNoteRow = null;
+          noteTooltip.hide();
+        }
+        if (render) renderAll();
+      };
+
+      // 選択状態の変更は actions 経由に限定
       const actions = {
         setTab: (tab) => {
           if (tab === state.tab) return;
-          state.tab = tab;
-          state.cat = "";
-          activeNoteRow = null;
-          noteTooltip.hide();
-          renderAll();
+          setSelection({ tab, cat: "" });
         },
-        setCat: (cat) => {
-          const cats = getCats();
-          state.cat = cats.includes(cat) ? cat : "";
-          activeNoteRow = null;
-          noteTooltip.hide();
-          renderAll();
-        },
+        setCat: (cat) => setSelection({ cat }),
       };
 
       const isEditableTarget = (target) => {
