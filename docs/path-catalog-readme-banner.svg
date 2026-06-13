@@ -1,44 +1,47 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
-  <title id="title">Path Catalog</title>
-  <desc id="desc">よく使うパスを、見つけやすく。</desc>
+  <title id="title">ここかな。</title>
+  <desc id="desc">散らかったパスから、探していた場所へ。</desc>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#111827"/>
-      <stop offset="1" stop-color="#0f172a"/>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#171426"/>
+      <stop offset="1" stop-color="#292344"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#8b5cf6"/>
-      <stop offset="1" stop-color="#6d28d9"/>
+    <linearGradient id="icon" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#443d70"/>
+      <stop offset="1" stop-color="#201c38"/>
     </linearGradient>
-    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="35"/>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000" flood-opacity=".32"/>
     </filter>
+    <clipPath id="iconClip">
+      <rect width="180" height="180" rx="42"/>
+    </clipPath>
   </defs>
 
-  <rect width="1200" height="360" rx="28" fill="url(#bg)"/>
-  <circle cx="960" cy="40" r="210" fill="#7c3aed" opacity=".16" filter="url(#glow)"/>
-  <circle cx="1140" cy="300" r="160" fill="#2563eb" opacity=".1" filter="url(#glow)"/>
-
-  <g transform="translate(86 90)">
-    <rect width="180" height="180" rx="52" fill="url(#accent)"/>
-    <path d="M40 126 78 62" fill="none" stroke="#f8fafc" stroke-width="17" stroke-linecap="round"/>
-    <rect x="101" y="56" width="62" height="62" rx="10" fill="#e2e8f0" opacity=".55"/>
-    <rect x="85" y="72" width="62" height="62" rx="10" fill="#f8fafc"/>
+  <rect width="1200" height="360" rx="28" fill="url(#page)"/>
+  <g transform="translate(82 90)" filter="url(#shadow)" clip-path="url(#iconClip)">
+    <rect width="180" height="180" rx="42" fill="url(#icon)"/>
+    <g font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="10" font-weight="700" fill="#aaa3bd">
+      <text x="-4" y="28">../old/src</text>
+      <text x="132" y="42">~/tmp</text>
+      <text x="-4" y="76">C:\work</text>
+      <text x="139" y="84">/assets</text>
+      <text x="-3" y="160">~/archive</text>
+      <text x="143" y="148">../docs</text>
+    </g>
+    <rect x="36" y="94" width="128" height="30" rx="7" fill="#c6a765"/>
+    <text x="46" y="114" fill="#4c3f40" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="12" font-weight="700">/src/data.js</text>
   </g>
 
-  <g font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
-    <text x="320" y="145" fill="#f8fafc" font-size="72" font-weight="750" letter-spacing="-2">Path Catalog</text>
-    <text x="324" y="205" fill="#cbd5e1" font-size="27" font-weight="500">よく使うパスを、見つけやすく。</text>
-
-    <g transform="translate(322 244)" font-size="17" font-weight="600">
-      <rect width="156" height="42" rx="21" fill="#7c3aed" opacity=".18" stroke="#8b5cf6" stroke-opacity=".65"/>
-      <text x="78" y="27" fill="#ddd6fe" text-anchor="middle">クリックでコピー</text>
-
-      <rect x="170" width="142" height="42" rx="21" fill="#2563eb" opacity=".15" stroke="#3b82f6" stroke-opacity=".55"/>
-      <text x="241" y="27" fill="#bfdbfe" text-anchor="middle">ブラウザで登録</text>
-
-      <rect x="326" width="168" height="42" rx="21" fill="#0f766e" opacity=".18" stroke="#14b8a6" stroke-opacity=".55"/>
-      <text x="410" y="27" fill="#99f6e4" text-anchor="middle">インストール不要</text>
+  <g font-family="'Noto Sans JP', ui-sans-serif, system-ui, sans-serif">
+    <text x="320" y="150" fill="#f8fafc" font-size="72" font-weight="800" letter-spacing="-3">ここかな。</text>
+    <text x="324" y="205" fill="#cbd5e1" font-size="25" font-weight="500">散らかったパスから、探していた場所へ。</text>
+    <g transform="translate(324 242)" font-size="16" font-weight="600">
+      <text x="0" y="25" fill="#c6a765">ブラウザで登録</text>
+      <text x="132" y="25" fill="#6b648a">/</text>
+      <text x="155" y="25" fill="#cbd5e1">クリックでコピー</text>
+      <text x="300" y="25" fill="#6b648a">/</text>
+      <text x="323" y="25" fill="#cbd5e1">data.jsで持ち運ぶ</text>
     </g>
   </g>
 </svg>

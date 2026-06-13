@@ -4,7 +4,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Path Catalog</title>
+  <title>ここかな。</title>
+  <link rel="icon" href="docs/kokokana-icon.svg" type="image/svg+xml">
 
   <!-- 開発・配布を簡単にするため CDN 版 Tailwind を利用 -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -301,58 +302,8 @@
       style="background-color: var(--bg-layer); border-color: var(--border);">
       <div class="grid grid-cols-[260px_1fr_auto] items-end gap-3">
         <div class="flex items-center gap-2.5" style="color: var(--text-heading);">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo"
-            class="h-9 w-auto">
-            <defs>
-              <style>
-                .badge {
-                  fill: #7c3aed;
-                }
-
-                .sqFront {
-                  fill: #f8fafc;
-                }
-
-                .sqBack {
-                  fill: #e2e8f0;
-                  opacity: 0.55;
-                }
-
-                .slash {
-                  stroke: #f8fafc;
-                  stroke-width: 22;
-                  stroke-linecap: round;
-                  fill: none;
-                }
-
-                .wordMain {
-                  fill: #f8fafc;
-                  font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                  font-size: 88px;
-                  font-weight: 700;
-                  letter-spacing: -0.02em;
-                }
-
-                .wordSub {
-                  fill: #cbd5e1;
-                  font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                  font-size: 88px;
-                  font-weight: 600;
-                  letter-spacing: -0.02em;
-                }
-              </style>
-            </defs>
-            <g transform="translate(24,24) scale(0.72)">
-              <rect class="badge" x="16" y="16" width="224" height="224" rx="64" />
-              <path class="slash" d="M50 165 L94 91" />
-              <rect class="sqBack" x="136" y="80" width="80" height="80" rx="12" />
-              <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12" />
-            </g>
-            <g transform="translate(280,150)">
-              <text x="0" y="0" class="wordMain">Path</text>
-              <text x="205" y="0" class="wordSub">Catalog</text>
-            </g>
-          </svg>
+          <img src="docs/kokokana-icon.svg" alt="" class="h-9 w-9 rounded-lg">
+          <span class="text-xl font-bold tracking-tight text-slate-100">ここかな。</span>
         </div>
         <div id="tabNav" class="flex flex-wrap items-end gap-1.5 pt-1 pb-1 -mb-[1px]"></div>
         <div class="relative flex items-center gap-2 pb-1">
@@ -1387,7 +1338,7 @@
       };
 
       const DATA_FILE_PREFIX = [
-        "// Path Catalog data",
+        "// ここかな。 data",
         "// ブラウザからの登録・読み込み・書き出しを推奨します。",
         ""
       ].join("\n");
@@ -1444,7 +1395,7 @@
           /^\uFEFF?(?:\s*\/\/[^\r\n]*(?:\r?\n|$))*\s*window\.PATH_CATALOG\s*=\s*([\s\S]*?)\s*;\s*$/
         );
         if (!match) {
-          throw new Error("Path Catalogから書き出したJSON互換形式のdata.jsではありません。");
+          throw new Error("ここかな。から書き出したJSON互換形式のdata.jsではありません。");
         }
         return validateCatalogData(JSON.parse(match[1]));
       };

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">ここかな。アイコン</title>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#443d70"/>
+      <stop offset="1" stop-color="#201c38"/>
+    </linearGradient>
+    <clipPath id="icon">
+      <rect width="512" height="512" rx="116"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#icon)">
+    <rect width="512" height="512" fill="url(#background)"/>
+
+    <g font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="27" font-weight="700">
+      <text x="-12" y="77" fill="#aaa3bd">../old/src</text>
+      <text x="356" y="105" fill="#aaa3bd">~/tmp</text>
+      <text x="-14" y="205" fill="#aaa3bd">C:\work</text>
+      <text x="374" y="225" fill="#aaa3bd">/assets</text>
+      <text x="-10" y="449" fill="#aaa3bd">~/archive</text>
+      <text x="385" y="421" fill="#aaa3bd">../docs</text>
+
+      <g transform="translate(101 270)">
+        <rect width="358" height="80" rx="18" fill="#c6a765"/>
+        <text x="27" y="54" fill="#4c3f40" font-size="32">/src/data.js</text>
+      </g>
+    </g>
+  </g>
+</svg>

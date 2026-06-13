@@ -1,12 +1,12 @@
 <div align="center">
 
-![Path Catalog](docs/path-catalog-readme-banner.svg)
+![ここかな。](docs/path-catalog-readme-banner.svg)
 
 フォルダーパスやURLを整理して、クリックですぐコピー。
 
 </div>
 
-![Path Catalog screen](docs/path-catalog-sample-capture.png)
+![ここかな。の画面](docs/path-catalog-sample-capture.png)
 
 ## 特長
 
