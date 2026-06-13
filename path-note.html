@@ -1450,6 +1450,19 @@
         renderWarnings(warnings);
       };
 
+      const commitCatalogChange = (change, { selection = {} } = {}) => {
+        const previousCatalog = cloneCatalog(catalog);
+        try {
+          change();
+          saveCatalog(catalog);
+        } catch (error) {
+          catalog = previousCatalog;
+          return { ok: false, error };
+        }
+        refreshCatalog(selection);
+        return { ok: true };
+      };
+
       let addGroupMode = "";
       let addGroupContext = {};
       const openAddGroupDialog = (mode, context = {}) => {
@@ -1501,29 +1514,25 @@
           return;
         }
 
-        const previousCatalog = cloneCatalog(catalog);
-        if (addGroupMode === "tab") addTab(name);
-        else if (addGroupMode === "category") addCategory(state.tab, name);
-        else if (addGroupMode === "subCategory") {
-          addSubCategory(addGroupContext.tab, addGroupContext.category, name);
-        }
-        else return;
-
-        try {
-          saveCatalog(catalog);
-        } catch (e) {
-          catalog = previousCatalog;
-          showAddGroupError("ローカルストレージに保存できませんでした。");
-          return;
-        }
-
         const nextState = addGroupMode === "tab"
           ? { tab: name, cat: "" }
           : addGroupMode === "category"
             ? { tab: state.tab, cat: name }
             : { tab: addGroupContext.tab, cat: addGroupContext.category };
+        const result = commitCatalogChange(() => {
+          if (addGroupMode === "tab") addTab(name);
+          else if (addGroupMode === "category") addCategory(state.tab, name);
+          else if (addGroupMode === "subCategory") {
+            addSubCategory(addGroupContext.tab, addGroupContext.category, name);
+          }
+          else throw new Error("追加対象が不明です。");
+        }, { selection: nextState });
+        if (!result.ok) {
+          showAddGroupError("ローカルストレージに保存できませんでした。");
+          return;
+        }
+
         $("addGroupDialog")?.close();
-        refreshCatalog(nextState);
       };
 
       const onOpenAddGroupClick = (event) => {
@@ -1713,16 +1722,15 @@
           return;
         }
 
-        appendCatalogItem(item);
-        try {
-          saveCatalog(catalog);
-        } catch (e) {
-          catalog = loadCatalog().catalog;
+        const result = commitCatalogChange(
+          () => appendCatalogItem(item),
+          { selection: { tab: item.tab, cat: item.category } }
+        );
+        if (!result.ok) {
           showAddPathError("ローカルストレージに保存できませんでした。");
           return;
         }
 
-        refreshCatalog({ tab: item.tab, cat: item.category });
         $("addPathDialog")?.close();
         showInlineToast($("openAddMenuButton")?.parentElement, "保存しました");
       };
@@ -1800,9 +1808,11 @@
             + `タブ: ${imported.length}件 / パス: ${importedItems}件\n\n続行しますか？`
           );
           if (!confirmed) return;
-          saveCatalog(imported);
-          catalog = cloneCatalog(imported);
-          refreshCatalog({ tab: "", cat: "" });
+          const result = commitCatalogChange(
+            () => { catalog = cloneCatalog(imported); },
+            { selection: { tab: "", cat: "" } }
+          );
+          if (!result.ok) throw result.error;
           showInlineToast($("openDataMenuButton")?.parentElement, "読み込みました");
         } catch (e) {
           window.alert(`データを読み込めませんでした。\n${e.message || e}`);
