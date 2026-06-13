@@ -597,9 +597,7 @@
           </button>
           <div id="viewMenu" class="add-menu absolute right-[174px] top-full z-40 mt-2 hidden rounded-lg p-1.5 shadow-2xl">
             <div class="px-3 pb-1 text-xs font-semibold" style="color: var(--text-muted);">表示モード</div>
-            <button type="button" class="theme-option" data-theme-value="current">スタンダード</button>
-            <button type="button" class="theme-option" data-theme-value="open">オープン</button>
-            <button type="button" class="theme-option" data-theme-value="compact">コンパクト</button>
+            <div id="themeOptions"></div>
           </div>
           <button id="openDataMenuButton" type="button" aria-expanded="false" aria-controls="dataMenu"
             class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold">
@@ -843,12 +841,33 @@
       const CATALOG_STORAGE_KEY = "pathCatalog.catalog.v1";
       const SUBCAT_STORAGE_KEY = "pathCatalog.subcatCollapsed.v1";
       const THEME_STORAGE_KEY = "pathNote.theme.v1";
-      const THEMES = new Set(["current", "open", "compact"]);
+      const THEME_CONFIG = [
+        { key: "current", label: "スタンダード", legacyKeys: ["focus"] },
+        { key: "open", label: "オープン", legacyKeys: ["paper", "index"] },
+        { key: "compact", label: "コンパクト", legacyKeys: [] },
+      ];
+      const DEFAULT_THEME = THEME_CONFIG[0].key;
+      const THEMES = new Set(THEME_CONFIG.map(({ key }) => key));
+      const LEGACY_THEME_MAP = Object.fromEntries(
+        THEME_CONFIG.flatMap(({ key, legacyKeys }) =>
+          legacyKeys.map((legacyKey) => [legacyKey, key]))
+      );
+
+      const resolveTheme = (theme) => {
+        const mappedTheme = LEGACY_THEME_MAP[theme] || theme;
+        return THEMES.has(mappedTheme) ? mappedTheme : DEFAULT_THEME;
+      };
+
+      const renderThemeOptions = () => {
+        const holder = $("themeOptions");
+        if (!holder) return;
+        holder.innerHTML = THEME_CONFIG.map(({ key, label }) => `
+          <button type="button" class="theme-option" data-theme-value="${toHtml(key)}">${toHtml(label)}</button>
+        `).join("");
+      };
 
       const applyTheme = (theme, { persist = true } = {}) => {
-        const legacyThemeMap = { focus: "current", paper: "open", index: "open" };
-        const mappedTheme = legacyThemeMap[theme] || theme;
-        const safeTheme = THEMES.has(mappedTheme) ? mappedTheme : "current";
+        const safeTheme = resolveTheme(theme);
         document.documentElement.dataset.theme = safeTheme;
         document.querySelectorAll("[data-theme-value]").forEach((button) => {
           button.classList.toggle("active", button.dataset.themeValue === safeTheme);
@@ -864,9 +883,9 @@
 
       const loadTheme = () => {
         try {
-          return localStorage.getItem(THEME_STORAGE_KEY) || "current";
+          return localStorage.getItem(THEME_STORAGE_KEY) || DEFAULT_THEME;
         } catch (e) {
-          return "current";
+          return DEFAULT_THEME;
         }
       };
       const subcatKeyFor = (tab, cat, sub) =>
@@ -1589,53 +1608,59 @@
         }, true);
       };
 
-      const closeAddMenu = () => {
-        $("addMenu")?.classList.add("hidden");
-        $("openAddMenuButton")?.setAttribute("aria-expanded", "false");
-      };
+      const menuController = (() => {
+        const menus = {
+          add: { menuId: "addMenu", buttonId: "openAddMenuButton" },
+          data: { menuId: "dataMenu", buttonId: "openDataMenuButton" },
+          view: { menuId: "viewMenu", buttonId: "openViewMenuButton" },
+        };
 
-      const closeDataMenu = () => {
-        $("dataMenu")?.classList.add("hidden");
-        $("openDataMenuButton")?.setAttribute("aria-expanded", "false");
-      };
+        const getElements = (name) => {
+          const config = menus[name];
+          if (!config) return {};
+          return { menu: $(config.menuId), button: $(config.buttonId) };
+        };
 
-      const closeViewMenu = () => {
-        $("viewMenu")?.classList.add("hidden");
-        $("openViewMenuButton")?.setAttribute("aria-expanded", "false");
-      };
+        const close = (name) => {
+          const { menu, button } = getElements(name);
+          menu?.classList.add("hidden");
+          button?.setAttribute("aria-expanded", "false");
+        };
 
-      const toggleAddMenu = () => {
-        const menu = $("addMenu");
-        const button = $("openAddMenuButton");
-        if (!menu || !button) return;
-        const willOpen = menu.classList.contains("hidden");
-        closeDataMenu();
-        closeViewMenu();
-        menu.classList.toggle("hidden", !willOpen);
-        button.setAttribute("aria-expanded", willOpen.toString());
-      };
+        const closeAll = (except = "") => {
+          Object.keys(menus).forEach((name) => {
+            if (name !== except) close(name);
+          });
+        };
 
-      const toggleDataMenu = () => {
-        const menu = $("dataMenu");
-        const button = $("openDataMenuButton");
-        if (!menu || !button) return;
-        const willOpen = menu.classList.contains("hidden");
-        closeAddMenu();
-        closeViewMenu();
-        menu.classList.toggle("hidden", !willOpen);
-        button.setAttribute("aria-expanded", willOpen.toString());
-      };
+        const toggle = (name) => {
+          const { menu, button } = getElements(name);
+          if (!menu || !button) return;
+          const willOpen = menu.classList.contains("hidden");
+          closeAll(name);
+          menu.classList.toggle("hidden", !willOpen);
+          button.setAttribute("aria-expanded", willOpen.toString());
+        };
 
-      const toggleViewMenu = () => {
-        const menu = $("viewMenu");
-        const button = $("openViewMenuButton");
-        if (!menu || !button) return;
-        const willOpen = menu.classList.contains("hidden");
-        closeAddMenu();
-        closeDataMenu();
-        menu.classList.toggle("hidden", !willOpen);
-        button.setAttribute("aria-expanded", willOpen.toString());
-      };
+        const closeFromOutsideClick = (event) => {
+          Object.keys(menus).forEach((name) => {
+            const { menu, button } = getElements(name);
+            if (menu && !menu.classList.contains("hidden")
+              && !menu.contains(event.target) && !button?.contains(event.target)) {
+              close(name);
+            }
+          });
+        };
+
+        return { close, toggle, closeFromOutsideClick };
+      })();
+
+      const closeAddMenu = () => menuController.close("add");
+      const closeDataMenu = () => menuController.close("data");
+      const closeViewMenu = () => menuController.close("view");
+      const toggleAddMenu = () => menuController.toggle("add");
+      const toggleDataMenu = () => menuController.toggle("data");
+      const toggleViewMenu = () => menuController.toggle("view");
 
       const onAddMenuAction = (event) => {
         const button = event.target.closest("[data-add-action]");
@@ -1659,30 +1684,13 @@
       const onThemeAction = (event) => {
         const button = event.target.closest("[data-theme-value]");
         if (!button) return;
-        applyTheme(button.dataset.themeValue || "current");
+        applyTheme(button.dataset.themeValue || DEFAULT_THEME);
         closeViewMenu();
         renderMain();
       };
 
       const onDocumentClick = (event) => {
-        const addMenu = $("addMenu");
-        const addButton = $("openAddMenuButton");
-        if (addMenu && !addMenu.classList.contains("hidden")
-          && !addMenu.contains(event.target) && !addButton?.contains(event.target)) {
-          closeAddMenu();
-        }
-        const dataMenu = $("dataMenu");
-        const dataButton = $("openDataMenuButton");
-        if (dataMenu && !dataMenu.classList.contains("hidden")
-          && !dataMenu.contains(event.target) && !dataButton?.contains(event.target)) {
-          closeDataMenu();
-        }
-        const viewMenu = $("viewMenu");
-        const viewButton = $("openViewMenuButton");
-        if (viewMenu && !viewMenu.classList.contains("hidden")
-          && !viewMenu.contains(event.target) && !viewButton?.contains(event.target)) {
-          closeViewMenu();
-        }
+        menuController.closeFromOutsideClick(event);
       };
 
       const showAddPathError = (message) => {
@@ -2045,6 +2053,7 @@
 
       // 初期化エントリポイント
       const init = () => {
+        renderThemeOptions();
         applyTheme(loadTheme(), { persist: false });
         bind();
         renderAll();
