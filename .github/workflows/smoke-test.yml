@@ -1,0 +1,63 @@
+name: Smoke test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check data.js syntax
+        run: node --check data.js
+
+      - name: Check HTML application contracts
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const vm = require("vm");
+
+          const html = fs.readFileSync("path-note.html", "utf8");
+          const inlineScripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
+
+          if (inlineScripts.length === 0) {
+            throw new Error("Inline application script was not found.");
+          }
+          inlineScripts.forEach((match, index) => {
+            new vm.Script(match[1], { filename: `path-note.inline-${index + 1}.js` });
+          });
+
+          const requiredIds = [
+            "tabNav",
+            "catList",
+            "list",
+            "openAddMenuButton",
+            "openDataMenuButton",
+            "openViewMenuButton",
+            "addPathDialog",
+            "addGroupDialog",
+          ];
+          requiredIds.forEach((id) => {
+            if (!new RegExp(`\\bid=["']${id}["']`).test(html)) {
+              throw new Error(`Required element #${id} was not found.`);
+            }
+          });
+
+          const dataScriptIndex = html.indexOf('<script src="data.js"></script>');
+          const appScriptIndex = inlineScripts[inlineScripts.length - 1].index;
+          if (dataScriptIndex < 0 || dataScriptIndex > appScriptIndex) {
+            throw new Error("data.js must load before the application script.");
+          }
+
+          const context = { window: {} };
+          vm.runInNewContext(fs.readFileSync("data.js", "utf8"), context, { filename: "data.js" });
+          if (!Array.isArray(context.window.PATH_CATALOG)) {
+            throw new Error("data.js must define window.PATH_CATALOG as an array.");
+          }
+
+          console.log(`Checked ${inlineScripts.length} inline scripts and ${requiredIds.length} required elements.`);
+          NODE
