@@ -1517,14 +1517,28 @@
         return { ok: true };
       };
 
+      const dialogController = {
+        reset: (formId, errorId) => {
+          $(formId)?.reset();
+          $(errorId)?.classList.add("hidden");
+        },
+        showError: (errorId, message) => {
+          const error = $(errorId);
+          if (!error) return;
+          error.textContent = message;
+          error.classList.remove("hidden");
+        },
+        open: (dialogId) => $(dialogId)?.showModal(),
+        close: (dialogId) => $(dialogId)?.close(),
+      };
+
       let addGroupMode = "";
       let addGroupContext = {};
       const openAddGroupDialog = (mode, context = {}) => {
         if (mode === "category" && !state.tab) return;
         addGroupMode = mode;
         addGroupContext = context;
-        $("addGroupForm")?.reset();
-        $("addGroupError")?.classList.add("hidden");
+        dialogController.reset("addGroupForm", "addGroupError");
         const isTab = mode === "tab";
         const isCategory = mode === "category";
         $("addGroupTitle").textContent = isTab ? "タブを追加" : isCategory ? "カテゴリを追加" : "サブカテゴリを追加";
@@ -1533,30 +1547,23 @@
           : isCategory
             ? `「${state.tab}」にカテゴリを追加します。`
             : `「${context.category}」にサブカテゴリを追加します。`;
-        $("addGroupDialog")?.showModal();
+        dialogController.open("addGroupDialog");
         $("addGroupName")?.focus();
-      };
-
-      const showAddGroupError = (message) => {
-        const error = $("addGroupError");
-        if (!error) return;
-        error.textContent = message;
-        error.classList.remove("hidden");
       };
 
       const onAddGroupSubmit = (event) => {
         event.preventDefault();
         const name = $("addGroupName")?.value.trim() || "";
         if (!name) {
-          showAddGroupError("名前を入力してください。");
+          dialogController.showError("addGroupError", "名前を入力してください。");
           return;
         }
         if (addGroupMode === "tab" && getTabs().includes(name)) {
-          showAddGroupError("同じ名前のタブがすでにあります。");
+          dialogController.showError("addGroupError", "同じ名前のタブがすでにあります。");
           return;
         }
         if (addGroupMode === "category" && getCats().includes(name)) {
-          showAddGroupError("同じ名前のカテゴリがすでにあります。");
+          dialogController.showError("addGroupError", "同じ名前のカテゴリがすでにあります。");
           return;
         }
         if (
@@ -1564,7 +1571,7 @@
           && catalogModel.getSubCategoryBlocks(addGroupContext.tab, addGroupContext.category)
             .some((block) => toSafeString(block[0]).trim() === name)
         ) {
-          showAddGroupError("同じ名前のサブカテゴリがすでにあります。");
+          dialogController.showError("addGroupError", "同じ名前のサブカテゴリがすでにあります。");
           return;
         }
 
@@ -1582,11 +1589,11 @@
           else throw new Error("追加対象が不明です。");
         }, { selection: nextState });
         if (!result.ok) {
-          showAddGroupError("ローカルストレージに保存できませんでした。");
+          dialogController.showError("addGroupError", "ローカルストレージに保存できませんでした。");
           return;
         }
 
-        $("addGroupDialog")?.close();
+        dialogController.close("addGroupDialog");
       };
 
       const onOpenAddGroupClick = (event) => {
@@ -1633,8 +1640,7 @@
         const form = $("addPathForm");
         const dialog = $("addPathDialog");
         if (!form || !dialog) return;
-        form.reset();
-        $("addPathError")?.classList.add("hidden");
+        dialogController.reset("addPathForm", "addPathError");
         const tab = toSafeString(presets.tab);
         const category = toSafeString(presets.category);
         const subCategory = toSafeString(presets.subCategory);
@@ -1648,7 +1654,7 @@
           field.classList.toggle("context-locked", shouldLock);
         });
         refreshAddDialogOptions();
-        dialog.showModal();
+        dialogController.open("addPathDialog");
         const firstEmptyField = ["addTab", "addCategory", "addSubCategory", "addName", "addPath"]
           .map($)
           .find((field) => field && !field.value);
@@ -1752,13 +1758,6 @@
         menuController.closeFromOutsideClick(event);
       };
 
-      const showAddPathError = (message) => {
-        const error = $("addPathError");
-        if (!error) return;
-        error.textContent = message;
-        error.classList.remove("hidden");
-      };
-
       const onAddPathSubmit = (event) => {
         event.preventDefault();
         const form = event.currentTarget;
@@ -1772,7 +1771,7 @@
           note: toSafeString(values.note)
         };
         if (!item.tab || !item.category || !item.subCategory || !item.name || !item.path) {
-          showAddPathError("必須項目を入力してください。");
+          dialogController.showError("addPathError", "必須項目を入力してください。");
           return;
         }
 
@@ -1781,11 +1780,11 @@
           { selection: { tab: item.tab, cat: item.category } }
         );
         if (!result.ok) {
-          showAddPathError("ローカルストレージに保存できませんでした。");
+          dialogController.showError("addPathError", "ローカルストレージに保存できませんでした。");
           return;
         }
 
-        $("addPathDialog")?.close();
+        dialogController.close("addPathDialog");
         showInlineToast($("openAddMenuButton")?.parentElement, "保存しました");
       };
 
@@ -2051,9 +2050,7 @@
         const catList = $("catList");
         const list = $("list");
         const addPathForm = $("addPathForm");
-        const addPathDialog = $("addPathDialog");
         const addGroupForm = $("addGroupForm");
-        const addGroupDialog = $("addGroupDialog");
 
         if (tabNav) tabNav.addEventListener("click", onTabClick);
         if (catList) catList.addEventListener("click", onCatClick);
@@ -2064,8 +2061,8 @@
         $("openDataMenuButton")?.addEventListener("click", toggleDataMenu);
         $("dataMenu")?.addEventListener("click", onDataMenuAction);
         $("importDataInput")?.addEventListener("change", (event) => importCatalogData(event.target.files?.[0]));
-        $("cancelAddPathButton")?.addEventListener("click", () => addPathDialog?.close());
-        $("cancelAddGroupButton")?.addEventListener("click", () => addGroupDialog?.close());
+        $("cancelAddPathButton")?.addEventListener("click", () => dialogController.close("addPathDialog"));
+        $("cancelAddGroupButton")?.addEventListener("click", () => dialogController.close("addGroupDialog"));
         $("addTab")?.addEventListener("input", refreshAddDialogOptions);
         $("addCategory")?.addEventListener("input", refreshAddDialogOptions);
         if (addPathForm) addPathForm.addEventListener("submit", onAddPathSubmit);
