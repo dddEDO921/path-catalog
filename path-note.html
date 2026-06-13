@@ -919,64 +919,111 @@
         note: toSafeString(x.note)
       }));
 
-      // 階層データをフラット化し、問題点は warnings に収集
-      function normalizeCatalog(raw) {
+      // 階層データを検査しながらフラット化する。strict はインポート時に使用する
+      const inspectCatalog = (raw, { strict = false } = {}) => {
         const warnings = [];
         const items = [];
 
         const warn = (msg, meta) => warnings.push({ msg, meta });
+        const rejectOrWarn = (strictMessage, warningMessage, meta) => {
+          if (strict) throw new Error(strictMessage);
+          warn(warningMessage, meta);
+        };
 
         if (!Array.isArray(raw)) {
-          warn("window.PATH_CATALOG が配列ではありません", { type: typeof raw });
+          rejectOrWarn(
+            "カタログ全体が配列ではありません。",
+            "window.PATH_CATALOG が配列ではありません",
+            { type: typeof raw }
+          );
           return { items, warnings };
         }
 
         for (let t = 0; t < raw.length; t++) {
           const tabBlock = raw[t];
-          if (!Array.isArray(tabBlock) || tabBlock.length < 2) {
-            warn("タブブロックが不正です", { t, tabBlock });
+          const validTabBlock = Array.isArray(tabBlock)
+            && (strict
+              ? tabBlock.length === 2 && typeof tabBlock[0] === "string" && Boolean(tabBlock[0].trim())
+              : tabBlock.length >= 2);
+          if (!validTabBlock) {
+            rejectOrWarn(`タブ ${t + 1} の形式が不正です。`, "タブブロックが不正です", { t, tabBlock });
             continue;
           }
           const tab = String(tabBlock[0] ?? "").trim();
           const categories = tabBlock[1];
 
           if (!Array.isArray(categories)) {
-            warn("カテゴリ配列が不正です", { t, tab });
+            rejectOrWarn(
+              `タブ「${tabBlock[0]}」のカテゴリが配列ではありません。`,
+              "カテゴリ配列が不正です",
+              { t, tab }
+            );
             continue;
           }
 
           for (let c = 0; c < categories.length; c++) {
             const catBlock = categories[c];
-            if (!Array.isArray(catBlock) || catBlock.length < 2) {
-              warn("カテゴリブロックが不正です", { t, c, catBlock });
+            const validCategoryBlock = Array.isArray(catBlock)
+              && (strict
+                ? catBlock.length === 2 && typeof catBlock[0] === "string" && Boolean(catBlock[0].trim())
+                : catBlock.length >= 2);
+            if (!validCategoryBlock) {
+              rejectOrWarn(
+                `タブ「${tabBlock[0]}」のカテゴリ ${c + 1} の形式が不正です。`,
+                "カテゴリブロックが不正です",
+                { t, c, catBlock }
+              );
               continue;
             }
             const category = String(catBlock[0] ?? "").trim();
             const subs = catBlock[1];
 
             if (!Array.isArray(subs)) {
-              warn("サブカテゴリ配列が不正です", { t, tab, c, category });
+              rejectOrWarn(
+                `カテゴリ「${catBlock[0]}」のサブカテゴリが配列ではありません。`,
+                "サブカテゴリ配列が不正です",
+                { t, tab, c, category }
+              );
               continue;
             }
 
             for (let s = 0; s < subs.length; s++) {
               const subBlock = subs[s];
-              if (!Array.isArray(subBlock) || subBlock.length < 2) {
-                warn("サブカテゴリブロックが不正です", { t, c, s, subBlock });
+              const validSubCategoryBlock = Array.isArray(subBlock)
+                && (strict
+                  ? subBlock.length === 2 && typeof subBlock[0] === "string" && Boolean(subBlock[0].trim())
+                  : subBlock.length >= 2);
+              if (!validSubCategoryBlock) {
+                rejectOrWarn(
+                  `カテゴリ「${catBlock[0]}」のサブカテゴリ ${s + 1} の形式が不正です。`,
+                  "サブカテゴリブロックが不正です",
+                  { t, c, s, subBlock }
+                );
                 continue;
               }
               const subCategory = String(subBlock[0] ?? "").trim(); // 空OK
               const rows = subBlock[1];
 
               if (!Array.isArray(rows)) {
-                warn("アイテム配列が不正です", { t, tab, c, category, s, subCategory });
+                rejectOrWarn(
+                  `サブカテゴリ「${subBlock[0]}」のパスが配列ではありません。`,
+                  "アイテム配列が不正です",
+                  { t, tab, c, category, s, subCategory }
+                );
                 continue;
               }
 
               for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
-                if (!Array.isArray(row)) {
-                  warn("アイテム行が配列ではありません", { t, c, s, i, row });
+                const validStrictRow = Array.isArray(row)
+                  && row.length === 3
+                  && row.every((cell) => typeof cell === "string");
+                if (!Array.isArray(row) || (strict && !validStrictRow)) {
+                  rejectOrWarn(
+                    `サブカテゴリ「${subBlock[0]}」のパス ${i + 1} の形式が不正です。`,
+                    "アイテム行が配列ではありません",
+                    { t, c, s, i, row }
+                  );
                   continue;
                 }
 
@@ -989,6 +1036,9 @@
                 const path = row[1] ?? "";
                 const note = String(row[2] ?? ""); // 空OK
 
+                if (strict && (!name || !String(path).trim())) {
+                  throw new Error(`サブカテゴリ「${subBlock[0]}」のパス ${i + 1} に必須項目がありません。`);
+                }
                 if (!name) warn("name が空です（表示は継続）", { t, c, s, i });
                 if (!path) warn("path が空です（表示は継続）", { t, c, s, i });
 
@@ -1008,7 +1058,6 @@
 
         return { items, warnings };
       };
-
       const cloneCatalog = (catalog) => JSON.parse(JSON.stringify(catalog));
       const saveCatalog = (catalog) => {
         localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(catalog));
@@ -1038,7 +1087,7 @@
       // 初回は data.js を展開し、以後はローカルストレージを正本にする
       const initialCatalog = loadCatalog();
       let catalog = initialCatalog.catalog;
-      let normalizedCatalog = normalizeCatalog(catalog);
+      let normalizedCatalog = inspectCatalog(catalog);
       let warnings = initialCatalog.storageWarnings.concat(normalizedCatalog.warnings);
 
       const catalogModel = (() => {
@@ -1440,7 +1489,7 @@
       };
 
       const refreshCatalog = ({ tab = state.tab, cat = state.cat } = {}) => {
-        normalizedCatalog = normalizeCatalog(catalog);
+        normalizedCatalog = inspectCatalog(catalog);
         warnings = normalizedCatalog.warnings;
         state.all = normalize(normalizedCatalog.items);
         setSelection({ tab, cat }, { render: false, hideNote: false });
@@ -1755,37 +1804,6 @@
         showInlineToast($("openDataMenuButton")?.parentElement, "書き出しました");
       };
 
-      const validateCatalogData = (value) => {
-        if (!Array.isArray(value)) throw new Error("カタログ全体が配列ではありません。");
-        value.forEach((tabBlock, t) => {
-          if (!Array.isArray(tabBlock) || tabBlock.length !== 2 || typeof tabBlock[0] !== "string" || !tabBlock[0].trim()) {
-            throw new Error(`タブ ${t + 1} の形式が不正です。`);
-          }
-          if (!Array.isArray(tabBlock[1])) throw new Error(`タブ「${tabBlock[0]}」のカテゴリが配列ではありません。`);
-          tabBlock[1].forEach((categoryBlock, c) => {
-            if (!Array.isArray(categoryBlock) || categoryBlock.length !== 2 || typeof categoryBlock[0] !== "string" || !categoryBlock[0].trim()) {
-              throw new Error(`タブ「${tabBlock[0]}」のカテゴリ ${c + 1} の形式が不正です。`);
-            }
-            if (!Array.isArray(categoryBlock[1])) throw new Error(`カテゴリ「${categoryBlock[0]}」のサブカテゴリが配列ではありません。`);
-            categoryBlock[1].forEach((subBlock, s) => {
-              if (!Array.isArray(subBlock) || subBlock.length !== 2 || typeof subBlock[0] !== "string" || !subBlock[0].trim()) {
-                throw new Error(`カテゴリ「${categoryBlock[0]}」のサブカテゴリ ${s + 1} の形式が不正です。`);
-              }
-              if (!Array.isArray(subBlock[1])) throw new Error(`サブカテゴリ「${subBlock[0]}」のパスが配列ではありません。`);
-              subBlock[1].forEach((row, i) => {
-                if (!Array.isArray(row) || row.length !== 3 || row.some((cell) => typeof cell !== "string")) {
-                  throw new Error(`サブカテゴリ「${subBlock[0]}」のパス ${i + 1} の形式が不正です。`);
-                }
-                if (!row[0].trim() || !row[1].trim()) {
-                  throw new Error(`サブカテゴリ「${subBlock[0]}」のパス ${i + 1} に必須項目がありません。`);
-                }
-              });
-            });
-          });
-        });
-        return value;
-      };
-
       const parseDataJs = (text) => {
         const match = text.match(
           /^\uFEFF?(?:\s*\/\/[^\r\n]*(?:\r?\n|$))*\s*window\.PATH_CATALOG\s*=\s*([\s\S]*?)\s*;\s*$/
@@ -1793,21 +1811,22 @@
         if (!match) {
           throw new Error("パスノートから書き出したJSON互換形式のdata.jsではありません。");
         }
-        return validateCatalogData(JSON.parse(match[1]));
+        const catalog = JSON.parse(match[1]);
+        const inspection = inspectCatalog(catalog, { strict: true });
+        return { catalog, itemCount: inspection.items.length };
       };
 
       const importCatalogData = async (file) => {
         if (!file) return;
         try {
           const imported = parseDataJs(await file.text());
-          const importedItems = normalizeCatalog(imported).items.length;
           const confirmed = window.confirm(
             `${file.name}を読み込み、現在のデータを置き換えます。\n`
-            + `タブ: ${imported.length}件 / パス: ${importedItems}件\n\n続行しますか？`
+            + `タブ: ${imported.catalog.length}件 / パス: ${imported.itemCount}件\n\n続行しますか？`
           );
           if (!confirmed) return;
           const result = commitCatalogChange(
-            () => { catalog = cloneCatalog(imported); },
+            () => { catalog = cloneCatalog(imported.catalog); },
             { selection: { tab: "", cat: "" } }
           );
           if (!result.ok) throw result.error;
