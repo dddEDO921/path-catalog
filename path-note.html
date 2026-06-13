@@ -1041,25 +1041,55 @@
       let normalizedCatalog = normalizeCatalog(catalog);
       let warnings = initialCatalog.storageWarnings.concat(normalizedCatalog.warnings);
 
-      const getTabBlocks = () => catalog.filter((block) => Array.isArray(block) && block.length >= 2);
-      const getTabBlock = (tab) => getTabBlocks().find((block) => toSafeString(block[0]).trim() === tab);
-      const getCategoryBlocks = (tab) => {
-        const tabBlock = getTabBlock(tab);
-        return Array.isArray(tabBlock?.[1])
-          ? tabBlock[1].filter((block) => Array.isArray(block) && block.length >= 2)
-          : [];
-      };
-      const getCategoryBlock = (tab, category) =>
-        getCategoryBlocks(tab).find((block) => toSafeString(block[0]).trim() === category);
-      const getSubCategoryBlocks = (tab, category) => {
-        const categoryBlock = getCategoryBlock(tab, category);
-        return Array.isArray(categoryBlock?.[1])
-          ? categoryBlock[1].filter((block) => Array.isArray(block) && block.length >= 2)
-          : [];
-      };
+      const catalogModel = (() => {
+        const getBlocks = (value) =>
+          Array.isArray(value) ? value.filter((block) => Array.isArray(block) && block.length >= 2) : [];
+        const findBlock = (blocks, label) =>
+          getBlocks(blocks).find((block) => toSafeString(block[0]).trim() === label);
+        const findOrCreateBlock = (blocks, label) => {
+          let block = blocks.find((entry) => Array.isArray(entry) && entry[0] === label);
+          if (!block) {
+            block = [label, []];
+            blocks.push(block);
+          }
+          if (!Array.isArray(block[1])) block[1] = [];
+          return block;
+        };
+
+        const getTabBlocks = () => getBlocks(catalog);
+        const getCategoryBlocks = (tab) => getBlocks(findBlock(catalog, tab)?.[1]);
+        const getSubCategoryBlocks = (tab, category) =>
+          getBlocks(findBlock(findBlock(catalog, tab)?.[1], category)?.[1]);
+
+        const addTab = (name) => {
+          catalog.push([name, []]);
+        };
+        const addCategory = (tab, name) => {
+          findOrCreateBlock(catalog, tab)[1].push([name, []]);
+        };
+        const addSubCategory = (tab, category, name) => {
+          const tabBlock = findOrCreateBlock(catalog, tab);
+          findOrCreateBlock(tabBlock[1], category)[1].push([name, []]);
+        };
+        const appendItem = ({ tab, category, subCategory, name, path, note }) => {
+          const tabBlock = findOrCreateBlock(catalog, tab);
+          const categoryBlock = findOrCreateBlock(tabBlock[1], category);
+          findOrCreateBlock(categoryBlock[1], subCategory)[1].push([name, path, note]);
+        };
+
+        return {
+          getTabBlocks,
+          getCategoryBlocks,
+          getSubCategoryBlocks,
+          addTab,
+          addCategory,
+          addSubCategory,
+          appendItem,
+        };
+      })();
 
       // UIの選択状態
-      const initialTabs = dedupe(getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
+      const initialTabs = dedupe(catalogModel.getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
       const state = {
         all: normalize(normalizedCatalog.items),
         tab: initialTabs[0] || "",
@@ -1076,16 +1106,16 @@
 
       // 現在のタブに応じたカテゴリ一覧
       const getTabs = () =>
-        dedupe(getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
+        dedupe(catalogModel.getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
       const getCats = () =>
-        dedupe(getCategoryBlocks(state.tab).map((block) => toSafeString(block[0]).trim()).filter(Boolean));
+        dedupe(catalogModel.getCategoryBlocks(state.tab).map((block) => toSafeString(block[0]).trim()).filter(Boolean));
 
       // メイン描画用にカテゴリ→サブカテゴリへグルーピング
       const groupByCategory = (items, categories) => {
         const catMap = {};
         categories.forEach((category) => {
           catMap[category] = {};
-          getSubCategoryBlocks(state.tab, category).forEach((subBlock) => {
+          catalogModel.getSubCategoryBlocks(state.tab, category).forEach((subBlock) => {
             const subCategory = toSafeString(subBlock[0]).trim();
             if (subCategory) catMap[category][subCategory] = [];
           });
@@ -1409,38 +1439,6 @@
         if (categoryHint) categoryHint.textContent = state.tab ? `「${state.tab}」へ追加` : "タブがありません";
       };
 
-      const findOrCreateBlock = (blocks, label) => {
-        let block = blocks.find((entry) => Array.isArray(entry) && entry[0] === label);
-        if (!block) {
-          block = [label, []];
-          blocks.push(block);
-        }
-        if (!Array.isArray(block[1])) block[1] = [];
-        return block;
-      };
-
-      const appendCatalogItem = ({ tab, category, subCategory, name, path, note }) => {
-        const tabBlock = findOrCreateBlock(catalog, tab);
-        const categoryBlock = findOrCreateBlock(tabBlock[1], category);
-        const subCategoryBlock = findOrCreateBlock(categoryBlock[1], subCategory);
-        subCategoryBlock[1].push([name, path, note]);
-      };
-
-      const addTab = (name) => {
-        catalog.push([name, []]);
-      };
-
-      const addCategory = (tab, name) => {
-        const tabBlock = findOrCreateBlock(catalog, tab);
-        tabBlock[1].push([name, []]);
-      };
-
-      const addSubCategory = (tab, category, name) => {
-        const tabBlock = findOrCreateBlock(catalog, tab);
-        const categoryBlock = findOrCreateBlock(tabBlock[1], category);
-        categoryBlock[1].push([name, []]);
-      };
-
       const refreshCatalog = ({ tab = state.tab, cat = state.cat } = {}) => {
         normalizedCatalog = normalizeCatalog(catalog);
         warnings = normalizedCatalog.warnings;
@@ -1507,7 +1505,7 @@
         }
         if (
           addGroupMode === "subCategory"
-          && getSubCategoryBlocks(addGroupContext.tab, addGroupContext.category)
+          && catalogModel.getSubCategoryBlocks(addGroupContext.tab, addGroupContext.category)
             .some((block) => toSafeString(block[0]).trim() === name)
         ) {
           showAddGroupError("同じ名前のサブカテゴリがすでにあります。");
@@ -1520,10 +1518,10 @@
             ? { tab: state.tab, cat: name }
             : { tab: addGroupContext.tab, cat: addGroupContext.category };
         const result = commitCatalogChange(() => {
-          if (addGroupMode === "tab") addTab(name);
-          else if (addGroupMode === "category") addCategory(state.tab, name);
+          if (addGroupMode === "tab") catalogModel.addTab(name);
+          else if (addGroupMode === "category") catalogModel.addCategory(state.tab, name);
           else if (addGroupMode === "subCategory") {
-            addSubCategory(addGroupContext.tab, addGroupContext.category, name);
+            catalogModel.addSubCategory(addGroupContext.tab, addGroupContext.category, name);
           }
           else throw new Error("追加対象が不明です。");
         }, { selection: nextState });
@@ -1556,8 +1554,8 @@
         const tab = $("addTab")?.value.trim() || "";
         const category = $("addCategory")?.value.trim() || "";
         const categoryOptions = tab
-          ? getCategoryBlocks(tab).map((block) => toSafeString(block[0]).trim())
-          : getTabBlocks().flatMap((block) =>
+          ? catalogModel.getCategoryBlocks(tab).map((block) => toSafeString(block[0]).trim())
+          : catalogModel.getTabBlocks().flatMap((block) =>
             (Array.isArray(block[1]) ? block[1] : []).map((categoryBlock) => toSafeString(categoryBlock?.[0]).trim())
           );
         setDatalistOptions("tabOptions", getTabs());
@@ -1568,7 +1566,7 @@
         setDatalistOptions(
           "subCategoryOptions",
           tab && category
-            ? getSubCategoryBlocks(tab, category).map((block) => toSafeString(block[0]).trim())
+            ? catalogModel.getSubCategoryBlocks(tab, category).map((block) => toSafeString(block[0]).trim())
             : state.all
               .filter((item) => (!tab || item.tab === tab) && (!category || item.category === category))
               .map((item) => item.subCategory)
@@ -1723,7 +1721,7 @@
         }
 
         const result = commitCatalogChange(
-          () => appendCatalogItem(item),
+          () => catalogModel.appendItem(item),
           { selection: { tab: item.tab, cat: item.category } }
         );
         if (!result.ok) {
