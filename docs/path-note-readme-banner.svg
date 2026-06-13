@@ -21,16 +21,18 @@
   <rect width="1200" height="360" rx="28" fill="url(#page)"/>
   <g transform="translate(82 90)" filter="url(#shadow)" clip-path="url(#iconClip)">
     <rect width="180" height="180" rx="42" fill="url(#icon)"/>
-    <g font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="10" font-weight="700" fill="#aaa3bd">
-      <text x="-4" y="28">../old/src</text>
-      <text x="132" y="42">~/tmp</text>
-      <text x="-4" y="76">C:\work</text>
-      <text x="139" y="84">/assets</text>
-      <text x="-3" y="160">~/archive</text>
-      <text x="143" y="148">../docs</text>
+    <g font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="12" font-weight="700">
+      <text x="30" y="50" fill="#b0a9c3">/work/src</text>
+      <text x="30" y="82" fill="#b0a9c3">../docs</text>
+      <text x="30" y="114" fill="#d1b46d">~/assets</text>
+      <text x="30" y="146" fill="#b0a9c3">C:\memo</text>
     </g>
-    <rect x="36" y="94" width="128" height="30" rx="7" fill="#c6a765"/>
-    <text x="46" y="114" fill="#4c3f40" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="12" font-weight="700">/src/data.js</text>
+    <g fill="#6c648a">
+      <rect x="17" y="39" width="4" height="12" rx="2"/>
+      <rect x="17" y="71" width="4" height="12" rx="2"/>
+      <rect x="17" y="103" width="4" height="12" rx="2"/>
+      <rect x="17" y="135" width="4" height="12" rx="2"/>
+    </g>
   </g>
 
   <g font-family="'Noto Sans JP', ui-sans-serif, system-ui, sans-serif">
