@@ -597,9 +597,7 @@
           </button>
           <div id="viewMenu" class="add-menu absolute right-[174px] top-full z-40 mt-2 hidden rounded-lg p-1.5 shadow-2xl">
             <div class="px-3 pb-1 text-xs font-semibold" style="color: var(--text-muted);">表示モード</div>
-            <button type="button" class="theme-option" data-theme-value="current">スタンダード</button>
-            <button type="button" class="theme-option" data-theme-value="open">オープン</button>
-            <button type="button" class="theme-option" data-theme-value="compact">コンパクト</button>
+            <div id="themeOptions"></div>
           </div>
           <button id="openDataMenuButton" type="button" aria-expanded="false" aria-controls="dataMenu"
             class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold">
@@ -843,12 +841,33 @@
       const CATALOG_STORAGE_KEY = "pathCatalog.catalog.v1";
       const SUBCAT_STORAGE_KEY = "pathCatalog.subcatCollapsed.v1";
       const THEME_STORAGE_KEY = "pathNote.theme.v1";
-      const THEMES = new Set(["current", "open", "compact"]);
+      const THEME_CONFIG = [
+        { key: "current", label: "スタンダード", legacyKeys: ["focus"] },
+        { key: "open", label: "オープン", legacyKeys: ["paper", "index"] },
+        { key: "compact", label: "コンパクト", legacyKeys: [] },
+      ];
+      const DEFAULT_THEME = THEME_CONFIG[0].key;
+      const THEMES = new Set(THEME_CONFIG.map(({ key }) => key));
+      const LEGACY_THEME_MAP = Object.fromEntries(
+        THEME_CONFIG.flatMap(({ key, legacyKeys }) =>
+          legacyKeys.map((legacyKey) => [legacyKey, key]))
+      );
+
+      const resolveTheme = (theme) => {
+        const mappedTheme = LEGACY_THEME_MAP[theme] || theme;
+        return THEMES.has(mappedTheme) ? mappedTheme : DEFAULT_THEME;
+      };
+
+      const renderThemeOptions = () => {
+        const holder = $("themeOptions");
+        if (!holder) return;
+        holder.innerHTML = THEME_CONFIG.map(({ key, label }) => `
+          <button type="button" class="theme-option" data-theme-value="${toHtml(key)}">${toHtml(label)}</button>
+        `).join("");
+      };
 
       const applyTheme = (theme, { persist = true } = {}) => {
-        const legacyThemeMap = { focus: "current", paper: "open", index: "open" };
-        const mappedTheme = legacyThemeMap[theme] || theme;
-        const safeTheme = THEMES.has(mappedTheme) ? mappedTheme : "current";
+        const safeTheme = resolveTheme(theme);
         document.documentElement.dataset.theme = safeTheme;
         document.querySelectorAll("[data-theme-value]").forEach((button) => {
           button.classList.toggle("active", button.dataset.themeValue === safeTheme);
@@ -864,9 +883,9 @@
 
       const loadTheme = () => {
         try {
-          return localStorage.getItem(THEME_STORAGE_KEY) || "current";
+          return localStorage.getItem(THEME_STORAGE_KEY) || DEFAULT_THEME;
         } catch (e) {
-          return "current";
+          return DEFAULT_THEME;
         }
       };
       const subcatKeyFor = (tab, cat, sub) =>
@@ -1665,7 +1684,7 @@
       const onThemeAction = (event) => {
         const button = event.target.closest("[data-theme-value]");
         if (!button) return;
-        applyTheme(button.dataset.themeValue || "current");
+        applyTheme(button.dataset.themeValue || DEFAULT_THEME);
         closeViewMenu();
         renderMain();
       };
@@ -2034,6 +2053,7 @@
 
       // 初期化エントリポイント
       const init = () => {
+        renderThemeOptions();
         applyTheme(loadTheme(), { persist: false });
         bind();
         renderAll();
