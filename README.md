@@ -1,12 +1,12 @@
 <div align="center">
 
-![ここかな。](docs/path-catalog-readme-banner.svg)
+![パスノート](docs/path-catalog-readme-banner.svg)
 
-フォルダーパスやURLを整理して、クリックですぐコピー。
+パスをまとめて、見つけやすく。
 
 </div>
 
-![ここかな。の画面](docs/path-catalog-sample-capture.png)
+![パスノートの画面](docs/path-catalog-sample-capture.png)
 
 ## 特長
 

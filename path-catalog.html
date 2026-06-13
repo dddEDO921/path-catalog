@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ここかな。</title>
+  <title>パスノート</title>
   <link rel="icon" href="docs/kokokana-icon.svg" type="image/svg+xml">
 
   <!-- 開発・配布を簡単にするため CDN 版 Tailwind を利用 -->
@@ -303,7 +303,7 @@
       <div class="grid grid-cols-[260px_1fr_auto] items-end gap-3">
         <div class="flex items-center gap-2.5" style="color: var(--text-heading);">
           <img src="docs/kokokana-icon.svg" alt="" class="h-9 w-9 rounded-lg">
-          <span class="text-xl font-bold tracking-tight text-slate-100">ここかな。</span>
+          <span class="text-xl font-bold tracking-tight text-slate-100">パスノート</span>
         </div>
         <div id="tabNav" class="flex flex-wrap items-end gap-1.5 pt-1 pb-1 -mb-[1px]"></div>
         <div class="relative flex items-center gap-2 pb-1">
@@ -1338,7 +1338,7 @@
       };
 
       const DATA_FILE_PREFIX = [
-        "// ここかな。 data",
+        "// パスノート data",
         "// ブラウザからの登録・読み込み・書き出しを推奨します。",
         ""
       ].join("\n");
@@ -1395,7 +1395,7 @@
           /^\uFEFF?(?:\s*\/\/[^\r\n]*(?:\r?\n|$))*\s*window\.PATH_CATALOG\s*=\s*([\s\S]*?)\s*;\s*$/
         );
         if (!match) {
-          throw new Error("ここかな。から書き出したJSON互換形式のdata.jsではありません。");
+          throw new Error("パスノートから書き出したJSON互換形式のdata.jsではありません。");
         }
         return validateCatalogData(JSON.parse(match[1]));
       };

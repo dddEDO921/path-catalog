@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
-  <title id="title">ここかな。</title>
-  <desc id="desc">散らかったパスから、探していた場所へ。</desc>
+  <title id="title">パスノート</title>
+  <desc id="desc">パスをまとめて、見つけやすく。</desc>
   <defs>
     <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
       <stop stop-color="#171426"/>
@@ -34,8 +34,8 @@
   </g>
 
   <g font-family="'Noto Sans JP', ui-sans-serif, system-ui, sans-serif">
-    <text x="320" y="150" fill="#f8fafc" font-size="72" font-weight="800" letter-spacing="-3">ここかな。</text>
-    <text x="324" y="205" fill="#cbd5e1" font-size="25" font-weight="500">散らかったパスから、探していた場所へ。</text>
+    <text x="320" y="150" fill="#f8fafc" font-size="72" font-weight="800" letter-spacing="-3">パスノート</text>
+    <text x="324" y="205" fill="#cbd5e1" font-size="25" font-weight="500">パスをまとめて、見つけやすく。</text>
     <g transform="translate(324 242)" font-size="16" font-weight="600">
       <text x="0" y="25" fill="#c6a765">ブラウザで登録</text>
       <text x="132" y="25" fill="#6b648a">/</text>
