@@ -37,6 +37,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
+    /* ===== テーマ変数: 表示モードごとの色・形 ===== */
     :root,
     [data-theme="current"] {
       --bg-base: #0f172a;
@@ -87,6 +88,7 @@
       --dialog-backdrop: rgba(32, 33, 38, 0.48);
     }
 
+    /* ===== 共通UI: レイアウト・ナビゲーション・カード・一覧行 ===== */
     body {
       font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg-base);
@@ -294,6 +296,7 @@
       outline: none;
     }
 
+    /* ===== 操作UI: メニュー・ダイアログ・ボタン・通知 ===== */
     .add-menu {
       min-width: 240px;
       background-color: var(--bg-layer);
@@ -415,6 +418,7 @@
       font-weight: 700;
     }
 
+    /* ===== 表示モード: モード固有の見た目 ===== */
     [data-theme="current"] .path-chip {
       border-color: transparent;
       background-color: rgba(15, 23, 42, 0.7);
@@ -582,6 +586,7 @@
 <body>
   <div class="h-dvh flex flex-col overflow-hidden">
 
+    <!-- ヘッダー: ブランド・タブ・全体操作 -->
     <header class="sticky top-0 z-30 border-b backdrop-blur px-5 py-2"
       style="background-color: var(--bg-layer); border-color: var(--border);">
       <div class="grid grid-cols-[260px_1fr_auto] items-end gap-3">
@@ -637,7 +642,7 @@
 
     <div class="grid grid-cols-[260px_1fr] flex-1 min-h-0 overflow-hidden">
 
-      <!-- Sidebar -->
+      <!-- ナビゲーション: カテゴリ・警告 -->
       <aside class="border-r overflow-y-auto" style="background-color: var(--bg-base); border-color: var(--border);">
         <div class="p-4">
           <div class="flex items-center justify-between">
@@ -658,7 +663,7 @@
         </div>
       </aside>
 
-      <!-- Main -->
+      <!-- メイン: パス一覧の描画先 -->
       <main class="p-5 space-y-4 overflow-y-auto" style="background-color: var(--bg-base);">
         <section id="list" class="grid grid-cols-1 gap-4"></section>
 
@@ -672,6 +677,7 @@
     </div>
   </div>
 
+  <!-- ダイアログ: パス・分類の追加 -->
   <dialog id="addPathDialog"
     class="dialog-shell w-[min(560px,calc(100vw-2rem))] rounded-xl border p-0 shadow-2xl">
     <form id="addPathForm" method="dialog">
@@ -760,7 +766,7 @@
 
   <script>
     (() => {
-      // 基本ユーティリティ（DOM取得・文字列安全化）
+      // ===== 共通処理: DOM・文字列・パス判定・色生成 =====
       const $ = (id) => document.getElementById(id);
       const toSafeString = (value) => (value ?? "").toString();
       const escapeHtml = (str) => str.replace(/[&<>"']/g, (m) => ({
@@ -836,6 +842,7 @@
         return value;
       };
 
+      // ===== 設定・永続化: 表示モード・ローカルストレージ =====
       // タブ未指定時に使うデフォルト名
       const DEFAULT_TAB = "共通";
       const CATALOG_STORAGE_KEY = "pathCatalog.catalog.v1";
@@ -916,6 +923,7 @@
       };
       const collapsedSubcats = loadCollapsedSubcats();
 
+      // ===== データモデル: 検査・読み込み・カタログ操作 =====
       // 外部データを安全な形に正規化（空や未定義を文字列化）
       const normalize = (items) => (items || []).map((x, i) => ({
         id: i + 1,
@@ -1144,6 +1152,7 @@
         };
       })();
 
+      // ===== 状態管理: 選択・絞り込み・グルーピング =====
       // UIの選択状態
       const initialTabs = dedupe(catalogModel.getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
       const state = {
@@ -1186,6 +1195,29 @@
         return catMap;
       };
 
+      const setSelection = ({ tab = state.tab, cat = state.cat } = {},
+        { render = true, hideNote = true } = {}) => {
+        const tabs = getTabs();
+        state.tab = tabs.includes(tab) ? tab : (tabs[0] || "");
+        const cats = getCats();
+        state.cat = cats.includes(cat) ? cat : "";
+        if (hideNote) {
+          activeNoteRow = null;
+          noteTooltip.hide();
+        }
+        if (render) renderAll();
+      };
+
+      // 選択状態の変更は actions 経由に限定
+      const actions = {
+        setTab: (tab) => {
+          if (tab === state.tab) return;
+          setSelection({ tab, cat: "" });
+        },
+        setCat: (cat) => setSelection({ cat }),
+      };
+
+      // ===== 描画: HTML生成・画面反映 =====
       // タブナビのHTML生成
       const buildTabListHtml = () => {
         const tabs = getTabs();
@@ -1495,6 +1527,7 @@
         if (categoryHint) categoryHint.textContent = state.tab ? `「${state.tab}」へ追加` : "タブがありません";
       };
 
+      // ===== UI制御: カタログ変更・ダイアログ・メニュー =====
       const refreshCatalog = ({ tab = state.tab, cat = state.cat } = {}) => {
         normalizedCatalog = inspectCatalog(catalog);
         warnings = normalizedCatalog.warnings;
@@ -1788,6 +1821,7 @@
         showInlineToast($("openAddMenuButton")?.parentElement, "保存しました");
       };
 
+      // ===== データ入出力: data.js の読み込み・書き出し =====
       const DATA_FILE_PREFIX = [
         "// パスノート data",
         "// ブラウザからの登録・読み込み・書き出しを推奨します。",
@@ -1845,6 +1879,7 @@
         }
       };
 
+      // ===== フィードバック: 通知・コピー・ノート表示 =====
       // カード上に短時間出すミニトースト
       const showInlineToast = (parent, msg) => {
         if (!parent) return;
@@ -1913,28 +1948,7 @@
         };
       })();
 
-      const setSelection = ({ tab = state.tab, cat = state.cat } = {},
-        { render = true, hideNote = true } = {}) => {
-        const tabs = getTabs();
-        state.tab = tabs.includes(tab) ? tab : (tabs[0] || "");
-        const cats = getCats();
-        state.cat = cats.includes(cat) ? cat : "";
-        if (hideNote) {
-          activeNoteRow = null;
-          noteTooltip.hide();
-        }
-        if (render) renderAll();
-      };
-
-      // 選択状態の変更は actions 経由に限定
-      const actions = {
-        setTab: (tab) => {
-          if (tab === state.tab) return;
-          setSelection({ tab, cat: "" });
-        },
-        setCat: (cat) => setSelection({ cat }),
-      };
-
+      // ===== イベント: キー操作・クリック・マウス操作 =====
       const isEditableTarget = (target) => {
         if (!target) return false;
         if (target.isContentEditable) return true;
@@ -2044,6 +2058,7 @@
         noteTooltip.hide();
       };
 
+      // ===== 初期化: イベント登録・初期描画 =====
       // 1回だけイベント登録
       const bind = () => {
         const tabNav = $("tabNav");
