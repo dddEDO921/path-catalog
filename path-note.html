@@ -841,6 +841,15 @@
       const CATALOG_STORAGE_KEY = "pathCatalog.catalog.v1";
       const SUBCAT_STORAGE_KEY = "pathCatalog.subcatCollapsed.v1";
       const THEME_STORAGE_KEY = "pathNote.theme.v1";
+      const storage = {
+        read: (key) => localStorage.getItem(key),
+        write: (key, value) => localStorage.setItem(key, value),
+        readJson: (key) => {
+          const value = localStorage.getItem(key);
+          return value === null ? null : JSON.parse(value);
+        },
+        writeJson: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
+      };
       const THEME_CONFIG = [
         { key: "current", label: "スタンダード", legacyKeys: ["focus"] },
         { key: "open", label: "オープン", legacyKeys: ["paper", "index"] },
@@ -874,7 +883,7 @@
         });
         if (persist) {
           try {
-            localStorage.setItem(THEME_STORAGE_KEY, safeTheme);
+            storage.write(THEME_STORAGE_KEY, safeTheme);
           } catch (e) {
             console.warn("表示モードを保存できませんでした。", e);
           }
@@ -883,7 +892,7 @@
 
       const loadTheme = () => {
         try {
-          return localStorage.getItem(THEME_STORAGE_KEY) || DEFAULT_THEME;
+          return storage.read(THEME_STORAGE_KEY) || DEFAULT_THEME;
         } catch (e) {
           return DEFAULT_THEME;
         }
@@ -892,8 +901,7 @@
         JSON.stringify([tab || "", cat || "", sub || ""]);
       const loadCollapsedSubcats = () => {
         try {
-          const raw = localStorage.getItem(SUBCAT_STORAGE_KEY);
-          const parsed = raw ? JSON.parse(raw) : [];
+          const parsed = storage.readJson(SUBCAT_STORAGE_KEY) ?? [];
           return new Set(Array.isArray(parsed) ? parsed : []);
         } catch (e) {
           return new Set();
@@ -901,7 +909,7 @@
       };
       const saveCollapsedSubcats = (set) => {
         try {
-          localStorage.setItem(SUBCAT_STORAGE_KEY, JSON.stringify(Array.from(set)));
+          storage.writeJson(SUBCAT_STORAGE_KEY, Array.from(set));
         } catch (e) {
           // ストレージが使えない場合は無視
         }
@@ -919,64 +927,111 @@
         note: toSafeString(x.note)
       }));
 
-      // 階層データをフラット化し、問題点は warnings に収集
-      function normalizeCatalog(raw) {
+      // 階層データを検査しながらフラット化する。strict はインポート時に使用する
+      const inspectCatalog = (raw, { strict = false } = {}) => {
         const warnings = [];
         const items = [];
 
         const warn = (msg, meta) => warnings.push({ msg, meta });
+        const rejectOrWarn = (strictMessage, warningMessage, meta) => {
+          if (strict) throw new Error(strictMessage);
+          warn(warningMessage, meta);
+        };
 
         if (!Array.isArray(raw)) {
-          warn("window.PATH_CATALOG が配列ではありません", { type: typeof raw });
+          rejectOrWarn(
+            "カタログ全体が配列ではありません。",
+            "window.PATH_CATALOG が配列ではありません",
+            { type: typeof raw }
+          );
           return { items, warnings };
         }
 
         for (let t = 0; t < raw.length; t++) {
           const tabBlock = raw[t];
-          if (!Array.isArray(tabBlock) || tabBlock.length < 2) {
-            warn("タブブロックが不正です", { t, tabBlock });
+          const validTabBlock = Array.isArray(tabBlock)
+            && (strict
+              ? tabBlock.length === 2 && typeof tabBlock[0] === "string" && Boolean(tabBlock[0].trim())
+              : tabBlock.length >= 2);
+          if (!validTabBlock) {
+            rejectOrWarn(`タブ ${t + 1} の形式が不正です。`, "タブブロックが不正です", { t, tabBlock });
             continue;
           }
           const tab = String(tabBlock[0] ?? "").trim();
           const categories = tabBlock[1];
 
           if (!Array.isArray(categories)) {
-            warn("カテゴリ配列が不正です", { t, tab });
+            rejectOrWarn(
+              `タブ「${tabBlock[0]}」のカテゴリが配列ではありません。`,
+              "カテゴリ配列が不正です",
+              { t, tab }
+            );
             continue;
           }
 
           for (let c = 0; c < categories.length; c++) {
             const catBlock = categories[c];
-            if (!Array.isArray(catBlock) || catBlock.length < 2) {
-              warn("カテゴリブロックが不正です", { t, c, catBlock });
+            const validCategoryBlock = Array.isArray(catBlock)
+              && (strict
+                ? catBlock.length === 2 && typeof catBlock[0] === "string" && Boolean(catBlock[0].trim())
+                : catBlock.length >= 2);
+            if (!validCategoryBlock) {
+              rejectOrWarn(
+                `タブ「${tabBlock[0]}」のカテゴリ ${c + 1} の形式が不正です。`,
+                "カテゴリブロックが不正です",
+                { t, c, catBlock }
+              );
               continue;
             }
             const category = String(catBlock[0] ?? "").trim();
             const subs = catBlock[1];
 
             if (!Array.isArray(subs)) {
-              warn("サブカテゴリ配列が不正です", { t, tab, c, category });
+              rejectOrWarn(
+                `カテゴリ「${catBlock[0]}」のサブカテゴリが配列ではありません。`,
+                "サブカテゴリ配列が不正です",
+                { t, tab, c, category }
+              );
               continue;
             }
 
             for (let s = 0; s < subs.length; s++) {
               const subBlock = subs[s];
-              if (!Array.isArray(subBlock) || subBlock.length < 2) {
-                warn("サブカテゴリブロックが不正です", { t, c, s, subBlock });
+              const validSubCategoryBlock = Array.isArray(subBlock)
+                && (strict
+                  ? subBlock.length === 2 && typeof subBlock[0] === "string" && Boolean(subBlock[0].trim())
+                  : subBlock.length >= 2);
+              if (!validSubCategoryBlock) {
+                rejectOrWarn(
+                  `カテゴリ「${catBlock[0]}」のサブカテゴリ ${s + 1} の形式が不正です。`,
+                  "サブカテゴリブロックが不正です",
+                  { t, c, s, subBlock }
+                );
                 continue;
               }
               const subCategory = String(subBlock[0] ?? "").trim(); // 空OK
               const rows = subBlock[1];
 
               if (!Array.isArray(rows)) {
-                warn("アイテム配列が不正です", { t, tab, c, category, s, subCategory });
+                rejectOrWarn(
+                  `サブカテゴリ「${subBlock[0]}」のパスが配列ではありません。`,
+                  "アイテム配列が不正です",
+                  { t, tab, c, category, s, subCategory }
+                );
                 continue;
               }
 
               for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
-                if (!Array.isArray(row)) {
-                  warn("アイテム行が配列ではありません", { t, c, s, i, row });
+                const validStrictRow = Array.isArray(row)
+                  && row.length === 3
+                  && row.every((cell) => typeof cell === "string");
+                if (!Array.isArray(row) || (strict && !validStrictRow)) {
+                  rejectOrWarn(
+                    `サブカテゴリ「${subBlock[0]}」のパス ${i + 1} の形式が不正です。`,
+                    "アイテム行が配列ではありません",
+                    { t, c, s, i, row }
+                  );
                   continue;
                 }
 
@@ -989,6 +1044,9 @@
                 const path = row[1] ?? "";
                 const note = String(row[2] ?? ""); // 空OK
 
+                if (strict && (!name || !String(path).trim())) {
+                  throw new Error(`サブカテゴリ「${subBlock[0]}」のパス ${i + 1} に必須項目がありません。`);
+                }
                 if (!name) warn("name が空です（表示は継続）", { t, c, s, i });
                 if (!path) warn("path が空です（表示は継続）", { t, c, s, i });
 
@@ -1008,18 +1066,16 @@
 
         return { items, warnings };
       };
-
       const cloneCatalog = (catalog) => JSON.parse(JSON.stringify(catalog));
       const saveCatalog = (catalog) => {
-        localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(catalog));
+        storage.writeJson(CATALOG_STORAGE_KEY, catalog);
       };
       const loadCatalog = () => {
         const storageWarnings = [];
         try {
-          const saved = localStorage.getItem(CATALOG_STORAGE_KEY);
+          const saved = storage.readJson(CATALOG_STORAGE_KEY);
           if (saved !== null) {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed)) return { catalog: parsed, storageWarnings };
+            if (Array.isArray(saved)) return { catalog: saved, storageWarnings };
             storageWarnings.push({ msg: "保存データが配列ではないため、初期データを使用しました", meta: {} });
           }
         } catch (e) {
@@ -1038,34 +1094,63 @@
       // 初回は data.js を展開し、以後はローカルストレージを正本にする
       const initialCatalog = loadCatalog();
       let catalog = initialCatalog.catalog;
-      let normalizedCatalog = normalizeCatalog(catalog);
+      let normalizedCatalog = inspectCatalog(catalog);
       let warnings = initialCatalog.storageWarnings.concat(normalizedCatalog.warnings);
 
-      const getTabBlocks = () => catalog.filter((block) => Array.isArray(block) && block.length >= 2);
-      const getTabBlock = (tab) => getTabBlocks().find((block) => toSafeString(block[0]).trim() === tab);
-      const getCategoryBlocks = (tab) => {
-        const tabBlock = getTabBlock(tab);
-        return Array.isArray(tabBlock?.[1])
-          ? tabBlock[1].filter((block) => Array.isArray(block) && block.length >= 2)
-          : [];
-      };
-      const getCategoryBlock = (tab, category) =>
-        getCategoryBlocks(tab).find((block) => toSafeString(block[0]).trim() === category);
-      const getSubCategoryBlocks = (tab, category) => {
-        const categoryBlock = getCategoryBlock(tab, category);
-        return Array.isArray(categoryBlock?.[1])
-          ? categoryBlock[1].filter((block) => Array.isArray(block) && block.length >= 2)
-          : [];
-      };
+      const catalogModel = (() => {
+        const getBlocks = (value) =>
+          Array.isArray(value) ? value.filter((block) => Array.isArray(block) && block.length >= 2) : [];
+        const findBlock = (blocks, label) =>
+          getBlocks(blocks).find((block) => toSafeString(block[0]).trim() === label);
+        const findOrCreateBlock = (blocks, label) => {
+          let block = blocks.find((entry) => Array.isArray(entry) && entry[0] === label);
+          if (!block) {
+            block = [label, []];
+            blocks.push(block);
+          }
+          if (!Array.isArray(block[1])) block[1] = [];
+          return block;
+        };
+
+        const getTabBlocks = () => getBlocks(catalog);
+        const getCategoryBlocks = (tab) => getBlocks(findBlock(catalog, tab)?.[1]);
+        const getSubCategoryBlocks = (tab, category) =>
+          getBlocks(findBlock(findBlock(catalog, tab)?.[1], category)?.[1]);
+
+        const addTab = (name) => {
+          catalog.push([name, []]);
+        };
+        const addCategory = (tab, name) => {
+          findOrCreateBlock(catalog, tab)[1].push([name, []]);
+        };
+        const addSubCategory = (tab, category, name) => {
+          const tabBlock = findOrCreateBlock(catalog, tab);
+          findOrCreateBlock(tabBlock[1], category)[1].push([name, []]);
+        };
+        const appendItem = ({ tab, category, subCategory, name, path, note }) => {
+          const tabBlock = findOrCreateBlock(catalog, tab);
+          const categoryBlock = findOrCreateBlock(tabBlock[1], category);
+          findOrCreateBlock(categoryBlock[1], subCategory)[1].push([name, path, note]);
+        };
+
+        return {
+          getTabBlocks,
+          getCategoryBlocks,
+          getSubCategoryBlocks,
+          addTab,
+          addCategory,
+          addSubCategory,
+          appendItem,
+        };
+      })();
 
       // UIの選択状態
+      const initialTabs = dedupe(catalogModel.getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
       const state = {
         all: normalize(normalizedCatalog.items),
-        tab: "",
+        tab: initialTabs[0] || "",
         cat: "",
       };
-      const initialTabs = dedupe(getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
-      state.tab = initialTabs[0] || "";
       let activeNoteRow = null;
 
       // 現在の選択状態で絞り込み
@@ -1077,16 +1162,16 @@
 
       // 現在のタブに応じたカテゴリ一覧
       const getTabs = () =>
-        dedupe(getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
+        dedupe(catalogModel.getTabBlocks().map((block) => toSafeString(block[0]).trim()).filter(Boolean));
       const getCats = () =>
-        dedupe(getCategoryBlocks(state.tab).map((block) => toSafeString(block[0]).trim()).filter(Boolean));
+        dedupe(catalogModel.getCategoryBlocks(state.tab).map((block) => toSafeString(block[0]).trim()).filter(Boolean));
 
       // メイン描画用にカテゴリ→サブカテゴリへグルーピング
       const groupByCategory = (items, categories) => {
         const catMap = {};
         categories.forEach((category) => {
           catMap[category] = {};
-          getSubCategoryBlocks(state.tab, category).forEach((subBlock) => {
+          catalogModel.getSubCategoryBlocks(state.tab, category).forEach((subBlock) => {
             const subCategory = toSafeString(subBlock[0]).trim();
             if (subCategory) catMap[category][subCategory] = [];
           });
@@ -1410,48 +1495,41 @@
         if (categoryHint) categoryHint.textContent = state.tab ? `「${state.tab}」へ追加` : "タブがありません";
       };
 
-      const findOrCreateBlock = (blocks, label) => {
-        let block = blocks.find((entry) => Array.isArray(entry) && entry[0] === label);
-        if (!block) {
-          block = [label, []];
-          blocks.push(block);
-        }
-        if (!Array.isArray(block[1])) block[1] = [];
-        return block;
-      };
-
-      const appendCatalogItem = ({ tab, category, subCategory, name, path, note }) => {
-        const tabBlock = findOrCreateBlock(catalog, tab);
-        const categoryBlock = findOrCreateBlock(tabBlock[1], category);
-        const subCategoryBlock = findOrCreateBlock(categoryBlock[1], subCategory);
-        subCategoryBlock[1].push([name, path, note]);
-      };
-
-      const addTab = (name) => {
-        catalog.push([name, []]);
-      };
-
-      const addCategory = (tab, name) => {
-        const tabBlock = findOrCreateBlock(catalog, tab);
-        tabBlock[1].push([name, []]);
-      };
-
-      const addSubCategory = (tab, category, name) => {
-        const tabBlock = findOrCreateBlock(catalog, tab);
-        const categoryBlock = findOrCreateBlock(tabBlock[1], category);
-        categoryBlock[1].push([name, []]);
-      };
-
       const refreshCatalog = ({ tab = state.tab, cat = state.cat } = {}) => {
-        normalizedCatalog = normalizeCatalog(catalog);
+        normalizedCatalog = inspectCatalog(catalog);
         warnings = normalizedCatalog.warnings;
         state.all = normalize(normalizedCatalog.items);
-        const tabs = getTabs();
-        state.tab = tabs.includes(tab) ? tab : (tabs[0] || "");
-        const cats = getCats();
-        state.cat = cats.includes(cat) ? cat : "";
+        setSelection({ tab, cat }, { render: false, hideNote: false });
         renderAll();
         renderWarnings(warnings);
+      };
+
+      const commitCatalogChange = (change, { selection = {} } = {}) => {
+        const previousCatalog = cloneCatalog(catalog);
+        try {
+          change();
+          saveCatalog(catalog);
+        } catch (error) {
+          catalog = previousCatalog;
+          return { ok: false, error };
+        }
+        refreshCatalog(selection);
+        return { ok: true };
+      };
+
+      const dialogController = {
+        reset: (formId, errorId) => {
+          $(formId)?.reset();
+          $(errorId)?.classList.add("hidden");
+        },
+        showError: (errorId, message) => {
+          const error = $(errorId);
+          if (!error) return;
+          error.textContent = message;
+          error.classList.remove("hidden");
+        },
+        open: (dialogId) => $(dialogId)?.showModal(),
+        close: (dialogId) => $(dialogId)?.close(),
       };
 
       let addGroupMode = "";
@@ -1460,8 +1538,7 @@
         if (mode === "category" && !state.tab) return;
         addGroupMode = mode;
         addGroupContext = context;
-        $("addGroupForm")?.reset();
-        $("addGroupError")?.classList.add("hidden");
+        dialogController.reset("addGroupForm", "addGroupError");
         const isTab = mode === "tab";
         const isCategory = mode === "category";
         $("addGroupTitle").textContent = isTab ? "タブを追加" : isCategory ? "カテゴリを追加" : "サブカテゴリを追加";
@@ -1470,54 +1547,31 @@
           : isCategory
             ? `「${state.tab}」にカテゴリを追加します。`
             : `「${context.category}」にサブカテゴリを追加します。`;
-        $("addGroupDialog")?.showModal();
+        dialogController.open("addGroupDialog");
         $("addGroupName")?.focus();
-      };
-
-      const showAddGroupError = (message) => {
-        const error = $("addGroupError");
-        if (!error) return;
-        error.textContent = message;
-        error.classList.remove("hidden");
       };
 
       const onAddGroupSubmit = (event) => {
         event.preventDefault();
         const name = $("addGroupName")?.value.trim() || "";
         if (!name) {
-          showAddGroupError("名前を入力してください。");
+          dialogController.showError("addGroupError", "名前を入力してください。");
           return;
         }
         if (addGroupMode === "tab" && getTabs().includes(name)) {
-          showAddGroupError("同じ名前のタブがすでにあります。");
+          dialogController.showError("addGroupError", "同じ名前のタブがすでにあります。");
           return;
         }
         if (addGroupMode === "category" && getCats().includes(name)) {
-          showAddGroupError("同じ名前のカテゴリがすでにあります。");
+          dialogController.showError("addGroupError", "同じ名前のカテゴリがすでにあります。");
           return;
         }
         if (
           addGroupMode === "subCategory"
-          && getSubCategoryBlocks(addGroupContext.tab, addGroupContext.category)
+          && catalogModel.getSubCategoryBlocks(addGroupContext.tab, addGroupContext.category)
             .some((block) => toSafeString(block[0]).trim() === name)
         ) {
-          showAddGroupError("同じ名前のサブカテゴリがすでにあります。");
-          return;
-        }
-
-        const previousCatalog = cloneCatalog(catalog);
-        if (addGroupMode === "tab") addTab(name);
-        else if (addGroupMode === "category") addCategory(state.tab, name);
-        else if (addGroupMode === "subCategory") {
-          addSubCategory(addGroupContext.tab, addGroupContext.category, name);
-        }
-        else return;
-
-        try {
-          saveCatalog(catalog);
-        } catch (e) {
-          catalog = previousCatalog;
-          showAddGroupError("ローカルストレージに保存できませんでした。");
+          dialogController.showError("addGroupError", "同じ名前のサブカテゴリがすでにあります。");
           return;
         }
 
@@ -1526,8 +1580,20 @@
           : addGroupMode === "category"
             ? { tab: state.tab, cat: name }
             : { tab: addGroupContext.tab, cat: addGroupContext.category };
-        $("addGroupDialog")?.close();
-        refreshCatalog(nextState);
+        const result = commitCatalogChange(() => {
+          if (addGroupMode === "tab") catalogModel.addTab(name);
+          else if (addGroupMode === "category") catalogModel.addCategory(state.tab, name);
+          else if (addGroupMode === "subCategory") {
+            catalogModel.addSubCategory(addGroupContext.tab, addGroupContext.category, name);
+          }
+          else throw new Error("追加対象が不明です。");
+        }, { selection: nextState });
+        if (!result.ok) {
+          dialogController.showError("addGroupError", "ローカルストレージに保存できませんでした。");
+          return;
+        }
+
+        dialogController.close("addGroupDialog");
       };
 
       const onOpenAddGroupClick = (event) => {
@@ -1551,8 +1617,8 @@
         const tab = $("addTab")?.value.trim() || "";
         const category = $("addCategory")?.value.trim() || "";
         const categoryOptions = tab
-          ? getCategoryBlocks(tab).map((block) => toSafeString(block[0]).trim())
-          : getTabBlocks().flatMap((block) =>
+          ? catalogModel.getCategoryBlocks(tab).map((block) => toSafeString(block[0]).trim())
+          : catalogModel.getTabBlocks().flatMap((block) =>
             (Array.isArray(block[1]) ? block[1] : []).map((categoryBlock) => toSafeString(categoryBlock?.[0]).trim())
           );
         setDatalistOptions("tabOptions", getTabs());
@@ -1563,7 +1629,7 @@
         setDatalistOptions(
           "subCategoryOptions",
           tab && category
-            ? getSubCategoryBlocks(tab, category).map((block) => toSafeString(block[0]).trim())
+            ? catalogModel.getSubCategoryBlocks(tab, category).map((block) => toSafeString(block[0]).trim())
             : state.all
               .filter((item) => (!tab || item.tab === tab) && (!category || item.category === category))
               .map((item) => item.subCategory)
@@ -1574,8 +1640,7 @@
         const form = $("addPathForm");
         const dialog = $("addPathDialog");
         if (!form || !dialog) return;
-        form.reset();
-        $("addPathError")?.classList.add("hidden");
+        dialogController.reset("addPathForm", "addPathError");
         const tab = toSafeString(presets.tab);
         const category = toSafeString(presets.category);
         const subCategory = toSafeString(presets.subCategory);
@@ -1589,7 +1654,7 @@
           field.classList.toggle("context-locked", shouldLock);
         });
         refreshAddDialogOptions();
-        dialog.showModal();
+        dialogController.open("addPathDialog");
         const firstEmptyField = ["addTab", "addCategory", "addSubCategory", "addName", "addPath"]
           .map($)
           .find((field) => field && !field.value);
@@ -1693,13 +1758,6 @@
         menuController.closeFromOutsideClick(event);
       };
 
-      const showAddPathError = (message) => {
-        const error = $("addPathError");
-        if (!error) return;
-        error.textContent = message;
-        error.classList.remove("hidden");
-      };
-
       const onAddPathSubmit = (event) => {
         event.preventDefault();
         const form = event.currentTarget;
@@ -1713,21 +1771,20 @@
           note: toSafeString(values.note)
         };
         if (!item.tab || !item.category || !item.subCategory || !item.name || !item.path) {
-          showAddPathError("必須項目を入力してください。");
+          dialogController.showError("addPathError", "必須項目を入力してください。");
           return;
         }
 
-        appendCatalogItem(item);
-        try {
-          saveCatalog(catalog);
-        } catch (e) {
-          catalog = loadCatalog().catalog;
-          showAddPathError("ローカルストレージに保存できませんでした。");
+        const result = commitCatalogChange(
+          () => catalogModel.appendItem(item),
+          { selection: { tab: item.tab, cat: item.category } }
+        );
+        if (!result.ok) {
+          dialogController.showError("addPathError", "ローカルストレージに保存できませんでした。");
           return;
         }
 
-        refreshCatalog({ tab: item.tab, cat: item.category });
-        $("addPathDialog")?.close();
+        dialogController.close("addPathDialog");
         showInlineToast($("openAddMenuButton")?.parentElement, "保存しました");
       };
 
@@ -1753,37 +1810,6 @@
         showInlineToast($("openDataMenuButton")?.parentElement, "書き出しました");
       };
 
-      const validateCatalogData = (value) => {
-        if (!Array.isArray(value)) throw new Error("カタログ全体が配列ではありません。");
-        value.forEach((tabBlock, t) => {
-          if (!Array.isArray(tabBlock) || tabBlock.length !== 2 || typeof tabBlock[0] !== "string" || !tabBlock[0].trim()) {
-            throw new Error(`タブ ${t + 1} の形式が不正です。`);
-          }
-          if (!Array.isArray(tabBlock[1])) throw new Error(`タブ「${tabBlock[0]}」のカテゴリが配列ではありません。`);
-          tabBlock[1].forEach((categoryBlock, c) => {
-            if (!Array.isArray(categoryBlock) || categoryBlock.length !== 2 || typeof categoryBlock[0] !== "string" || !categoryBlock[0].trim()) {
-              throw new Error(`タブ「${tabBlock[0]}」のカテゴリ ${c + 1} の形式が不正です。`);
-            }
-            if (!Array.isArray(categoryBlock[1])) throw new Error(`カテゴリ「${categoryBlock[0]}」のサブカテゴリが配列ではありません。`);
-            categoryBlock[1].forEach((subBlock, s) => {
-              if (!Array.isArray(subBlock) || subBlock.length !== 2 || typeof subBlock[0] !== "string" || !subBlock[0].trim()) {
-                throw new Error(`カテゴリ「${categoryBlock[0]}」のサブカテゴリ ${s + 1} の形式が不正です。`);
-              }
-              if (!Array.isArray(subBlock[1])) throw new Error(`サブカテゴリ「${subBlock[0]}」のパスが配列ではありません。`);
-              subBlock[1].forEach((row, i) => {
-                if (!Array.isArray(row) || row.length !== 3 || row.some((cell) => typeof cell !== "string")) {
-                  throw new Error(`サブカテゴリ「${subBlock[0]}」のパス ${i + 1} の形式が不正です。`);
-                }
-                if (!row[0].trim() || !row[1].trim()) {
-                  throw new Error(`サブカテゴリ「${subBlock[0]}」のパス ${i + 1} に必須項目がありません。`);
-                }
-              });
-            });
-          });
-        });
-        return value;
-      };
-
       const parseDataJs = (text) => {
         const match = text.match(
           /^\uFEFF?(?:\s*\/\/[^\r\n]*(?:\r?\n|$))*\s*window\.PATH_CATALOG\s*=\s*([\s\S]*?)\s*;\s*$/
@@ -1791,22 +1817,25 @@
         if (!match) {
           throw new Error("パスノートから書き出したJSON互換形式のdata.jsではありません。");
         }
-        return validateCatalogData(JSON.parse(match[1]));
+        const catalog = JSON.parse(match[1]);
+        const inspection = inspectCatalog(catalog, { strict: true });
+        return { catalog, itemCount: inspection.items.length };
       };
 
       const importCatalogData = async (file) => {
         if (!file) return;
         try {
           const imported = parseDataJs(await file.text());
-          const importedItems = normalizeCatalog(imported).items.length;
           const confirmed = window.confirm(
             `${file.name}を読み込み、現在のデータを置き換えます。\n`
-            + `タブ: ${imported.length}件 / パス: ${importedItems}件\n\n続行しますか？`
+            + `タブ: ${imported.catalog.length}件 / パス: ${imported.itemCount}件\n\n続行しますか？`
           );
           if (!confirmed) return;
-          saveCatalog(imported);
-          catalog = cloneCatalog(imported);
-          refreshCatalog({ tab: "", cat: "" });
+          const result = commitCatalogChange(
+            () => { catalog = cloneCatalog(imported.catalog); },
+            { selection: { tab: "", cat: "" } }
+          );
+          if (!result.ok) throw result.error;
           showInlineToast($("openDataMenuButton")?.parentElement, "読み込みました");
         } catch (e) {
           window.alert(`データを読み込めませんでした。\n${e.message || e}`);
@@ -1884,23 +1913,26 @@
         };
       })();
 
-      // 状態変更はここに集約
+      const setSelection = ({ tab = state.tab, cat = state.cat } = {},
+        { render = true, hideNote = true } = {}) => {
+        const tabs = getTabs();
+        state.tab = tabs.includes(tab) ? tab : (tabs[0] || "");
+        const cats = getCats();
+        state.cat = cats.includes(cat) ? cat : "";
+        if (hideNote) {
+          activeNoteRow = null;
+          noteTooltip.hide();
+        }
+        if (render) renderAll();
+      };
+
+      // 選択状態の変更は actions 経由に限定
       const actions = {
         setTab: (tab) => {
           if (tab === state.tab) return;
-          state.tab = tab;
-          state.cat = "";
-          activeNoteRow = null;
-          noteTooltip.hide();
-          renderAll();
+          setSelection({ tab, cat: "" });
         },
-        setCat: (cat) => {
-          const cats = getCats();
-          state.cat = cats.includes(cat) ? cat : "";
-          activeNoteRow = null;
-          noteTooltip.hide();
-          renderAll();
-        },
+        setCat: (cat) => setSelection({ cat }),
       };
 
       const isEditableTarget = (target) => {
@@ -2018,9 +2050,7 @@
         const catList = $("catList");
         const list = $("list");
         const addPathForm = $("addPathForm");
-        const addPathDialog = $("addPathDialog");
         const addGroupForm = $("addGroupForm");
-        const addGroupDialog = $("addGroupDialog");
 
         if (tabNav) tabNav.addEventListener("click", onTabClick);
         if (catList) catList.addEventListener("click", onCatClick);
@@ -2031,8 +2061,8 @@
         $("openDataMenuButton")?.addEventListener("click", toggleDataMenu);
         $("dataMenu")?.addEventListener("click", onDataMenuAction);
         $("importDataInput")?.addEventListener("change", (event) => importCatalogData(event.target.files?.[0]));
-        $("cancelAddPathButton")?.addEventListener("click", () => addPathDialog?.close());
-        $("cancelAddGroupButton")?.addEventListener("click", () => addGroupDialog?.close());
+        $("cancelAddPathButton")?.addEventListener("click", () => dialogController.close("addPathDialog"));
+        $("cancelAddGroupButton")?.addEventListener("click", () => dialogController.close("addGroupDialog"));
         $("addTab")?.addEventListener("input", refreshAddDialogOptions);
         $("addCategory")?.addEventListener("input", refreshAddDialogOptions);
         if (addPathForm) addPathForm.addEventListener("submit", onAddPathSubmit);
