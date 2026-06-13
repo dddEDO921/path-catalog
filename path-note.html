@@ -390,12 +390,6 @@
       color: var(--text-muted) !important;
     }
 
-    .theme-options {
-      border-top: 1px solid var(--border);
-      margin-top: 0.35rem;
-      padding-top: 0.45rem;
-    }
-
     .theme-option {
       display: flex;
       align-items: center;
@@ -422,14 +416,15 @@
     }
 
     [data-theme="open"] .cat-card {
-      border-width: 0 0 1px;
-      border-color: var(--border);
+      margin-bottom: 2.25rem;
+      border: 0;
+      background: transparent;
       overflow: visible;
       box-shadow: none !important;
     }
 
     [data-theme="open"] .cat-card__header {
-      padding: 0.35rem 0 0.7rem;
+      padding: 0.2rem 0 0.75rem;
       background: transparent !important;
       border-bottom: 2px solid var(--text-heading);
       grid-template-columns: 1fr auto;
@@ -446,21 +441,22 @@
     }
 
     [data-theme="open"] .cat-card > div:last-child {
-      padding: 0.7rem 0 1.4rem;
+      padding: 0.85rem 0 0;
     }
 
     [data-theme="open"] .subcat-toggle {
+      padding-left: 0;
       border-radius: 0;
     }
 
     [data-theme="open"] .subcat-list {
-      border-left: 1px solid var(--subcat-border);
-      margin-left: 0.75rem;
-      padding-left: 0.75rem;
+      margin-left: 0;
+      padding-left: 0;
+      border-left: 0;
     }
 
     [data-theme="open"] .list-row {
-      border-bottom: 1px solid var(--border);
+      border-color: transparent;
       border-radius: 0;
       padding-top: 0.35rem;
       padding-bottom: 0.35rem;
@@ -469,6 +465,29 @@
     [data-theme="open"] .path-chip {
       padding-left: 0;
       padding-right: 0;
+      border-color: transparent;
+      color: #85838d;
+    }
+
+    [data-theme="open"] .cat-card__pill,
+    [data-theme="open"] .subcat-line {
+      background-color: #8176bb;
+    }
+
+    [data-theme="open"] .item-icon {
+      color: #a09cac;
+    }
+
+    [data-theme="open"] .list-row:hover {
+      background-color: rgba(79, 71, 123, 0.045);
+    }
+
+    [data-theme="open"] .list-row:hover .item-icon {
+      color: #8176bb;
+    }
+
+    [data-theme="open"] #list {
+      gap: 0;
     }
 
     .compact-list {
@@ -563,6 +582,16 @@
         </div>
         <div id="tabNav" class="flex flex-wrap items-end gap-1.5 pt-1 pb-1 -mb-[1px]"></div>
         <div class="relative flex items-center gap-2 pb-1">
+          <button id="openViewMenuButton" type="button" aria-expanded="false" aria-controls="viewMenu"
+            class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold">
+            表示
+          </button>
+          <div id="viewMenu" class="add-menu absolute right-[174px] top-full z-40 mt-2 hidden rounded-lg p-1.5 shadow-2xl">
+            <div class="px-3 pb-1 text-xs font-semibold" style="color: var(--text-muted);">表示モード</div>
+            <button type="button" class="theme-option" data-theme-value="current">スタンダード</button>
+            <button type="button" class="theme-option" data-theme-value="open">オープン</button>
+            <button type="button" class="theme-option" data-theme-value="compact">コンパクト</button>
+          </div>
           <button id="openDataMenuButton" type="button" aria-expanded="false" aria-controls="dataMenu"
             class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold">
             データ管理
@@ -576,12 +605,6 @@
               <span class="block font-semibold">データを書き出す</span>
               <span class="menu-hint block text-xs">そのまま使えるdata.jsを保存</span>
             </button>
-            <div class="theme-options">
-              <div class="px-3 pb-1 text-xs font-semibold" style="color: var(--text-muted);">表示モード</div>
-              <button type="button" class="theme-option" data-theme-value="current">スタンダード</button>
-              <button type="button" class="theme-option" data-theme-value="open">オープン</button>
-              <button type="button" class="theme-option" data-theme-value="compact">コンパクト</button>
-            </div>
           </div>
           <input id="importDataInput" type="file" accept=".js,text/javascript" class="hidden">
           <button id="openAddMenuButton" type="button" aria-expanded="false" aria-controls="addMenu"
@@ -1567,12 +1590,18 @@
         $("openDataMenuButton")?.setAttribute("aria-expanded", "false");
       };
 
+      const closeViewMenu = () => {
+        $("viewMenu")?.classList.add("hidden");
+        $("openViewMenuButton")?.setAttribute("aria-expanded", "false");
+      };
+
       const toggleAddMenu = () => {
         const menu = $("addMenu");
         const button = $("openAddMenuButton");
         if (!menu || !button) return;
         const willOpen = menu.classList.contains("hidden");
         closeDataMenu();
+        closeViewMenu();
         menu.classList.toggle("hidden", !willOpen);
         button.setAttribute("aria-expanded", willOpen.toString());
       };
@@ -1583,6 +1612,18 @@
         if (!menu || !button) return;
         const willOpen = menu.classList.contains("hidden");
         closeAddMenu();
+        closeViewMenu();
+        menu.classList.toggle("hidden", !willOpen);
+        button.setAttribute("aria-expanded", willOpen.toString());
+      };
+
+      const toggleViewMenu = () => {
+        const menu = $("viewMenu");
+        const button = $("openViewMenuButton");
+        if (!menu || !button) return;
+        const willOpen = menu.classList.contains("hidden");
+        closeAddMenu();
+        closeDataMenu();
         menu.classList.toggle("hidden", !willOpen);
         button.setAttribute("aria-expanded", willOpen.toString());
       };
@@ -1610,6 +1651,7 @@
         const button = event.target.closest("[data-theme-value]");
         if (!button) return;
         applyTheme(button.dataset.themeValue || "current");
+        closeViewMenu();
         renderMain();
       };
 
@@ -1625,6 +1667,12 @@
         if (dataMenu && !dataMenu.classList.contains("hidden")
           && !dataMenu.contains(event.target) && !dataButton?.contains(event.target)) {
           closeDataMenu();
+        }
+        const viewMenu = $("viewMenu");
+        const viewButton = $("openViewMenuButton");
+        if (viewMenu && !viewMenu.classList.contains("hidden")
+          && !viewMenu.contains(event.target) && !viewButton?.contains(event.target)) {
+          closeViewMenu();
         }
       };
 
@@ -1961,9 +2009,10 @@
         if (catList) catList.addEventListener("click", onCatClick);
         $("openAddMenuButton")?.addEventListener("click", toggleAddMenu);
         $("addMenu")?.addEventListener("click", onAddMenuAction);
+        $("openViewMenuButton")?.addEventListener("click", toggleViewMenu);
+        $("viewMenu")?.addEventListener("click", onThemeAction);
         $("openDataMenuButton")?.addEventListener("click", toggleDataMenu);
         $("dataMenu")?.addEventListener("click", onDataMenuAction);
-        $("dataMenu")?.addEventListener("click", onThemeAction);
         $("importDataInput")?.addEventListener("change", (event) => importCatalogData(event.target.files?.[0]));
         $("cancelAddPathButton")?.addEventListener("click", () => addPathDialog?.close());
         $("cancelAddGroupButton")?.addEventListener("click", () => addGroupDialog?.close());
