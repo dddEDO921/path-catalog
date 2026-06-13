@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="ja">
+<html lang="ja" data-theme="current">
 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Path Catalog</title>
+  <title>パスノート</title>
+  <link rel="icon" href="docs/path-note-icon.svg" type="image/svg+xml">
 
   <!-- 開発・配布を簡単にするため CDN 版 Tailwind を利用 -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -36,16 +37,54 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    :root {
+    :root,
+    [data-theme="current"] {
       --bg-base: #0f172a;
       --bg-layer: #111827;
+      --bg-sidebar: #0f172a;
+      --bg-control: #0b1220;
+      --bg-hover: rgba(255, 255, 255, 0.05);
       --border: #1f2937;
       --accent: #7c3aed;
+      --accent-hover: #8b5cf6;
       --accent-soft: rgba(124, 58, 237, 0.12);
       --accent-soft-strong: rgba(124, 58, 237, 0.15);
       --text-heading: #e5e7eb;
       --text-body: #cbd5e1;
       --text-muted: #9ca3af;
+      --text-on-accent: #ffffff;
+      --card-radius: 0.75rem;
+      --card-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.8);
+      --path-bg: rgba(15, 23, 42, 0.35);
+      --path-border: rgba(124, 58, 237, 0.35);
+      --path-radius: 0.5rem;
+      --header-weight: 600;
+      --dialog-backdrop: rgba(2, 6, 23, 0.78);
+    }
+
+    [data-theme="open"],
+    [data-theme="compact"] {
+      --bg-base: #f4f4f5;
+      --bg-layer: #ffffff;
+      --bg-sidebar: #efeff1;
+      --bg-control: #ffffff;
+      --bg-hover: rgba(79, 71, 123, 0.06);
+      --border: #d9dade;
+      --accent: #4f477b;
+      --accent-hover: #3f3866;
+      --accent-soft: rgba(79, 71, 123, 0.1);
+      --accent-soft-strong: rgba(79, 71, 123, 0.16);
+      --text-heading: #202126;
+      --text-body: #4b4c52;
+      --text-muted: #777980;
+      --text-on-accent: #ffffff;
+      --card-radius: 0;
+      --card-shadow: none;
+      --path-bg: transparent;
+      --path-border: transparent;
+      --path-radius: 0;
+      --header-weight: 700;
+      --dialog-backdrop: rgba(32, 33, 38, 0.48);
     }
 
     body {
@@ -68,12 +107,12 @@
 
     .tab-btn:hover {
       border-bottom-color: var(--border);
-      color: #ffffff;
+      color: var(--text-heading);
     }
 
     .tab-btn.active {
       border-bottom-color: var(--accent);
-      color: #ffffff;
+      color: var(--text-heading);
     }
 
     .cat-btn {
@@ -89,13 +128,13 @@
     }
 
     .cat-btn:hover {
-      background-color: rgba(255, 255, 255, 0.04);
+      background-color: var(--bg-hover);
       color: var(--text-heading);
     }
 
     .cat-btn.active {
-      background-color: rgba(255, 255, 255, 0.07);
-      color: #ffffff;
+      background-color: var(--accent-soft);
+      color: var(--text-heading);
       font-weight: 700;
     }
 
@@ -125,7 +164,7 @@
     }
 
     .list-row:hover {
-      background-color: rgba(255, 255, 255, 0.02);
+      background-color: var(--bg-hover);
       border-color: transparent;
     }
 
@@ -133,10 +172,10 @@
       display: inline-block;
       max-width: 100%;
       padding: 0.25rem 0.6rem;
-      border: 1px solid var(--path-chip-border, rgba(124, 58, 237, 0.35));
-      border-radius: 0.5rem;
-      background-color: rgba(15, 23, 42, 0.35);
-      color: #e2e8f0;
+      border: 1px solid var(--path-chip-border, var(--path-border));
+      border-radius: var(--path-radius);
+      background-color: var(--path-bg);
+      color: var(--text-body);
       line-height: 1.45;
       white-space: normal;
       word-break: break-all;
@@ -154,12 +193,12 @@
     }
 
     .list-row:hover .item-icon {
-      color: var(--item-color-strong, #ffffff);
+      color: var(--item-color-strong, var(--text-heading));
       transform: translateY(-1px) scale(1.12);
     }
 
     .list-row:hover .item-name {
-      color: #ffffff;
+      color: var(--text-heading);
       transform: translateY(-1px);
     }
 
@@ -168,7 +207,7 @@
     }
 
     .row-accent {
-      background: linear-gradient(180deg, var(--accent) 0%, rgba(124, 58, 237, 0.65) 100%);
+      background: var(--accent);
     }
 
     .note-badge {
@@ -178,7 +217,8 @@
     .cat-card {
       background-color: var(--bg-layer);
       border-color: var(--border);
-      box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--cat-glow, transparent);
+      border-radius: var(--card-radius) !important;
+      box-shadow: var(--card-shadow), 0 0 0 1px var(--cat-glow, transparent) !important;
     }
 
     .cat-card__header {
@@ -227,7 +267,7 @@
     }
 
     .subcat-toggle:hover {
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: var(--bg-hover);
       transform: translateY(-1px);
     }
 
@@ -248,15 +288,15 @@
 
     .add-inline-btn:hover,
     .add-inline-btn:focus-visible {
-      border-color: rgba(139, 92, 246, 0.55);
-      background-color: rgba(124, 58, 237, 0.14);
-      color: #ffffff;
+      border-color: var(--accent);
+      background-color: var(--accent-soft);
+      color: var(--text-heading);
       outline: none;
     }
 
     .add-menu {
       min-width: 240px;
-      background-color: #0f172a;
+      background-color: var(--bg-layer);
       border: 1px solid var(--border);
     }
 
@@ -271,8 +311,8 @@
 
     .add-menu-item:hover,
     .add-menu-item:focus-visible {
-      background-color: rgba(255, 255, 255, 0.06);
-      color: #ffffff;
+      background-color: var(--bg-hover);
+      color: var(--text-heading);
       outline: none;
     }
 
@@ -283,102 +323,307 @@
 
     .context-locked {
       color: var(--text-muted);
-      background-color: rgba(15, 23, 42, 0.55);
+      background-color: var(--bg-control);
     }
 
     dialog::backdrop {
-      background: rgba(2, 6, 23, 0.78);
+      background: var(--dialog-backdrop);
       backdrop-filter: blur(3px);
+    }
+
+    header {
+      color: var(--text-body);
+    }
+
+    aside {
+      background-color: var(--bg-sidebar) !important;
+    }
+
+    .brand-name {
+      color: var(--text-heading);
+    }
+
+    .secondary-button,
+    .theme-option,
+    .dialog-shell,
+    .dialog-input,
+    .toast-surface {
+      border-color: var(--border) !important;
+      color: var(--text-body) !important;
+    }
+
+    .secondary-button,
+    .dialog-input,
+    .toast-surface {
+      background-color: var(--bg-control) !important;
+    }
+
+    .primary-button {
+      border-color: var(--accent) !important;
+      background-color: var(--accent) !important;
+      color: var(--text-on-accent) !important;
+    }
+
+    .primary-button:hover {
+      background-color: var(--accent-hover) !important;
+    }
+
+    .dialog-shell {
+      background-color: var(--bg-layer) !important;
+      color: var(--text-heading) !important;
+    }
+
+    .dialog-divider {
+      border-color: var(--border) !important;
+    }
+
+    .dialog-label,
+    .dialog-muted,
+    .menu-hint {
+      color: var(--text-muted) !important;
+    }
+
+    .note-badge,
+    #emptyMessage {
+      border-color: var(--border) !important;
+      background-color: var(--bg-control) !important;
+      color: var(--text-muted) !important;
+    }
+
+    .theme-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 0.5rem 0.8rem;
+      border-radius: 0.4rem;
+      text-align: left;
+    }
+
+    .theme-option:hover,
+    .theme-option:focus-visible,
+    .theme-option.active {
+      background-color: var(--bg-hover);
+      color: var(--text-heading) !important;
+      outline: none;
+    }
+
+    .theme-option.active::after {
+      content: "選択中";
+      color: var(--accent);
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    [data-theme="current"] .path-chip {
+      border-color: transparent;
+      background-color: rgba(15, 23, 42, 0.7);
+    }
+
+    [data-theme="current"] .list-row:hover .path-chip {
+      background-color: rgba(30, 41, 59, 0.82);
+    }
+
+    [data-theme="open"] .cat-card {
+      margin-bottom: 2.25rem;
+      border: 0;
+      background: transparent;
+      overflow: visible;
+      box-shadow: none !important;
+    }
+
+    [data-theme="open"] .cat-card__header {
+      padding: 0.2rem 0 0.75rem;
+      background: transparent !important;
+      border-bottom: 2px solid var(--text-heading);
+      grid-template-columns: 1fr auto;
+    }
+
+    [data-theme="open"] .cat-card__header .cat-card__pill,
+    [data-theme="open"] .cat-card__topline {
+      display: none;
+    }
+
+    [data-theme="open"] .cat-card__header > div {
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    [data-theme="open"] .cat-card > div:last-child {
+      padding: 0.85rem 0 0;
+    }
+
+    [data-theme="open"] .subcat-toggle {
+      padding-left: 0;
+      border-radius: 0;
+    }
+
+    [data-theme="open"] .subcat-list {
+      margin-left: 0;
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    [data-theme="open"] .list-row {
+      border-color: transparent;
+      border-radius: 0;
+      padding-top: 0.35rem;
+      padding-bottom: 0.35rem;
+    }
+
+    [data-theme="open"] .path-chip {
+      padding-left: 0;
+      padding-right: 0;
+      border-color: transparent;
+      color: #85838d;
+    }
+
+    [data-theme="open"] .cat-card__pill,
+    [data-theme="open"] .subcat-line {
+      background-color: #8176bb;
+    }
+
+    [data-theme="open"] .item-icon {
+      color: #a09cac;
+    }
+
+    [data-theme="open"] .list-row:hover {
+      background-color: rgba(79, 71, 123, 0.045);
+    }
+
+    [data-theme="open"] .list-row:hover .item-icon {
+      color: #8176bb;
+    }
+
+    [data-theme="open"] #list {
+      gap: 0;
+    }
+
+    .compact-list {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 0.65rem;
+      background: var(--bg-layer);
+    }
+
+    .compact-head,
+    .compact-row {
+      display: grid;
+      grid-template-columns: 78px 110px 220px minmax(0, 1fr) 24px;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .compact-head {
+      min-height: 1.8rem;
+      padding: 0 0.7rem;
+      background: #ededf0;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+
+    .compact-row {
+      min-height: 2rem;
+      padding: 0 0.7rem;
+      border-top: 1px solid #eeeeef;
+      cursor: pointer;
+    }
+
+    .compact-row:hover {
+      background: var(--accent-soft);
+      box-shadow: inset 3px 0 var(--accent);
+    }
+
+    .compact-tag {
+      overflow: hidden;
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.3rem;
+      background: #f1f1f3;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .compact-tag--category {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .compact-name {
+      overflow: hidden;
+      color: var(--text-heading);
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .compact-path {
+      overflow: hidden;
+      color: var(--text-muted);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.68rem;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .compact-note {
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      text-align: center;
     }
 
   </style>
 </head>
 
-<body class="text-slate-100">
+<body>
   <div class="h-dvh flex flex-col overflow-hidden">
 
     <header class="sticky top-0 z-30 border-b backdrop-blur px-5 py-2"
       style="background-color: var(--bg-layer); border-color: var(--border);">
       <div class="grid grid-cols-[260px_1fr_auto] items-end gap-3">
         <div class="flex items-center gap-2.5" style="color: var(--text-heading);">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="Path Catalog logo"
-            class="h-9 w-auto">
-            <defs>
-              <style>
-                .badge {
-                  fill: #7c3aed;
-                }
-
-                .sqFront {
-                  fill: #f8fafc;
-                }
-
-                .sqBack {
-                  fill: #e2e8f0;
-                  opacity: 0.55;
-                }
-
-                .slash {
-                  stroke: #f8fafc;
-                  stroke-width: 22;
-                  stroke-linecap: round;
-                  fill: none;
-                }
-
-                .wordMain {
-                  fill: #f8fafc;
-                  font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                  font-size: 88px;
-                  font-weight: 700;
-                  letter-spacing: -0.02em;
-                }
-
-                .wordSub {
-                  fill: #cbd5e1;
-                  font-family: "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                  font-size: 88px;
-                  font-weight: 600;
-                  letter-spacing: -0.02em;
-                }
-              </style>
-            </defs>
-            <g transform="translate(24,24) scale(0.72)">
-              <rect class="badge" x="16" y="16" width="224" height="224" rx="64" />
-              <path class="slash" d="M50 165 L94 91" />
-              <rect class="sqBack" x="136" y="80" width="80" height="80" rx="12" />
-              <rect class="sqFront" x="116" y="96" width="80" height="80" rx="12" />
-            </g>
-            <g transform="translate(280,150)">
-              <text x="0" y="0" class="wordMain">Path</text>
-              <text x="205" y="0" class="wordSub">Catalog</text>
-            </g>
-          </svg>
+          <img src="docs/path-note-icon.svg" alt="" class="h-9 w-9 rounded-lg">
+          <span class="brand-name text-xl font-bold tracking-tight">パスノート</span>
         </div>
         <div id="tabNav" class="flex flex-wrap items-end gap-1.5 pt-1 pb-1 -mb-[1px]"></div>
         <div class="relative flex items-center gap-2 pb-1">
+          <button id="openViewMenuButton" type="button" aria-expanded="false" aria-controls="viewMenu"
+            class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold">
+            表示
+          </button>
+          <div id="viewMenu" class="add-menu absolute right-[174px] top-full z-40 mt-2 hidden rounded-lg p-1.5 shadow-2xl">
+            <div class="px-3 pb-1 text-xs font-semibold" style="color: var(--text-muted);">表示モード</div>
+            <button type="button" class="theme-option" data-theme-value="current">スタンダード</button>
+            <button type="button" class="theme-option" data-theme-value="open">オープン</button>
+            <button type="button" class="theme-option" data-theme-value="compact">コンパクト</button>
+          </div>
           <button id="openDataMenuButton" type="button" aria-expanded="false" aria-controls="dataMenu"
-            class="rounded-md border border-slate-700 px-3 py-1.5 text-sm font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+            class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold">
             データ管理
           </button>
           <div id="dataMenu" class="add-menu absolute right-[76px] top-full z-40 mt-2 hidden rounded-lg p-1.5 shadow-2xl">
             <button type="button" class="add-menu-item" data-data-action="import">
               <span class="block font-semibold">データを読み込む</span>
-              <span class="block text-xs text-slate-400">data.jsから現在の内容を置き換え</span>
+              <span class="menu-hint block text-xs">data.jsから現在の内容を置き換え</span>
             </button>
             <button type="button" class="add-menu-item" data-data-action="export">
               <span class="block font-semibold">データを書き出す</span>
-              <span class="block text-xs text-slate-400">そのまま使えるdata.jsを保存</span>
+              <span class="menu-hint block text-xs">そのまま使えるdata.jsを保存</span>
             </button>
           </div>
           <input id="importDataInput" type="file" accept=".js,text/javascript" class="hidden">
           <button id="openAddMenuButton" type="button" aria-expanded="false" aria-controls="addMenu"
-            class="rounded-md border border-violet-500 bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-violet-500">
+            class="primary-button rounded-md border px-3 py-1.5 text-sm font-semibold">
             ＋ 追加
           </button>
           <div id="addMenu" class="add-menu absolute right-0 top-full z-40 mt-2 hidden rounded-lg p-1.5 shadow-2xl">
             <button type="button" class="add-menu-item" data-add-action="path">
               <span class="block font-semibold">パスを一から追加</span>
-              <span class="block text-xs text-slate-400">追加先を入力して登録</span>
+              <span class="menu-hint block text-xs">追加先を入力して登録</span>
             </button>
             <button type="button" class="add-menu-item" data-add-action="category">
               <span class="block font-semibold">カテゴリを追加</span>
@@ -430,52 +675,52 @@
   </div>
 
   <dialog id="addPathDialog"
-    class="w-[min(560px,calc(100vw-2rem))] rounded-xl border border-slate-700 bg-slate-900 p-0 text-slate-100 shadow-2xl">
+    class="dialog-shell w-[min(560px,calc(100vw-2rem))] rounded-xl border p-0 shadow-2xl">
     <form id="addPathForm" method="dialog">
-      <div class="border-b border-slate-700 px-5 py-4">
+      <div class="dialog-divider border-b px-5 py-4">
         <h2 class="text-lg font-semibold">パスを追加</h2>
-        <p class="mt-1 text-sm text-slate-400">既存または新しい分類を入力して、ブラウザに保存します。</p>
+        <p class="dialog-muted mt-1 text-sm">既存または新しい分類を入力して、ブラウザに保存します。</p>
       </div>
       <div class="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
-        <label class="text-sm text-slate-300">
+        <label class="dialog-label text-sm">
           タブ
           <input id="addTab" name="tab" list="tabOptions" required
-            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500">
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
         </label>
-        <label class="text-sm text-slate-300">
+        <label class="dialog-label text-sm">
           カテゴリ
           <input id="addCategory" name="category" list="categoryOptions" required
-            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500">
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
         </label>
-        <label class="text-sm text-slate-300 sm:col-span-2">
+        <label class="dialog-label text-sm sm:col-span-2">
           サブカテゴリ
           <input id="addSubCategory" name="subCategory" list="subCategoryOptions" required
-            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500">
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
         </label>
-        <label class="text-sm text-slate-300 sm:col-span-2">
+        <label class="dialog-label text-sm sm:col-span-2">
           表示名
           <input id="addName" name="name" required
-            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500">
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
         </label>
-        <label class="text-sm text-slate-300 sm:col-span-2">
+        <label class="dialog-label text-sm sm:col-span-2">
           パス / URL
           <input id="addPath" name="path" required
-            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-slate-100 outline-none focus:border-violet-500">
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 font-mono outline-none">
         </label>
-        <label class="text-sm text-slate-300 sm:col-span-2">
+        <label class="dialog-label text-sm sm:col-span-2">
           ノート（任意）
           <textarea id="addNote" name="note" rows="2"
-            class="mt-1 w-full resize-y rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500"></textarea>
+            class="dialog-input mt-1 w-full resize-y rounded-md border px-3 py-2 outline-none"></textarea>
         </label>
         <p id="addPathError" class="hidden text-sm text-rose-300 sm:col-span-2"></p>
       </div>
-      <div class="flex justify-end gap-2 border-t border-slate-700 px-5 py-4">
+      <div class="dialog-divider flex justify-end gap-2 border-t px-5 py-4">
         <button id="cancelAddPathButton" type="button"
-          class="rounded-md border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+          class="secondary-button rounded-md border px-3 py-2 text-sm font-semibold">
           キャンセル
         </button>
         <button type="submit"
-          class="rounded-md border border-violet-500 bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+          class="primary-button rounded-md border px-3 py-2 text-sm font-semibold">
           保存
         </button>
       </div>
@@ -486,27 +731,27 @@
   </dialog>
 
   <dialog id="addGroupDialog"
-    class="w-[min(440px,calc(100vw-2rem))] rounded-xl border border-slate-700 bg-slate-900 p-0 text-slate-100 shadow-2xl">
+    class="dialog-shell w-[min(440px,calc(100vw-2rem))] rounded-xl border p-0 shadow-2xl">
     <form id="addGroupForm" method="dialog">
-      <div class="border-b border-slate-700 px-5 py-4">
+      <div class="dialog-divider border-b px-5 py-4">
         <h2 id="addGroupTitle" class="text-lg font-semibold"></h2>
-        <p id="addGroupDescription" class="mt-1 text-sm text-slate-400"></p>
+        <p id="addGroupDescription" class="dialog-muted mt-1 text-sm"></p>
       </div>
       <div class="px-5 py-4">
-        <label class="text-sm text-slate-300">
+        <label class="dialog-label text-sm">
           名前
           <input id="addGroupName" name="name" required
-            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-violet-500">
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
         </label>
         <p id="addGroupError" class="mt-3 hidden text-sm text-rose-300"></p>
       </div>
-      <div class="flex justify-end gap-2 border-t border-slate-700 px-5 py-4">
+      <div class="dialog-divider flex justify-end gap-2 border-t px-5 py-4">
         <button id="cancelAddGroupButton" type="button"
-          class="rounded-md border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+          class="secondary-button rounded-md border px-3 py-2 text-sm font-semibold">
           キャンセル
         </button>
         <button type="submit"
-          class="rounded-md border border-violet-500 bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500">
+          class="primary-button rounded-md border px-3 py-2 text-sm font-semibold">
           追加
         </button>
       </div>
@@ -597,6 +842,33 @@
       const DEFAULT_TAB = "共通";
       const CATALOG_STORAGE_KEY = "pathCatalog.catalog.v1";
       const SUBCAT_STORAGE_KEY = "pathCatalog.subcatCollapsed.v1";
+      const THEME_STORAGE_KEY = "pathNote.theme.v1";
+      const THEMES = new Set(["current", "open", "compact"]);
+
+      const applyTheme = (theme, { persist = true } = {}) => {
+        const legacyThemeMap = { focus: "current", paper: "open", index: "open" };
+        const mappedTheme = legacyThemeMap[theme] || theme;
+        const safeTheme = THEMES.has(mappedTheme) ? mappedTheme : "current";
+        document.documentElement.dataset.theme = safeTheme;
+        document.querySelectorAll("[data-theme-value]").forEach((button) => {
+          button.classList.toggle("active", button.dataset.themeValue === safeTheme);
+        });
+        if (persist) {
+          try {
+            localStorage.setItem(THEME_STORAGE_KEY, safeTheme);
+          } catch (e) {
+            console.warn("表示モードを保存できませんでした。", e);
+          }
+        }
+      };
+
+      const loadTheme = () => {
+        try {
+          return localStorage.getItem(THEME_STORAGE_KEY) || "current";
+        } catch (e) {
+          return "current";
+        }
+      };
       const subcatKeyFor = (tab, cat, sub) =>
         JSON.stringify([tab || "", cat || "", sub || ""]);
       const loadCollapsedSubcats = () => {
@@ -1034,8 +1306,41 @@
         `;
       };
 
+      const buildCompactMainHtml = (items) => {
+        const rows = items.map((item) => `
+          <li class="compact-row"
+              data-copy="${toHtml(item.path)}"
+              data-note="${toHtml(item.note || "")}">
+            <span class="compact-tag compact-tag--category">${toHtml(item.category)}</span>
+            <span class="compact-tag">${toHtml(item.subCategory)}</span>
+            <span class="compact-name">${toHtml(formatDisplayName(item.name))}</span>
+            <span class="compact-path">${toHtml(item.path)}</span>
+            <span class="compact-note">${item.note ? "i" : ""}</span>
+          </li>
+        `).join("");
+
+        return {
+          html: `
+            <div class="compact-list">
+              <div class="compact-head">
+                <span>カテゴリ</span>
+                <span>分類</span>
+                <span>名前</span>
+                <span>パス</span>
+                <span></span>
+              </div>
+              <ul>${rows}</ul>
+            </div>
+          `,
+          isEmpty: items.length === 0
+        };
+      };
+
       // メイン領域のHTML生成
       const buildMainHtml = (items) => {
+        if (document.documentElement.dataset.theme === "compact") {
+          return buildCompactMainHtml(items);
+        }
         const categories = state.cat ? [state.cat] : getCats();
         if (categories.length === 0) {
           return { html: "", isEmpty: true };
@@ -1294,12 +1599,18 @@
         $("openDataMenuButton")?.setAttribute("aria-expanded", "false");
       };
 
+      const closeViewMenu = () => {
+        $("viewMenu")?.classList.add("hidden");
+        $("openViewMenuButton")?.setAttribute("aria-expanded", "false");
+      };
+
       const toggleAddMenu = () => {
         const menu = $("addMenu");
         const button = $("openAddMenuButton");
         if (!menu || !button) return;
         const willOpen = menu.classList.contains("hidden");
         closeDataMenu();
+        closeViewMenu();
         menu.classList.toggle("hidden", !willOpen);
         button.setAttribute("aria-expanded", willOpen.toString());
       };
@@ -1310,6 +1621,18 @@
         if (!menu || !button) return;
         const willOpen = menu.classList.contains("hidden");
         closeAddMenu();
+        closeViewMenu();
+        menu.classList.toggle("hidden", !willOpen);
+        button.setAttribute("aria-expanded", willOpen.toString());
+      };
+
+      const toggleViewMenu = () => {
+        const menu = $("viewMenu");
+        const button = $("openViewMenuButton");
+        if (!menu || !button) return;
+        const willOpen = menu.classList.contains("hidden");
+        closeAddMenu();
+        closeDataMenu();
         menu.classList.toggle("hidden", !willOpen);
         button.setAttribute("aria-expanded", willOpen.toString());
       };
@@ -1333,6 +1656,14 @@
         else if (action === "export") exportCatalogData();
       };
 
+      const onThemeAction = (event) => {
+        const button = event.target.closest("[data-theme-value]");
+        if (!button) return;
+        applyTheme(button.dataset.themeValue || "current");
+        closeViewMenu();
+        renderMain();
+      };
+
       const onDocumentClick = (event) => {
         const addMenu = $("addMenu");
         const addButton = $("openAddMenuButton");
@@ -1345,6 +1676,12 @@
         if (dataMenu && !dataMenu.classList.contains("hidden")
           && !dataMenu.contains(event.target) && !dataButton?.contains(event.target)) {
           closeDataMenu();
+        }
+        const viewMenu = $("viewMenu");
+        const viewButton = $("openViewMenuButton");
+        if (viewMenu && !viewMenu.classList.contains("hidden")
+          && !viewMenu.contains(event.target) && !viewButton?.contains(event.target)) {
+          closeViewMenu();
         }
       };
 
@@ -1387,7 +1724,7 @@
       };
 
       const DATA_FILE_PREFIX = [
-        "// Path Catalog data",
+        "// パスノート data",
         "// ブラウザからの登録・読み込み・書き出しを推奨します。",
         ""
       ].join("\n");
@@ -1444,7 +1781,7 @@
           /^\uFEFF?(?:\s*\/\/[^\r\n]*(?:\r?\n|$))*\s*window\.PATH_CATALOG\s*=\s*([\s\S]*?)\s*;\s*$/
         );
         if (!match) {
-          throw new Error("Path Catalogから書き出したJSON互換形式のdata.jsではありません。");
+          throw new Error("パスノートから書き出したJSON互換形式のdata.jsではありません。");
         }
         return validateCatalogData(JSON.parse(match[1]));
       };
@@ -1475,7 +1812,7 @@
       const showInlineToast = (parent, msg) => {
         if (!parent) return;
         const tag = document.createElement("span");
-        tag.className = "absolute right-2 top-1/2 -translate-y-1/2 transform rounded-full bg-slate-900/90 text-xs px-2 py-0.5 border border-slate-700 shadow";
+        tag.className = "toast-surface absolute right-2 top-1/2 -translate-y-1/2 transform rounded-full text-xs px-2 py-0.5 border shadow";
         tag.style.color = "var(--text-heading)";
         tag.textContent = msg;
         parent.appendChild(tag);
@@ -1522,7 +1859,7 @@
         el.style.pointerEvents = "none";
         el.style.opacity = "0";
         el.style.transition = "opacity 120ms ease, transform 120ms ease";
-        el.className = "max-w-md whitespace-pre-line rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs shadow-lg";
+        el.className = "toast-surface max-w-md whitespace-pre-line rounded-md border px-3 py-2 text-xs shadow-lg";
         el.style.color = "var(--text-heading)";
         document.body.appendChild(el);
         return {
@@ -1681,6 +2018,8 @@
         if (catList) catList.addEventListener("click", onCatClick);
         $("openAddMenuButton")?.addEventListener("click", toggleAddMenu);
         $("addMenu")?.addEventListener("click", onAddMenuAction);
+        $("openViewMenuButton")?.addEventListener("click", toggleViewMenu);
+        $("viewMenu")?.addEventListener("click", onThemeAction);
         $("openDataMenuButton")?.addEventListener("click", toggleDataMenu);
         $("dataMenu")?.addEventListener("click", onDataMenuAction);
         $("importDataInput")?.addEventListener("change", (event) => importCatalogData(event.target.files?.[0]));
@@ -1706,6 +2045,7 @@
 
       // 初期化エントリポイント
       const init = () => {
+        applyTheme(loadTheme(), { persist: false });
         bind();
         renderAll();
         renderWarnings(warnings);

@@ -1,4 +1,4 @@
-// Path Catalog data
+// パスノート data
 // ブラウザからの登録・読み込み・書き出しを推奨します。
 
 window.PATH_CATALOG = [

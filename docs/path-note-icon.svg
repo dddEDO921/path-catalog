@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">パスノート アイコン</title>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#443d70"/>
+      <stop offset="1" stop-color="#201c38"/>
+    </linearGradient>
+    <clipPath id="icon">
+      <rect width="512" height="512" rx="116"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#icon)">
+    <rect width="512" height="512" fill="url(#background)"/>
+    <g font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="34" font-weight="700">
+      <text x="82" y="142" fill="#b0a9c3">/work/src</text>
+      <text x="82" y="228" fill="#b0a9c3">../docs</text>
+      <text x="82" y="314" fill="#d1b46d">~/assets</text>
+      <text x="82" y="400" fill="#b0a9c3">C:\memo</text>
+    </g>
+    <g fill="#6c648a">
+      <rect x="48" y="114" width="12" height="34" rx="6"/>
+      <rect x="48" y="200" width="12" height="34" rx="6"/>
+      <rect x="48" y="286" width="12" height="34" rx="6"/>
+      <rect x="48" y="372" width="12" height="34" rx="6"/>
+    </g>
+  </g>
+</svg>
