@@ -841,6 +841,15 @@
       const CATALOG_STORAGE_KEY = "pathCatalog.catalog.v1";
       const SUBCAT_STORAGE_KEY = "pathCatalog.subcatCollapsed.v1";
       const THEME_STORAGE_KEY = "pathNote.theme.v1";
+      const storage = {
+        read: (key) => localStorage.getItem(key),
+        write: (key, value) => localStorage.setItem(key, value),
+        readJson: (key) => {
+          const value = localStorage.getItem(key);
+          return value === null ? null : JSON.parse(value);
+        },
+        writeJson: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
+      };
       const THEME_CONFIG = [
         { key: "current", label: "スタンダード", legacyKeys: ["focus"] },
         { key: "open", label: "オープン", legacyKeys: ["paper", "index"] },
@@ -874,7 +883,7 @@
         });
         if (persist) {
           try {
-            localStorage.setItem(THEME_STORAGE_KEY, safeTheme);
+            storage.write(THEME_STORAGE_KEY, safeTheme);
           } catch (e) {
             console.warn("表示モードを保存できませんでした。", e);
           }
@@ -883,7 +892,7 @@
 
       const loadTheme = () => {
         try {
-          return localStorage.getItem(THEME_STORAGE_KEY) || DEFAULT_THEME;
+          return storage.read(THEME_STORAGE_KEY) || DEFAULT_THEME;
         } catch (e) {
           return DEFAULT_THEME;
         }
@@ -892,8 +901,7 @@
         JSON.stringify([tab || "", cat || "", sub || ""]);
       const loadCollapsedSubcats = () => {
         try {
-          const raw = localStorage.getItem(SUBCAT_STORAGE_KEY);
-          const parsed = raw ? JSON.parse(raw) : [];
+          const parsed = storage.readJson(SUBCAT_STORAGE_KEY) ?? [];
           return new Set(Array.isArray(parsed) ? parsed : []);
         } catch (e) {
           return new Set();
@@ -901,7 +909,7 @@
       };
       const saveCollapsedSubcats = (set) => {
         try {
-          localStorage.setItem(SUBCAT_STORAGE_KEY, JSON.stringify(Array.from(set)));
+          storage.writeJson(SUBCAT_STORAGE_KEY, Array.from(set));
         } catch (e) {
           // ストレージが使えない場合は無視
         }
@@ -1060,15 +1068,14 @@
       };
       const cloneCatalog = (catalog) => JSON.parse(JSON.stringify(catalog));
       const saveCatalog = (catalog) => {
-        localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(catalog));
+        storage.writeJson(CATALOG_STORAGE_KEY, catalog);
       };
       const loadCatalog = () => {
         const storageWarnings = [];
         try {
-          const saved = localStorage.getItem(CATALOG_STORAGE_KEY);
+          const saved = storage.readJson(CATALOG_STORAGE_KEY);
           if (saved !== null) {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed)) return { catalog: parsed, storageWarnings };
+            if (Array.isArray(saved)) return { catalog: saved, storageWarnings };
             storageWarnings.push({ msg: "保存データが配列ではないため、初期データを使用しました", meta: {} });
           }
         } catch (e) {
