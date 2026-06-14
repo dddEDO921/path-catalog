@@ -1944,8 +1944,7 @@
           return;
         }
         const result = commitCatalogChange(
-          () => catalogModel.replaceItem(detailItem._meta, item),
-          { selection: { tab: item.tab, cat: item.category } }
+          () => catalogModel.replaceItem(detailItem._meta, item)
         );
         if (!result.ok) {
           dialogController.showError("editPathError", "ローカルストレージに保存できませんでした。");
