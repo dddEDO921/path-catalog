@@ -789,6 +789,7 @@
             <ul class="list-disc ml-4 mt-1 space-y-1">
               <li>一覧のパスをクリックでコピー</li>
               <li>キー: ↑/↓ パス、Enter コピー</li>
+              <li>キー: Home/End、PageUp/PageDown</li>
               <li>キー: ←/→ タブ、Alt+↑/↓ カテゴリ</li>
             </ul>
           </div>
@@ -2613,6 +2614,12 @@
           : Math.max(0, Math.min(currentIndex + delta, rows.length - 1));
         updateListSelection(Number(rows[nextIndex].dataset.listItemId));
       };
+      const moveListSelectionTo = (position) => {
+        const rows = getVisibleListRows();
+        if (!rows.length) return;
+        const index = position === "end" ? rows.length - 1 : 0;
+        updateListSelection(Number(rows[index].dataset.listItemId));
+      };
       const getSelectedPath = () => {
         const row = document.querySelector(`[data-list-item-id="${selectedPathId}"]`);
         if (!row || row.offsetParent === null) return undefined;
@@ -2659,6 +2666,16 @@
 
         if (!event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
           moveListSelection(event.key === "ArrowDown" ? 1 : -1);
+          event.preventDefault();
+          return;
+        }
+        if (!event.altKey && (event.key === "Home" || event.key === "End")) {
+          moveListSelectionTo(event.key === "End" ? "end" : "start");
+          event.preventDefault();
+          return;
+        }
+        if (!event.altKey && (event.key === "PageUp" || event.key === "PageDown")) {
+          moveListSelection(event.key === "PageDown" ? 10 : -10);
           event.preventDefault();
           return;
         }
