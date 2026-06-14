@@ -216,6 +216,85 @@
       color: var(--text-muted);
     }
 
+    .details-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.4rem;
+      height: 1.4rem;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      font-weight: 700;
+      transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+    }
+
+    .details-button:hover,
+    .details-button:focus-visible {
+      border-color: var(--accent);
+      background-color: var(--accent-soft);
+      color: var(--text-heading);
+      outline: none;
+    }
+
+    .detail-value {
+      color: var(--text-heading);
+    }
+
+    .detail-path {
+      border-color: var(--border);
+      background-color: var(--bg-control);
+      color: var(--text-body);
+    }
+
+    .path-details-dialog {
+      width: min(600px, calc(100vw - 2rem));
+      max-width: none;
+    }
+
+    .search-dialog {
+      width: min(720px, calc(100vw - 2rem));
+      max-width: none;
+    }
+
+    .search-results {
+      max-height: min(60vh, 560px);
+      overflow-y: auto;
+    }
+
+    .search-result {
+      border-bottom: 1px solid var(--border);
+      transition: background-color 140ms ease;
+    }
+
+    .search-result:last-child {
+      border-bottom: 0;
+    }
+
+    .search-result:hover,
+    .search-result:focus-within {
+      background-color: var(--bg-hover);
+    }
+
+    .search-result-path {
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 560px) {
+      .detail-path-row {
+        flex-direction: column;
+      }
+
+      .detail-path-row .primary-button {
+        width: 100%;
+      }
+
+      .search-shortcut {
+        display: none;
+      }
+    }
+
     .cat-card {
       background-color: var(--bg-layer);
       border-color: var(--border);
@@ -388,6 +467,20 @@
       background-color: var(--accent-hover) !important;
     }
 
+    .danger-button {
+      border-color: rgba(244, 63, 94, 0.45) !important;
+      background-color: transparent;
+      color: #fb7185;
+    }
+
+    .danger-button:hover,
+    .danger-button:focus-visible {
+      border-color: #f43f5e !important;
+      background-color: rgba(244, 63, 94, 0.12);
+      color: #fda4af;
+      outline: none;
+    }
+
     .dialog-shell {
       background-color: var(--bg-layer) !important;
       color: var(--text-heading) !important;
@@ -403,7 +496,6 @@
       color: var(--text-muted) !important;
     }
 
-    .note-badge,
     #emptyMessage {
       border-color: var(--border) !important;
       background-color: var(--bg-control) !important;
@@ -592,6 +684,8 @@
     }
 
     .compact-note {
+      position: relative;
+      min-height: 1.4rem;
       color: var(--text-muted);
       font-size: 0.65rem;
       text-align: center;
@@ -615,6 +709,11 @@
         </div>
         <div id="tabNav" class="flex flex-wrap items-end gap-1.5 pt-1 pb-1 -mb-[1px]"></div>
         <div class="relative flex items-center gap-2 pb-1">
+          <button id="openSearchButton" type="button"
+            class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold"
+            aria-keyshortcuts="Control+K Meta+K /">
+            検索 <span class="search-shortcut ml-1 text-xs opacity-60">Ctrl K</span>
+          </button>
           <button id="openViewMenuButton" type="button" aria-expanded="false" aria-controls="viewMenu"
             class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold">
             表示
@@ -628,6 +727,10 @@
             データ管理
           </button>
           <div id="dataMenu" class="add-menu absolute right-[76px] top-full z-40 mt-2 hidden rounded-lg p-1.5 shadow-2xl">
+            <button type="button" class="add-menu-item" data-data-action="organize">
+              <span class="block font-semibold">分類を整理</span>
+              <span class="menu-hint block text-xs">タブ・カテゴリ・サブカテゴリを削除</span>
+            </button>
             <button type="button" class="add-menu-item" data-data-action="import">
               <span class="block font-semibold">データを読み込む</span>
               <span class="menu-hint block text-xs">data.jsから現在の内容を置き換え</span>
@@ -707,17 +810,17 @@
       <div class="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
         <label class="dialog-label text-sm">
           タブ
-          <input id="addTab" name="tab" list="tabOptions" required
+          <input id="addTab" name="tab" list="addTabOptions" required
             class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
         </label>
         <label class="dialog-label text-sm">
           カテゴリ
-          <input id="addCategory" name="category" list="categoryOptions" required
+          <input id="addCategory" name="category" list="addCategoryOptions" required
             class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
         </label>
         <label class="dialog-label text-sm sm:col-span-2">
           サブカテゴリ
-          <input id="addSubCategory" name="subCategory" list="subCategoryOptions" required
+          <input id="addSubCategory" name="subCategory" list="addSubCategoryOptions" required
             class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
         </label>
         <label class="dialog-label text-sm sm:col-span-2">
@@ -748,9 +851,9 @@
         </button>
       </div>
     </form>
-    <datalist id="tabOptions"></datalist>
-    <datalist id="categoryOptions"></datalist>
-    <datalist id="subCategoryOptions"></datalist>
+    <datalist id="addTabOptions"></datalist>
+    <datalist id="addCategoryOptions"></datalist>
+    <datalist id="addSubCategoryOptions"></datalist>
   </dialog>
 
   <dialog id="addGroupDialog"
@@ -779,6 +882,163 @@
         </button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="pathDetailsDialog"
+    class="dialog-shell path-details-dialog rounded-xl border p-0 shadow-2xl">
+    <div>
+      <div class="dialog-divider flex items-start justify-between gap-4 border-b px-5 py-4">
+        <div class="min-w-0">
+          <p id="detailLocation" class="dialog-muted text-xs"></p>
+          <h2 id="detailName" class="mt-1 break-words text-lg font-semibold"></h2>
+        </div>
+        <div class="flex shrink-0 gap-2">
+          <button id="editPathDetailsButton" type="button"
+            class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold">
+            編集
+          </button>
+          <button id="closePathDetailsButton" type="button"
+            class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold"
+            aria-label="詳細を閉じる">
+            閉じる
+          </button>
+        </div>
+      </div>
+      <div id="pathDetailsView" class="space-y-4 px-5 py-4">
+        <section>
+          <div class="dialog-label text-xs font-semibold">パス / URL</div>
+          <div class="detail-path-row mt-1 flex items-start gap-2">
+            <div id="detailPath" class="detail-path min-w-0 flex-1 break-all rounded-md border px-3 py-2 font-mono text-sm"></div>
+            <button id="copyDetailPathButton" type="button"
+              class="primary-button shrink-0 rounded-md border px-3 py-2 text-sm font-semibold">
+              コピー
+            </button>
+          </div>
+        </section>
+        <section>
+          <div class="dialog-label text-xs font-semibold">ノート</div>
+          <div id="detailNote" class="detail-value mt-1 whitespace-pre-wrap break-words text-sm"></div>
+        </section>
+        <div class="dialog-divider flex justify-end border-t pt-4">
+          <button id="deletePathButton" type="button"
+            class="danger-button rounded-md border px-3 py-2 text-sm font-semibold">
+            このパスを削除
+          </button>
+        </div>
+      </div>
+      <form id="editPathForm" class="hidden" method="dialog">
+        <div class="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
+          <label class="dialog-label text-sm">
+            タブ
+            <select id="editTab" name="tab" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
+          </label>
+          <label class="dialog-label text-sm">
+            カテゴリ
+            <select id="editCategory" name="category" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
+          </label>
+          <label class="dialog-label text-sm sm:col-span-2">
+            サブカテゴリ
+            <select id="editSubCategory" name="subCategory" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
+          </label>
+          <label class="dialog-label text-sm sm:col-span-2">
+            表示名
+            <input id="editName" name="name" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
+          </label>
+          <label class="dialog-label text-sm sm:col-span-2">
+            パス / URL
+            <input id="editPath" name="path" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 font-mono outline-none">
+          </label>
+          <label class="dialog-label text-sm sm:col-span-2">
+            ノート（任意）
+            <textarea id="editNote" name="note" rows="2"
+              class="dialog-input mt-1 w-full resize-y rounded-md border px-3 py-2 outline-none"></textarea>
+          </label>
+          <p id="editPathError" class="hidden text-sm text-rose-300 sm:col-span-2"></p>
+        </div>
+        <div class="dialog-divider flex justify-end gap-2 border-t px-5 py-4">
+          <button id="cancelEditPathButton" type="button"
+            class="secondary-button rounded-md border px-3 py-2 text-sm font-semibold">
+            キャンセル
+          </button>
+          <button type="submit"
+            class="primary-button rounded-md border px-3 py-2 text-sm font-semibold">
+            保存
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="searchDialog"
+    class="dialog-shell search-dialog rounded-xl border p-0 shadow-2xl">
+    <div>
+      <div class="dialog-divider border-b px-5 py-4">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold">パスを検索</h2>
+          <button id="closeSearchButton" type="button"
+            class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold">
+            閉じる
+          </button>
+        </div>
+        <input id="searchInput" type="search" autocomplete="off"
+          placeholder="名前、パス、ノート、分類から検索"
+          class="dialog-input mt-3 w-full rounded-md border px-3 py-2.5 outline-none">
+        <p id="searchSummary" class="dialog-muted mt-2 text-xs"></p>
+      </div>
+      <div id="searchResults" class="search-results"></div>
+    </div>
+  </dialog>
+
+  <dialog id="organizeDialog"
+    class="dialog-shell w-[min(520px,calc(100vw-2rem))] rounded-xl border p-0 shadow-2xl">
+    <div>
+      <div class="dialog-divider border-b px-5 py-4">
+        <h2 class="text-lg font-semibold">分類を整理</h2>
+        <p class="dialog-muted mt-1 text-sm">分類を削除すると、中にあるパスも削除されます。</p>
+      </div>
+      <div class="space-y-4 px-5 py-4">
+        <label class="dialog-label block text-sm">
+          削除する単位
+          <select id="organizeLevel"
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
+            <option value="subCategory">サブカテゴリ</option>
+            <option value="category">カテゴリ</option>
+            <option value="tab">タブ</option>
+          </select>
+        </label>
+        <label class="dialog-label block text-sm">
+          タブ
+          <select id="organizeTab"
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
+        </label>
+        <label id="organizeCategoryField" class="dialog-label block text-sm">
+          カテゴリ
+          <select id="organizeCategory"
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
+        </label>
+        <label id="organizeSubCategoryField" class="dialog-label block text-sm">
+          サブカテゴリ
+          <select id="organizeSubCategory"
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
+        </label>
+        <p id="organizeSummary" class="dialog-muted text-sm"></p>
+      </div>
+      <div class="dialog-divider flex justify-end gap-2 border-t px-5 py-4">
+        <button id="closeOrganizeButton" type="button"
+          class="secondary-button rounded-md border px-3 py-2 text-sm font-semibold">
+          閉じる
+        </button>
+        <button id="deleteGroupButton" type="button"
+          class="danger-button rounded-md border px-3 py-2 text-sm font-semibold">
+          選択した分類を削除
+        </button>
+      </div>
+    </div>
   </dialog>
 
   <script src="data.js"></script>
@@ -951,7 +1211,8 @@
         subCategory: toSafeString(x.subCategory),
         name: toSafeString(x.name),
         path: toSafeString(x.path),
-        note: toSafeString(x.note)
+        note: toSafeString(x.note),
+        _meta: x._meta
       }));
 
       // 階層データを検査しながらフラット化する。strict はインポート時に使用する
@@ -1159,6 +1420,49 @@
           const categoryBlock = findOrCreateBlock(tabBlock[1], category);
           findOrCreateBlock(categoryBlock[1], subCategory)[1].push([name, path, note]);
         };
+        const replaceItem = (meta, item) => {
+          const row = catalog?.[meta.t]?.[1]?.[meta.c]?.[1]?.[meta.s]?.[1]?.[meta.i];
+          if (!Array.isArray(row)) throw new Error("更新対象のパスが見つかりません。");
+          const isSameLocation = [
+            catalog[meta.t][0],
+            catalog[meta.t][1][meta.c][0],
+            catalog[meta.t][1][meta.c][1][meta.s][0],
+          ].every((value, index) => value === [item.tab, item.category, item.subCategory][index]);
+          if (isSameLocation) {
+            catalog[meta.t][1][meta.c][1][meta.s][1][meta.i] = [item.name, item.path, item.note];
+            return;
+          }
+          catalog[meta.t][1][meta.c][1][meta.s][1].splice(meta.i, 1);
+          appendItem(item);
+        };
+        const deleteItem = (meta) => {
+          const rows = catalog?.[meta.t]?.[1]?.[meta.c]?.[1]?.[meta.s]?.[1];
+          if (!Array.isArray(rows) || !Array.isArray(rows[meta.i])) {
+            throw new Error("削除対象のパスが見つかりません。");
+          }
+          rows.splice(meta.i, 1);
+        };
+        const deleteGroup = ({ level, tab, category, subCategory }) => {
+          const tabIndex = catalog.findIndex((block) => Array.isArray(block) && block[0] === tab);
+          if (tabIndex < 0) throw new Error("削除対象のタブが見つかりません。");
+          if (level === "tab") {
+            catalog.splice(tabIndex, 1);
+            return;
+          }
+          const categories = catalog[tabIndex][1];
+          const categoryIndex = categories.findIndex((block) => Array.isArray(block) && block[0] === category);
+          if (categoryIndex < 0) throw new Error("削除対象のカテゴリが見つかりません。");
+          if (level === "category") {
+            categories.splice(categoryIndex, 1);
+            return;
+          }
+          const subCategories = categories[categoryIndex][1];
+          const subCategoryIndex = subCategories.findIndex(
+            (block) => Array.isArray(block) && block[0] === subCategory
+          );
+          if (subCategoryIndex < 0) throw new Error("削除対象のサブカテゴリが見つかりません。");
+          subCategories.splice(subCategoryIndex, 1);
+        };
 
         return {
           getTabBlocks,
@@ -1168,6 +1472,9 @@
           addCategory,
           addSubCategory,
           appendItem,
+          replaceItem,
+          deleteItem,
+          deleteGroup,
         };
       })();
 
@@ -1353,11 +1660,70 @@
 
       // 空欄の表示名はプレースホルダで補完
       const formatDisplayName = (name) => (name ? name : "(no name)");
-      const buildNoteBadge = (note) => {
-        if (!note) return "";
+      const buildDetailsButton = (item) => {
         return `
-          <span class="note-badge absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-xxs bg-slate-900/80">i</span>
+          <button type="button" class="details-button absolute right-0 top-1/2 -translate-y-1/2"
+                  data-path-details="${item.id}"
+                  aria-label="${toHtml(formatDisplayName(item.name))}の詳細を表示"
+                  title="詳細を表示">i</button>
         `;
+      };
+
+      const SEARCH_RESULT_LIMIT = 100;
+      const normalizeSearchText = (value) => toSafeString(value).normalize("NFKC").toLocaleLowerCase();
+      const getSearchResults = (query) => {
+        const terms = normalizeSearchText(query).split(/\s+/).filter(Boolean);
+        if (!terms.length) return [];
+        return state.all.filter((item) => {
+          const haystack = normalizeSearchText([
+            item.name,
+            item.path,
+            item.note,
+            item.tab,
+            item.category,
+            item.subCategory,
+          ].join("\n"));
+          return terms.every((term) => haystack.includes(term));
+        });
+      };
+      const buildSearchResultHtml = (item) => `
+        <li class="search-result flex items-start gap-3 px-5 py-3">
+          <button type="button" class="min-w-0 flex-1 text-left" data-search-copy="${item.id}">
+            <span class="block text-xs" style="color: var(--text-muted);">
+              ${toHtml([item.tab, item.category, item.subCategory].filter(Boolean).join(" / "))}
+            </span>
+            <span class="mt-1 block font-semibold" style="color: var(--text-heading);">
+              ${toHtml(formatDisplayName(item.name))}
+            </span>
+            <span class="search-result-path mt-1 block break-all font-mono text-xs">${toHtml(item.path)}</span>
+          </button>
+          <button type="button" class="secondary-button shrink-0 rounded-md border px-2.5 py-1.5 text-xs font-semibold"
+                  data-search-details="${item.id}">
+            詳細
+          </button>
+        </li>
+      `;
+      const renderSearchResults = () => {
+        const query = $("searchInput")?.value || "";
+        const results = getSearchResults(query);
+        const holder = $("searchResults");
+        const summary = $("searchSummary");
+        if (!holder || !summary) return;
+        if (!query.trim()) {
+          summary.textContent = `全 ${state.all.length}件から検索します`;
+          holder.innerHTML = `
+            <p class="dialog-muted px-5 py-8 text-center text-sm">
+              キーワードを入力してください
+            </p>`;
+          return;
+        }
+        const visibleResults = results.slice(0, SEARCH_RESULT_LIMIT);
+        summary.textContent = results.length > SEARCH_RESULT_LIMIT
+          ? `${results.length}件見つかりました（先頭${SEARCH_RESULT_LIMIT}件を表示）`
+          : `${results.length}件見つかりました`;
+        holder.innerHTML = results.length
+          ? `<ul>${visibleResults.map(buildSearchResultHtml).join("")}</ul>`
+          : `<p class="dialog-muted px-5 py-8 text-center text-sm">一致するパスがありません</p>`;
       };
 
       // 一覧の1行分HTML生成
@@ -1365,7 +1731,7 @@
         const meta = classifyPath(item.path);
         const iconHtml = (meta.icon || "").trim();
         const noteText = item.note || "";
-        const noteBadge = buildNoteBadge(noteText);
+        const detailsButton = buildDetailsButton(item);
         return `
           <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-0.5 rounded-md shadow-sm grid grid-cols-[18px_220px_minmax(0,1fr)] gap-x-3 gap-y-0 items-center transition overflow-visible list-row"
               data-copy="${toHtml(item.path)}"
@@ -1379,7 +1745,7 @@
             </div>
             <div class="relative text-xs font-mono tabular-nums col-start-3 col-span-1 pr-7" style="color: var(--text-muted);">
               <span class="path-chip">${toHtml(item.path)}</span>
-              ${noteBadge}
+              ${detailsButton}
             </div>
           </li>
         `;
@@ -1470,7 +1836,7 @@
             <span class="compact-tag">${toHtml(item.subCategory)}</span>
             <span class="compact-name">${toHtml(formatDisplayName(item.name))}</span>
             <span class="compact-path">${toHtml(item.path)}</span>
-            <span class="compact-note">${item.note ? "i" : ""}</span>
+            <span class="compact-note">${buildDetailsButton(item)}</span>
           </li>
         `).join("");
 
@@ -1584,6 +1950,138 @@
         close: (dialogId) => $(dialogId)?.close(),
       };
 
+      const openSearchDialog = () => {
+        const input = $("searchInput");
+        const dialog = $("searchDialog");
+        if (dialog?.open) {
+          input?.focus();
+          input?.select();
+          return;
+        }
+        menuController.close("add");
+        menuController.close("data");
+        menuController.close("view");
+        if (input) input.value = "";
+        renderSearchResults();
+        dialogController.open("searchDialog");
+        requestAnimationFrame(() => input?.focus());
+      };
+
+      let detailItem = null;
+      const setPathDetailsEditing = (isEditing) => {
+        $("pathDetailsView")?.classList.toggle("hidden", isEditing);
+        $("editPathForm")?.classList.toggle("hidden", !isEditing);
+        $("editPathDetailsButton")?.classList.toggle("hidden", isEditing);
+      };
+      const openPathDetailsDialog = (item) => {
+        if (!item) return;
+        detailItem = item;
+        $("detailLocation").textContent = [item.tab, item.category, item.subCategory].filter(Boolean).join(" / ");
+        $("detailName").textContent = formatDisplayName(item.name);
+        $("detailPath").textContent = item.path;
+        $("detailNote").textContent = item.note || "ノートはありません";
+        $("detailNote").classList.toggle("dialog-muted", !item.note);
+        setPathDetailsEditing(false);
+        dialogController.open("pathDetailsDialog");
+      };
+      const startPathDetailsEditing = () => {
+        if (!detailItem) return;
+        dialogController.reset("editPathForm", "editPathError");
+        $("editTab").value = detailItem.tab;
+        $("editCategory").value = detailItem.category;
+        $("editSubCategory").value = detailItem.subCategory;
+        $("editName").value = detailItem.name;
+        $("editPath").value = detailItem.path;
+        $("editNote").value = detailItem.note;
+        refreshPathFormOptions("edit");
+        setPathDetailsEditing(true);
+        $("editName")?.focus();
+      };
+      const deleteDetailItem = () => {
+        if (!detailItem?._meta) return;
+        const confirmed = window.confirm(
+          `「${formatDisplayName(detailItem.name)}」を削除します。\n`
+          + `${detailItem.path}\n\nこの操作は取り消せません。`
+        );
+        if (!confirmed) return;
+        const result = commitCatalogChange(() => catalogModel.deleteItem(detailItem._meta));
+        if (!result.ok) {
+          window.alert("パスを削除できませんでした。");
+          return;
+        }
+        detailItem = null;
+        dialogController.close("pathDetailsDialog");
+      };
+
+      const getOrganizeSelection = () => ({
+        level: $("organizeLevel")?.value || "subCategory",
+        tab: $("organizeTab")?.value || "",
+        category: $("organizeCategory")?.value || "",
+        subCategory: $("organizeSubCategory")?.value || "",
+      });
+      const getOrganizeItems = ({ level, tab, category, subCategory }) =>
+        state.all.filter((item) => {
+          if (item.tab !== tab) return false;
+          if (level === "tab") return true;
+          if (item.category !== category) return false;
+          if (level === "category") return true;
+          return item.subCategory === subCategory;
+        });
+      const refreshOrganizeDialog = () => {
+        const current = getOrganizeSelection();
+        const tabs = getTabs();
+        const tab = tabs.includes(current.tab) ? current.tab : (tabs[0] || "");
+        setSelectOptions("organizeTab", tabs, tab);
+        const categories = catalogModel.getCategoryBlocks(tab).map((block) => toSafeString(block[0]).trim());
+        const category = categories.includes(current.category) ? current.category : (categories[0] || "");
+        setSelectOptions("organizeCategory", categories, category);
+        const subCategories = catalogModel.getSubCategoryBlocks(tab, category)
+          .map((block) => toSafeString(block[0]).trim());
+        const subCategory = subCategories.includes(current.subCategory)
+          ? current.subCategory
+          : (subCategories[0] || "");
+        setSelectOptions("organizeSubCategory", subCategories, subCategory);
+        const level = $("organizeLevel")?.value || "subCategory";
+        $("organizeCategoryField")?.classList.toggle("hidden", level === "tab");
+        $("organizeSubCategoryField")?.classList.toggle("hidden", level !== "subCategory");
+        const selection = getOrganizeSelection();
+        const count = getOrganizeItems(selection).length;
+        const labels = { tab: "タブ", category: "カテゴリ", subCategory: "サブカテゴリ" };
+        $("organizeSummary").textContent = `この${labels[level]}と、中にあるパス ${count}件を削除します。`;
+        $("deleteGroupButton").disabled = !selection.tab
+          || (level !== "tab" && !selection.category)
+          || (level === "subCategory" && !selection.subCategory);
+      };
+      const openOrganizeDialog = () => {
+        $("organizeLevel").value = "subCategory";
+        $("organizeTab").innerHTML = "";
+        $("organizeCategory").innerHTML = "";
+        $("organizeSubCategory").innerHTML = "";
+        refreshOrganizeDialog();
+        dialogController.open("organizeDialog");
+      };
+      const deleteOrganizeSelection = () => {
+        const selection = getOrganizeSelection();
+        const count = getOrganizeItems(selection).length;
+        const targetName = selection.level === "tab"
+          ? selection.tab
+          : selection.level === "category"
+            ? selection.category
+            : selection.subCategory;
+        if (!targetName) return;
+        const confirmed = window.confirm(
+          `「${targetName}」を削除します。\n`
+          + `中にあるパス ${count}件も削除されます。\n\nこの操作は取り消せません。`
+        );
+        if (!confirmed) return;
+        const result = commitCatalogChange(() => catalogModel.deleteGroup(selection));
+        if (!result.ok) {
+          window.alert("分類を削除できませんでした。");
+          return;
+        }
+        refreshOrganizeDialog();
+      };
+
       let addGroupMode = "";
       let addGroupContext = {};
       const openAddGroupDialog = (mode, context = {}) => {
@@ -1665,28 +2163,46 @@
           .join("");
       };
 
-      const refreshAddDialogOptions = () => {
-        const tab = $("addTab")?.value.trim() || "";
-        const category = $("addCategory")?.value.trim() || "";
+      const setSelectOptions = (id, values, selectedValue) => {
+        const holder = $(id);
+        if (!holder) return;
+        holder.innerHTML = dedupe(values.filter(Boolean))
+          .map((value) => `<option value="${toHtml(value)}"${value === selectedValue ? " selected" : ""}>${toHtml(value)}</option>`)
+          .join("");
+      };
+
+      const refreshPathFormOptions = (prefix) => {
+        const tab = $(`${prefix}Tab`)?.value.trim() || "";
+        const category = $(`${prefix}Category`)?.value.trim() || "";
         const categoryOptions = tab
           ? catalogModel.getCategoryBlocks(tab).map((block) => toSafeString(block[0]).trim())
           : catalogModel.getTabBlocks().flatMap((block) =>
             (Array.isArray(block[1]) ? block[1] : []).map((categoryBlock) => toSafeString(categoryBlock?.[0]).trim())
           );
-        setDatalistOptions("tabOptions", getTabs());
-        setDatalistOptions(
-          "categoryOptions",
-          categoryOptions
-        );
-        setDatalistOptions(
-          "subCategoryOptions",
-          tab && category
-            ? catalogModel.getSubCategoryBlocks(tab, category).map((block) => toSafeString(block[0]).trim())
-            : state.all
-              .filter((item) => (!tab || item.tab === tab) && (!category || item.category === category))
-              .map((item) => item.subCategory)
-        );
+        if (prefix === "edit") {
+          setSelectOptions("editTab", getTabs(), tab);
+          const selectedCategory = categoryOptions.includes(category) ? category : (categoryOptions[0] || "");
+          setSelectOptions("editCategory", categoryOptions, selectedCategory);
+          const subCategoryOptions = selectedCategory
+            ? catalogModel.getSubCategoryBlocks(tab, selectedCategory).map((block) => toSafeString(block[0]).trim())
+            : [];
+          const currentSubCategory = $("editSubCategory")?.value || "";
+          const selectedSubCategory = subCategoryOptions.includes(currentSubCategory)
+            ? currentSubCategory
+            : (subCategoryOptions[0] || "");
+          setSelectOptions("editSubCategory", subCategoryOptions, selectedSubCategory);
+          return;
+        }
+        const subCategoryOptions = tab && category
+          ? catalogModel.getSubCategoryBlocks(tab, category).map((block) => toSafeString(block[0]).trim())
+          : state.all
+            .filter((item) => (!tab || item.tab === tab) && (!category || item.category === category))
+            .map((item) => item.subCategory);
+        setDatalistOptions("addTabOptions", getTabs());
+        setDatalistOptions("addCategoryOptions", categoryOptions);
+        setDatalistOptions("addSubCategoryOptions", subCategoryOptions);
       };
+      const refreshAddDialogOptions = () => refreshPathFormOptions("add");
 
       const prepareAddDialog = (presets = {}, lockContext = false) => {
         const form = $("addPathForm");
@@ -1723,6 +2239,42 @@
           category: button.dataset.addCategory || "",
           subCategory: button.dataset.addSubCategory || ""
         }, true);
+      };
+
+      const onEditPathSubmit = (event) => {
+        event.preventDefault();
+        if (!detailItem?._meta) {
+          dialogController.showError("editPathError", "更新対象のパスが見つかりません。");
+          return;
+        }
+        const item = {
+          tab: $("editTab")?.value.trim() || "",
+          category: $("editCategory")?.value.trim() || "",
+          subCategory: $("editSubCategory")?.value.trim() || "",
+          name: $("editName")?.value.trim() || "",
+          path: $("editPath")?.value.trim() || "",
+          note: $("editNote")?.value || "",
+        };
+        if (!item.tab || !item.category || !item.subCategory || !item.name || !item.path) {
+          dialogController.showError("editPathError", "必須項目を入力してください。");
+          return;
+        }
+        const result = commitCatalogChange(
+          () => catalogModel.replaceItem(detailItem._meta, item)
+        );
+        if (!result.ok) {
+          dialogController.showError("editPathError", "ローカルストレージに保存できませんでした。");
+          return;
+        }
+        const updatedItem = state.all.find((candidate) =>
+          candidate.tab === item.tab
+          && candidate.category === item.category
+          && candidate.subCategory === item.subCategory
+          && candidate.name === item.name
+          && candidate.path === item.path
+          && candidate.note === item.note
+        );
+        openPathDetailsDialog(updatedItem);
       };
 
       const menuController = (() => {
@@ -1796,6 +2348,7 @@
         closeDataMenu();
         if (action === "import") $("importDataInput")?.click();
         else if (action === "export") exportCatalogData();
+        else if (action === "organize") openOrganizeDialog();
       };
 
       const onThemeAction = (event) => {
@@ -1985,6 +2538,19 @@
 
       // キー操作（左右でタブ、上下でカテゴリ）
       const onKeydown = (event) => {
+        const isSearchShortcut = (event.ctrlKey || event.metaKey)
+          && !event.altKey
+          && event.key.toLocaleLowerCase() === "k";
+        const isSlashShortcut = event.key === "/"
+          && !event.ctrlKey
+          && !event.metaKey
+          && !event.altKey
+          && !isEditableTarget(event.target);
+        if (isSearchShortcut || isSlashShortcut) {
+          event.preventDefault();
+          openSearchDialog();
+          return;
+        }
         if (isEditableTarget(event.target)) return;
         if (event.ctrlKey || event.metaKey || event.altKey) return;
 
@@ -2020,12 +2586,40 @@
         actions.setCat(btn.getAttribute("data-cat") || "");
       };
 
+      // イベント委譲: パス詳細を表示
+      const onPathDetailsClick = (event) => {
+        const button = event.target.closest("[data-path-details]");
+        if (!button) return;
+        event.stopPropagation();
+        activeNoteRow = null;
+        noteTooltip.hide();
+        const id = Number(button.getAttribute("data-path-details"));
+        openPathDetailsDialog(state.all.find((item) => item.id === id));
+      };
+
       // イベント委譲: クリックでコピー
       const onListClick = async (event) => {
+        if (event.target.closest("[data-path-details]")) return;
         const row = event.target.closest("li[data-copy]");
         if (!row) return;
         const p = row.getAttribute("data-copy") || "";
         await copyTextToClipboard(p, row);
+      };
+
+      const onSearchResultClick = async (event) => {
+        const detailsButton = event.target.closest("[data-search-details]");
+        if (detailsButton) {
+          const id = Number(detailsButton.getAttribute("data-search-details"));
+          dialogController.close("searchDialog");
+          openPathDetailsDialog(state.all.find((item) => item.id === id));
+          return;
+        }
+        const copyButton = event.target.closest("[data-search-copy]");
+        if (!copyButton) return;
+        const id = Number(copyButton.getAttribute("data-search-copy"));
+        const item = state.all.find((candidate) => candidate.id === id);
+        if (!item) return;
+        await copyTextToClipboard(item.path, copyButton);
       };
 
       // イベント委譲: サブカテゴリの折りたたみ
@@ -2085,9 +2679,14 @@
         const list = $("list");
         const addPathForm = $("addPathForm");
         const addGroupForm = $("addGroupForm");
+        const editPathForm = $("editPathForm");
 
         if (tabNav) tabNav.addEventListener("click", onTabClick);
         if (catList) catList.addEventListener("click", onCatClick);
+        $("openSearchButton")?.addEventListener("click", openSearchDialog);
+        $("closeSearchButton")?.addEventListener("click", () => dialogController.close("searchDialog"));
+        $("searchInput")?.addEventListener("input", renderSearchResults);
+        $("searchResults")?.addEventListener("click", onSearchResultClick);
         $("openAddMenuButton")?.addEventListener("click", toggleAddMenu);
         $("addMenu")?.addEventListener("click", onAddMenuAction);
         $("openViewMenuButton")?.addEventListener("click", toggleViewMenu);
@@ -2097,16 +2696,34 @@
         $("importDataInput")?.addEventListener("change", (event) => importCatalogData(event.target.files?.[0]));
         $("cancelAddPathButton")?.addEventListener("click", () => dialogController.close("addPathDialog"));
         $("cancelAddGroupButton")?.addEventListener("click", () => dialogController.close("addGroupDialog"));
+        $("closePathDetailsButton")?.addEventListener("click", () => dialogController.close("pathDetailsDialog"));
+        $("editPathDetailsButton")?.addEventListener("click", startPathDetailsEditing);
+        $("cancelEditPathButton")?.addEventListener("click", () => setPathDetailsEditing(false));
+        $("deletePathButton")?.addEventListener("click", deleteDetailItem);
+        $("closeOrganizeButton")?.addEventListener("click", () => dialogController.close("organizeDialog"));
+        $("deleteGroupButton")?.addEventListener("click", deleteOrganizeSelection);
+        $("organizeLevel")?.addEventListener("change", refreshOrganizeDialog);
+        $("organizeTab")?.addEventListener("change", refreshOrganizeDialog);
+        $("organizeCategory")?.addEventListener("change", refreshOrganizeDialog);
+        $("organizeSubCategory")?.addEventListener("change", refreshOrganizeDialog);
+        $("copyDetailPathButton")?.addEventListener("click", () => {
+          if (!detailItem) return;
+          copyTextToClipboard(detailItem.path, $("detailPath"));
+        });
         $("addTab")?.addEventListener("input", refreshAddDialogOptions);
         $("addCategory")?.addEventListener("input", refreshAddDialogOptions);
+        $("editTab")?.addEventListener("change", () => refreshPathFormOptions("edit"));
+        $("editCategory")?.addEventListener("change", () => refreshPathFormOptions("edit"));
         if (addPathForm) addPathForm.addEventListener("submit", onAddPathSubmit);
         if (addGroupForm) addGroupForm.addEventListener("submit", onAddGroupSubmit);
+        if (editPathForm) editPathForm.addEventListener("submit", onEditPathSubmit);
         document.addEventListener("keydown", onKeydown);
         document.addEventListener("click", onDocumentClick);
         if (list) {
           list.addEventListener("click", onAddShortcutClick);
           list.addEventListener("click", onOpenAddGroupClick);
           list.addEventListener("click", onSubcatToggle);
+          list.addEventListener("click", onPathDetailsClick);
           list.addEventListener("click", onListClick);
           list.addEventListener("mouseover", onNoteOver);
           list.addEventListener("mousemove", onNoteMove);

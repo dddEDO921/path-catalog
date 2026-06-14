@@ -35,11 +35,20 @@ jobs:
             "tabNav",
             "catList",
             "list",
+            "openSearchButton",
+            "searchDialog",
+            "searchInput",
+            "searchResults",
             "openAddMenuButton",
             "openDataMenuButton",
             "openViewMenuButton",
             "addPathDialog",
             "addGroupDialog",
+            "pathDetailsDialog",
+            "editPathForm",
+            "deletePathButton",
+            "organizeDialog",
+            "deleteGroupButton",
           ];
           requiredIds.forEach((id) => {
             if (!new RegExp(`\\bid=["']${id}["']`).test(html)) {
