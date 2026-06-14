@@ -41,6 +41,7 @@ jobs:
             "addPathDialog",
             "addGroupDialog",
             "pathDetailsDialog",
+            "editPathForm",
           ];
           requiredIds.forEach((id) => {
             if (!new RegExp(`\\bid=["']${id}["']`).test(html)) {

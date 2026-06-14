@@ -837,13 +837,19 @@
           <p id="detailLocation" class="dialog-muted text-xs"></p>
           <h2 id="detailName" class="mt-1 break-words text-lg font-semibold"></h2>
         </div>
-        <button id="closePathDetailsButton" type="button"
-          class="secondary-button shrink-0 rounded-md border px-2.5 py-1.5 text-sm font-semibold"
-          aria-label="詳細を閉じる">
-          閉じる
-        </button>
+        <div class="flex shrink-0 gap-2">
+          <button id="editPathDetailsButton" type="button"
+            class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold">
+            編集
+          </button>
+          <button id="closePathDetailsButton" type="button"
+            class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold"
+            aria-label="詳細を閉じる">
+            閉じる
+          </button>
+        </div>
       </div>
-      <div class="space-y-4 px-5 py-4">
+      <div id="pathDetailsView" class="space-y-4 px-5 py-4">
         <section>
           <div class="dialog-label text-xs font-semibold">パス / URL</div>
           <div class="detail-path-row mt-1 flex items-start gap-2">
@@ -859,6 +865,51 @@
           <div id="detailNote" class="detail-value mt-1 whitespace-pre-wrap break-words text-sm"></div>
         </section>
       </div>
+      <form id="editPathForm" class="hidden" method="dialog">
+        <div class="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
+          <label class="dialog-label text-sm">
+            タブ
+            <input id="editTab" name="tab" list="tabOptions" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
+          </label>
+          <label class="dialog-label text-sm">
+            カテゴリ
+            <input id="editCategory" name="category" list="categoryOptions" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
+          </label>
+          <label class="dialog-label text-sm sm:col-span-2">
+            サブカテゴリ
+            <input id="editSubCategory" name="subCategory" list="subCategoryOptions" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
+          </label>
+          <label class="dialog-label text-sm sm:col-span-2">
+            表示名
+            <input id="editName" name="name" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
+          </label>
+          <label class="dialog-label text-sm sm:col-span-2">
+            パス / URL
+            <input id="editPath" name="path" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 font-mono outline-none">
+          </label>
+          <label class="dialog-label text-sm sm:col-span-2">
+            ノート（任意）
+            <textarea id="editNote" name="note" rows="2"
+              class="dialog-input mt-1 w-full resize-y rounded-md border px-3 py-2 outline-none"></textarea>
+          </label>
+          <p id="editPathError" class="hidden text-sm text-rose-300 sm:col-span-2"></p>
+        </div>
+        <div class="dialog-divider flex justify-end gap-2 border-t px-5 py-4">
+          <button id="cancelEditPathButton" type="button"
+            class="secondary-button rounded-md border px-3 py-2 text-sm font-semibold">
+            キャンセル
+          </button>
+          <button type="submit"
+            class="primary-button rounded-md border px-3 py-2 text-sm font-semibold">
+            保存
+          </button>
+        </div>
+      </form>
     </div>
   </dialog>
 
@@ -1032,7 +1083,8 @@
         subCategory: toSafeString(x.subCategory),
         name: toSafeString(x.name),
         path: toSafeString(x.path),
-        note: toSafeString(x.note)
+        note: toSafeString(x.note),
+        _meta: x._meta
       }));
 
       // 階層データを検査しながらフラット化する。strict はインポート時に使用する
@@ -1240,6 +1292,21 @@
           const categoryBlock = findOrCreateBlock(tabBlock[1], category);
           findOrCreateBlock(categoryBlock[1], subCategory)[1].push([name, path, note]);
         };
+        const replaceItem = (meta, item) => {
+          const row = catalog?.[meta.t]?.[1]?.[meta.c]?.[1]?.[meta.s]?.[1]?.[meta.i];
+          if (!Array.isArray(row)) throw new Error("更新対象のパスが見つかりません。");
+          const isSameLocation = [
+            catalog[meta.t][0],
+            catalog[meta.t][1][meta.c][0],
+            catalog[meta.t][1][meta.c][1][meta.s][0],
+          ].every((value, index) => value === [item.tab, item.category, item.subCategory][index]);
+          if (isSameLocation) {
+            catalog[meta.t][1][meta.c][1][meta.s][1][meta.i] = [item.name, item.path, item.note];
+            return;
+          }
+          catalog[meta.t][1][meta.c][1][meta.s][1].splice(meta.i, 1);
+          appendItem(item);
+        };
 
         return {
           getTabBlocks,
@@ -1249,6 +1316,7 @@
           addCategory,
           addSubCategory,
           appendItem,
+          replaceItem,
         };
       })();
 
@@ -1668,6 +1736,11 @@
       };
 
       let detailItem = null;
+      const setPathDetailsEditing = (isEditing) => {
+        $("pathDetailsView")?.classList.toggle("hidden", isEditing);
+        $("editPathForm")?.classList.toggle("hidden", !isEditing);
+        $("editPathDetailsButton")?.classList.toggle("hidden", isEditing);
+      };
       const openPathDetailsDialog = (item) => {
         if (!item) return;
         detailItem = item;
@@ -1676,7 +1749,21 @@
         $("detailPath").textContent = item.path;
         $("detailNote").textContent = item.note || "ノートはありません";
         $("detailNote").classList.toggle("dialog-muted", !item.note);
+        setPathDetailsEditing(false);
         dialogController.open("pathDetailsDialog");
+      };
+      const startPathDetailsEditing = () => {
+        if (!detailItem) return;
+        dialogController.reset("editPathForm", "editPathError");
+        $("editTab").value = detailItem.tab;
+        $("editCategory").value = detailItem.category;
+        $("editSubCategory").value = detailItem.subCategory;
+        $("editName").value = detailItem.name;
+        $("editPath").value = detailItem.path;
+        $("editNote").value = detailItem.note;
+        refreshPathFormOptions("edit");
+        setPathDetailsEditing(true);
+        $("editName")?.focus();
       };
 
       let addGroupMode = "";
@@ -1760,9 +1847,9 @@
           .join("");
       };
 
-      const refreshAddDialogOptions = () => {
-        const tab = $("addTab")?.value.trim() || "";
-        const category = $("addCategory")?.value.trim() || "";
+      const refreshPathFormOptions = (prefix) => {
+        const tab = $(`${prefix}Tab`)?.value.trim() || "";
+        const category = $(`${prefix}Category`)?.value.trim() || "";
         const categoryOptions = tab
           ? catalogModel.getCategoryBlocks(tab).map((block) => toSafeString(block[0]).trim())
           : catalogModel.getTabBlocks().flatMap((block) =>
@@ -1782,6 +1869,7 @@
               .map((item) => item.subCategory)
         );
       };
+      const refreshAddDialogOptions = () => refreshPathFormOptions("add");
 
       const prepareAddDialog = (presets = {}, lockContext = false) => {
         const form = $("addPathForm");
@@ -1818,6 +1906,43 @@
           category: button.dataset.addCategory || "",
           subCategory: button.dataset.addSubCategory || ""
         }, true);
+      };
+
+      const onEditPathSubmit = (event) => {
+        event.preventDefault();
+        if (!detailItem?._meta) {
+          dialogController.showError("editPathError", "更新対象のパスが見つかりません。");
+          return;
+        }
+        const item = {
+          tab: $("editTab")?.value.trim() || "",
+          category: $("editCategory")?.value.trim() || "",
+          subCategory: $("editSubCategory")?.value.trim() || "",
+          name: $("editName")?.value.trim() || "",
+          path: $("editPath")?.value.trim() || "",
+          note: $("editNote")?.value || "",
+        };
+        if (!item.tab || !item.category || !item.subCategory || !item.name || !item.path) {
+          dialogController.showError("editPathError", "必須項目を入力してください。");
+          return;
+        }
+        const result = commitCatalogChange(
+          () => catalogModel.replaceItem(detailItem._meta, item),
+          { selection: { tab: item.tab, cat: item.category } }
+        );
+        if (!result.ok) {
+          dialogController.showError("editPathError", "ローカルストレージに保存できませんでした。");
+          return;
+        }
+        const updatedItem = state.all.find((candidate) =>
+          candidate.tab === item.tab
+          && candidate.category === item.category
+          && candidate.subCategory === item.subCategory
+          && candidate.name === item.name
+          && candidate.path === item.path
+          && candidate.note === item.note
+        );
+        openPathDetailsDialog(updatedItem);
       };
 
       const menuController = (() => {
@@ -2192,6 +2317,7 @@
         const list = $("list");
         const addPathForm = $("addPathForm");
         const addGroupForm = $("addGroupForm");
+        const editPathForm = $("editPathForm");
 
         if (tabNav) tabNav.addEventListener("click", onTabClick);
         if (catList) catList.addEventListener("click", onCatClick);
@@ -2205,14 +2331,19 @@
         $("cancelAddPathButton")?.addEventListener("click", () => dialogController.close("addPathDialog"));
         $("cancelAddGroupButton")?.addEventListener("click", () => dialogController.close("addGroupDialog"));
         $("closePathDetailsButton")?.addEventListener("click", () => dialogController.close("pathDetailsDialog"));
+        $("editPathDetailsButton")?.addEventListener("click", startPathDetailsEditing);
+        $("cancelEditPathButton")?.addEventListener("click", () => setPathDetailsEditing(false));
         $("copyDetailPathButton")?.addEventListener("click", () => {
           if (!detailItem) return;
           copyTextToClipboard(detailItem.path, $("detailPath"));
         });
         $("addTab")?.addEventListener("input", refreshAddDialogOptions);
         $("addCategory")?.addEventListener("input", refreshAddDialogOptions);
+        $("editTab")?.addEventListener("input", () => refreshPathFormOptions("edit"));
+        $("editCategory")?.addEventListener("input", () => refreshPathFormOptions("edit"));
         if (addPathForm) addPathForm.addEventListener("submit", onAddPathSubmit);
         if (addGroupForm) addGroupForm.addEventListener("submit", onAddGroupSubmit);
+        if (editPathForm) editPathForm.addEventListener("submit", onEditPathSubmit);
         document.addEventListener("keydown", onKeydown);
         document.addEventListener("click", onDocumentClick);
         if (list) {
