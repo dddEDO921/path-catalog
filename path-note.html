@@ -342,8 +342,25 @@
       background-color: var(--bg-sidebar) !important;
     }
 
-    .brand-name {
+    .header-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      height: 40px;
       color: var(--text-heading);
+    }
+
+    .header-logo__mark {
+      display: block;
+      width: 58px;
+      height: 40px;
+    }
+
+    .header-logo__name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.015em;
     }
 
     .secondary-button,
@@ -590,9 +607,11 @@
     <header class="sticky top-0 z-30 border-b backdrop-blur px-5 py-2"
       style="background-color: var(--bg-layer); border-color: var(--border);">
       <div class="grid grid-cols-[260px_1fr_auto] items-end gap-3">
-        <div class="flex items-center gap-2.5" style="color: var(--text-heading);">
-          <img src="docs/path-note-icon.svg" alt="" class="h-9 w-9 rounded-lg">
-          <span class="brand-name text-xl font-bold tracking-tight">パスノート</span>
+        <div class="flex items-center">
+          <div class="header-logo" aria-label="パスノート">
+            <img src="docs/path-note-header-mark.svg" alt="" class="header-logo__mark">
+            <span class="header-logo__name" aria-hidden="true">パスノート</span>
+          </div>
         </div>
         <div id="tabNav" class="flex flex-wrap items-end gap-1.5 pt-1 pb-1 -mb-[1px]"></div>
         <div class="relative flex items-center gap-2 pb-1">
