@@ -435,6 +435,20 @@
       background-color: var(--accent-hover) !important;
     }
 
+    .danger-button {
+      border-color: rgba(244, 63, 94, 0.45) !important;
+      background-color: transparent;
+      color: #fb7185;
+    }
+
+    .danger-button:hover,
+    .danger-button:focus-visible {
+      border-color: #f43f5e !important;
+      background-color: rgba(244, 63, 94, 0.12);
+      color: #fda4af;
+      outline: none;
+    }
+
     .dialog-shell {
       background-color: var(--bg-layer) !important;
       color: var(--text-heading) !important;
@@ -864,6 +878,12 @@
           <div class="dialog-label text-xs font-semibold">ノート</div>
           <div id="detailNote" class="detail-value mt-1 whitespace-pre-wrap break-words text-sm"></div>
         </section>
+        <div class="dialog-divider flex justify-end border-t pt-4">
+          <button id="deletePathButton" type="button"
+            class="danger-button rounded-md border px-3 py-2 text-sm font-semibold">
+            このパスを削除
+          </button>
+        </div>
       </div>
       <form id="editPathForm" class="hidden" method="dialog">
         <div class="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
@@ -1307,6 +1327,13 @@
           catalog[meta.t][1][meta.c][1][meta.s][1].splice(meta.i, 1);
           appendItem(item);
         };
+        const deleteItem = (meta) => {
+          const rows = catalog?.[meta.t]?.[1]?.[meta.c]?.[1]?.[meta.s]?.[1];
+          if (!Array.isArray(rows) || !Array.isArray(rows[meta.i])) {
+            throw new Error("削除対象のパスが見つかりません。");
+          }
+          rows.splice(meta.i, 1);
+        };
 
         return {
           getTabBlocks,
@@ -1317,6 +1344,7 @@
           addSubCategory,
           appendItem,
           replaceItem,
+          deleteItem,
         };
       })();
 
@@ -1764,6 +1792,21 @@
         refreshPathFormOptions("edit");
         setPathDetailsEditing(true);
         $("editName")?.focus();
+      };
+      const deleteDetailItem = () => {
+        if (!detailItem?._meta) return;
+        const confirmed = window.confirm(
+          `「${formatDisplayName(detailItem.name)}」を削除します。\n`
+          + `${detailItem.path}\n\nこの操作は取り消せません。`
+        );
+        if (!confirmed) return;
+        const result = commitCatalogChange(() => catalogModel.deleteItem(detailItem._meta));
+        if (!result.ok) {
+          window.alert("パスを削除できませんでした。");
+          return;
+        }
+        detailItem = null;
+        dialogController.close("pathDetailsDialog");
       };
 
       let addGroupMode = "";
@@ -2349,6 +2392,7 @@
         $("closePathDetailsButton")?.addEventListener("click", () => dialogController.close("pathDetailsDialog"));
         $("editPathDetailsButton")?.addEventListener("click", startPathDetailsEditing);
         $("cancelEditPathButton")?.addEventListener("click", () => setPathDetailsEditing(false));
+        $("deletePathButton")?.addEventListener("click", deleteDetailItem);
         $("copyDetailPathButton")?.addEventListener("click", () => {
           if (!detailItem) return;
           copyTextToClipboard(detailItem.path, $("detailPath"));
