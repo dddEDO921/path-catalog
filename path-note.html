@@ -722,7 +722,8 @@
         <div class="relative flex items-center gap-2 pb-1">
           <button id="openSearchButton" type="button"
             class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold"
-            aria-keyshortcuts="Control+K Meta+K /">
+            aria-keyshortcuts="Control+K Meta+K /"
+            title="検索を開く（Ctrl/Cmd + K または /）">
             検索 <span class="search-shortcut ml-1 text-xs opacity-60">Ctrl K</span>
           </button>
           <button id="openViewMenuButton" type="button" aria-expanded="false" aria-controls="viewMenu"
@@ -785,13 +786,12 @@
           <nav class="mt-2 space-y-0" id="catList"></nav>
 
           <div class="mt-4 text-sm" style="color: var(--text-muted);">
-            <p>操作:</p>
-            <ul class="list-disc ml-4 mt-1 space-y-1">
-              <li>一覧のパスをクリックでコピー</li>
-              <li>キー: ↑/↓ パス、Enter コピー</li>
-              <li>キー: Home/End、PageUp/PageDown</li>
-              <li>キー: ←/→ タブ、Alt+↑/↓ カテゴリ</li>
-            </ul>
+            <button id="openShortcutsButton" type="button"
+              class="secondary-button w-full rounded-md border px-3 py-2 text-left text-sm font-semibold"
+              aria-keyshortcuts="?"
+              title="キーボード操作を表示（?）">
+              キーボード操作を見る <span class="float-right opacity-60">?</span>
+            </button>
           </div>
 
           <div id="warningPanel" class="mt-4 hidden"></div>
@@ -908,7 +908,9 @@
         </div>
         <div class="flex shrink-0 gap-2">
           <button id="editPathDetailsButton" type="button"
-            class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold">
+            class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold"
+            aria-keyshortcuts="e"
+            title="編集する（E）">
             編集
           </button>
           <button id="closePathDetailsButton" type="button"
@@ -924,7 +926,9 @@
           <div class="detail-path-row mt-1 flex items-start gap-2">
             <div id="detailPath" class="detail-path min-w-0 flex-1 break-all rounded-md border px-3 py-2 font-mono text-sm"></div>
             <button id="copyDetailPathButton" type="button"
-              class="primary-button shrink-0 rounded-md border px-3 py-2 text-sm font-semibold">
+              class="primary-button shrink-0 rounded-md border px-3 py-2 text-sm font-semibold"
+              aria-keyshortcuts="Enter"
+              title="パスをコピー（Enter）">
               コピー
             </button>
           </div>
@@ -982,7 +986,8 @@
             キャンセル
           </button>
           <button type="submit"
-            class="primary-button rounded-md border px-3 py-2 text-sm font-semibold">
+            class="primary-button rounded-md border px-3 py-2 text-sm font-semibold"
+            title="保存（Ctrl/Cmd + S）">
             保存
           </button>
         </div>
@@ -1010,6 +1015,61 @@
         </div>
       </div>
       <div id="searchResults" class="search-results"></div>
+    </div>
+  </dialog>
+
+  <dialog id="shortcutsDialog"
+    class="dialog-shell w-[min(560px,calc(100vw-2rem))] rounded-xl border p-0 shadow-2xl">
+    <div>
+      <div class="dialog-divider flex items-center justify-between gap-3 border-b px-5 py-4">
+        <div>
+          <h2 class="text-lg font-semibold">キーボード操作</h2>
+          <p class="dialog-muted mt-1 text-sm">よく使う操作を、マウスなしで行えます。</p>
+        </div>
+        <button id="closeShortcutsButton" type="button"
+          class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold">
+          閉じる
+        </button>
+      </div>
+      <div class="grid grid-cols-1 gap-x-8 gap-y-5 px-5 py-4 sm:grid-cols-2">
+        <section>
+          <h3 class="font-semibold">どこでも</h3>
+          <dl class="dialog-muted mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
+            <dt class="font-mono">Ctrl/Cmd K・/</dt><dd>検索を開く</dd>
+            <dt class="font-mono">?</dt><dd>この操作一覧を開く</dd>
+            <dt class="font-mono">Esc</dt><dd>画面を閉じる</dd>
+          </dl>
+        </section>
+        <section>
+          <h3 class="font-semibold">一覧</h3>
+          <dl class="dialog-muted mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
+            <dt class="font-mono">↑ / ↓</dt><dd>パスを選択</dd>
+            <dt class="font-mono">Enter</dt><dd>コピー</dd>
+            <dt class="font-mono">Space</dt><dd>詳細を開く</dd>
+            <dt class="font-mono">Home / End</dt><dd>先頭・末尾へ移動</dd>
+            <dt class="font-mono">PageUp / Down</dt><dd>10件ずつ移動</dd>
+            <dt class="font-mono">← / →</dt><dd>タブを移動</dd>
+            <dt class="font-mono">Alt ↑ / ↓</dt><dd>カテゴリを移動</dd>
+          </dl>
+        </section>
+        <section>
+          <h3 class="font-semibold">検索</h3>
+          <dl class="dialog-muted mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
+            <dt class="font-mono">↑ / ↓</dt><dd>結果を選択</dd>
+            <dt class="font-mono">Enter</dt><dd>コピー</dd>
+            <dt class="font-mono">Ctrl/Cmd Enter</dt><dd>詳細を開く</dd>
+          </dl>
+        </section>
+        <section>
+          <h3 class="font-semibold">詳細・編集</h3>
+          <dl class="dialog-muted mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
+            <dt class="font-mono">Enter</dt><dd>コピー</dd>
+            <dt class="font-mono">E</dt><dd>編集を開始</dd>
+            <dt class="font-mono">Ctrl/Cmd S</dt><dd>編集を保存</dd>
+            <dt class="font-mono">Esc</dt><dd>編集をキャンセル・閉じる</dd>
+          </dl>
+        </section>
+      </div>
     </div>
   </dialog>
 
@@ -2022,6 +2082,12 @@
         dialogController.open("searchDialog");
         requestAnimationFrame(() => input?.focus());
       };
+      const openShortcutsDialog = () => {
+        menuController.close("add");
+        menuController.close("data");
+        menuController.close("view");
+        dialogController.open("shortcutsDialog");
+      };
 
       let detailItem = null;
       const setPathDetailsEditing = (isEditing) => {
@@ -2628,6 +2694,16 @@
 
       // キー操作（左右でタブ、Alt+上下でカテゴリ、上下でパス）
       const onKeydown = (event) => {
+        const isShortcutHelp = event.key === "?"
+          && !event.ctrlKey
+          && !event.metaKey
+          && !event.altKey
+          && !isEditableTarget(event.target);
+        if (isShortcutHelp && !document.querySelector("dialog[open]")) {
+          event.preventDefault();
+          openShortcutsDialog();
+          return;
+        }
         if (document.querySelector("dialog[open]")) return;
         const isSearchShortcut = (event.ctrlKey || event.metaKey)
           && !event.altKey
@@ -2870,6 +2946,8 @@
         if (tabNav) tabNav.addEventListener("click", onTabClick);
         if (catList) catList.addEventListener("click", onCatClick);
         $("openSearchButton")?.addEventListener("click", openSearchDialog);
+        $("openShortcutsButton")?.addEventListener("click", openShortcutsDialog);
+        $("closeShortcutsButton")?.addEventListener("click", () => dialogController.close("shortcutsDialog"));
         $("closeSearchButton")?.addEventListener("click", () => dialogController.close("searchDialog"));
         $("searchInput")?.addEventListener("input", renderSearchResults);
         $("searchInput")?.addEventListener("keydown", onSearchKeydown);
