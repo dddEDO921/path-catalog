@@ -755,17 +755,17 @@
       <div class="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
         <label class="dialog-label text-sm">
           タブ
-          <input id="addTab" name="tab" list="tabOptions" required
+          <input id="addTab" name="tab" list="addTabOptions" required
             class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
         </label>
         <label class="dialog-label text-sm">
           カテゴリ
-          <input id="addCategory" name="category" list="categoryOptions" required
+          <input id="addCategory" name="category" list="addCategoryOptions" required
             class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
         </label>
         <label class="dialog-label text-sm sm:col-span-2">
           サブカテゴリ
-          <input id="addSubCategory" name="subCategory" list="subCategoryOptions" required
+          <input id="addSubCategory" name="subCategory" list="addSubCategoryOptions" required
             class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
         </label>
         <label class="dialog-label text-sm sm:col-span-2">
@@ -796,9 +796,9 @@
         </button>
       </div>
     </form>
-    <datalist id="tabOptions"></datalist>
-    <datalist id="categoryOptions"></datalist>
-    <datalist id="subCategoryOptions"></datalist>
+    <datalist id="addTabOptions"></datalist>
+    <datalist id="addCategoryOptions"></datalist>
+    <datalist id="addSubCategoryOptions"></datalist>
   </dialog>
 
   <dialog id="addGroupDialog"
@@ -869,18 +869,18 @@
         <div class="grid grid-cols-1 gap-4 px-5 py-4 sm:grid-cols-2">
           <label class="dialog-label text-sm">
             タブ
-            <input id="editTab" name="tab" list="tabOptions" required
-              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
+            <select id="editTab" name="tab" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
           </label>
           <label class="dialog-label text-sm">
             カテゴリ
-            <input id="editCategory" name="category" list="categoryOptions" required
-              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
+            <select id="editCategory" name="category" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
           </label>
           <label class="dialog-label text-sm sm:col-span-2">
             サブカテゴリ
-            <input id="editSubCategory" name="subCategory" list="subCategoryOptions" required
-              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
+            <select id="editSubCategory" name="subCategory" required
+              class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
           </label>
           <label class="dialog-label text-sm sm:col-span-2">
             表示名
@@ -1847,6 +1847,14 @@
           .join("");
       };
 
+      const setSelectOptions = (id, values, selectedValue) => {
+        const holder = $(id);
+        if (!holder) return;
+        holder.innerHTML = dedupe(values.filter(Boolean))
+          .map((value) => `<option value="${toHtml(value)}"${value === selectedValue ? " selected" : ""}>${toHtml(value)}</option>`)
+          .join("");
+      };
+
       const refreshPathFormOptions = (prefix) => {
         const tab = $(`${prefix}Tab`)?.value.trim() || "";
         const category = $(`${prefix}Category`)?.value.trim() || "";
@@ -1855,19 +1863,28 @@
           : catalogModel.getTabBlocks().flatMap((block) =>
             (Array.isArray(block[1]) ? block[1] : []).map((categoryBlock) => toSafeString(categoryBlock?.[0]).trim())
           );
-        setDatalistOptions("tabOptions", getTabs());
-        setDatalistOptions(
-          "categoryOptions",
-          categoryOptions
-        );
-        setDatalistOptions(
-          "subCategoryOptions",
-          tab && category
-            ? catalogModel.getSubCategoryBlocks(tab, category).map((block) => toSafeString(block[0]).trim())
-            : state.all
-              .filter((item) => (!tab || item.tab === tab) && (!category || item.category === category))
-              .map((item) => item.subCategory)
-        );
+        if (prefix === "edit") {
+          setSelectOptions("editTab", getTabs(), tab);
+          const selectedCategory = categoryOptions.includes(category) ? category : (categoryOptions[0] || "");
+          setSelectOptions("editCategory", categoryOptions, selectedCategory);
+          const subCategoryOptions = selectedCategory
+            ? catalogModel.getSubCategoryBlocks(tab, selectedCategory).map((block) => toSafeString(block[0]).trim())
+            : [];
+          const currentSubCategory = $("editSubCategory")?.value || "";
+          const selectedSubCategory = subCategoryOptions.includes(currentSubCategory)
+            ? currentSubCategory
+            : (subCategoryOptions[0] || "");
+          setSelectOptions("editSubCategory", subCategoryOptions, selectedSubCategory);
+          return;
+        }
+        const subCategoryOptions = tab && category
+          ? catalogModel.getSubCategoryBlocks(tab, category).map((block) => toSafeString(block[0]).trim())
+          : state.all
+            .filter((item) => (!tab || item.tab === tab) && (!category || item.category === category))
+            .map((item) => item.subCategory);
+        setDatalistOptions("addTabOptions", getTabs());
+        setDatalistOptions("addCategoryOptions", categoryOptions);
+        setDatalistOptions("addSubCategoryOptions", subCategoryOptions);
       };
       const refreshAddDialogOptions = () => refreshPathFormOptions("add");
 
@@ -2339,8 +2356,8 @@
         });
         $("addTab")?.addEventListener("input", refreshAddDialogOptions);
         $("addCategory")?.addEventListener("input", refreshAddDialogOptions);
-        $("editTab")?.addEventListener("input", () => refreshPathFormOptions("edit"));
-        $("editCategory")?.addEventListener("input", () => refreshPathFormOptions("edit"));
+        $("editTab")?.addEventListener("change", () => refreshPathFormOptions("edit"));
+        $("editCategory")?.addEventListener("change", () => refreshPathFormOptions("edit"));
         if (addPathForm) addPathForm.addEventListener("submit", onAddPathSubmit);
         if (addGroupForm) addGroupForm.addEventListener("submit", onAddGroupSubmit);
         if (editPathForm) editPathForm.addEventListener("submit", onEditPathSubmit);
