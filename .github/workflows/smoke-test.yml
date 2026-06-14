@@ -43,6 +43,8 @@ jobs:
             "pathDetailsDialog",
             "editPathForm",
             "deletePathButton",
+            "organizeDialog",
+            "deleteGroupButton",
           ];
           requiredIds.forEach((id) => {
             if (!new RegExp(`\\bid=["']${id}["']`).test(html)) {

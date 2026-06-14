@@ -690,6 +690,10 @@
             データ管理
           </button>
           <div id="dataMenu" class="add-menu absolute right-[76px] top-full z-40 mt-2 hidden rounded-lg p-1.5 shadow-2xl">
+            <button type="button" class="add-menu-item" data-data-action="organize">
+              <span class="block font-semibold">分類を整理</span>
+              <span class="menu-hint block text-xs">タブ・カテゴリ・サブカテゴリを削除</span>
+            </button>
             <button type="button" class="add-menu-item" data-data-action="import">
               <span class="block font-semibold">データを読み込む</span>
               <span class="menu-hint block text-xs">data.jsから現在の内容を置き換え</span>
@@ -930,6 +934,53 @@
           </button>
         </div>
       </form>
+    </div>
+  </dialog>
+
+  <dialog id="organizeDialog"
+    class="dialog-shell w-[min(520px,calc(100vw-2rem))] rounded-xl border p-0 shadow-2xl">
+    <div>
+      <div class="dialog-divider border-b px-5 py-4">
+        <h2 class="text-lg font-semibold">分類を整理</h2>
+        <p class="dialog-muted mt-1 text-sm">分類を削除すると、中にあるパスも削除されます。</p>
+      </div>
+      <div class="space-y-4 px-5 py-4">
+        <label class="dialog-label block text-sm">
+          削除する単位
+          <select id="organizeLevel"
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none">
+            <option value="subCategory">サブカテゴリ</option>
+            <option value="category">カテゴリ</option>
+            <option value="tab">タブ</option>
+          </select>
+        </label>
+        <label class="dialog-label block text-sm">
+          タブ
+          <select id="organizeTab"
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
+        </label>
+        <label id="organizeCategoryField" class="dialog-label block text-sm">
+          カテゴリ
+          <select id="organizeCategory"
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
+        </label>
+        <label id="organizeSubCategoryField" class="dialog-label block text-sm">
+          サブカテゴリ
+          <select id="organizeSubCategory"
+            class="dialog-input mt-1 w-full rounded-md border px-3 py-2 outline-none"></select>
+        </label>
+        <p id="organizeSummary" class="dialog-muted text-sm"></p>
+      </div>
+      <div class="dialog-divider flex justify-end gap-2 border-t px-5 py-4">
+        <button id="closeOrganizeButton" type="button"
+          class="secondary-button rounded-md border px-3 py-2 text-sm font-semibold">
+          閉じる
+        </button>
+        <button id="deleteGroupButton" type="button"
+          class="danger-button rounded-md border px-3 py-2 text-sm font-semibold">
+          選択した分類を削除
+        </button>
+      </div>
     </div>
   </dialog>
 
@@ -1334,6 +1385,27 @@
           }
           rows.splice(meta.i, 1);
         };
+        const deleteGroup = ({ level, tab, category, subCategory }) => {
+          const tabIndex = catalog.findIndex((block) => Array.isArray(block) && block[0] === tab);
+          if (tabIndex < 0) throw new Error("削除対象のタブが見つかりません。");
+          if (level === "tab") {
+            catalog.splice(tabIndex, 1);
+            return;
+          }
+          const categories = catalog[tabIndex][1];
+          const categoryIndex = categories.findIndex((block) => Array.isArray(block) && block[0] === category);
+          if (categoryIndex < 0) throw new Error("削除対象のカテゴリが見つかりません。");
+          if (level === "category") {
+            categories.splice(categoryIndex, 1);
+            return;
+          }
+          const subCategories = categories[categoryIndex][1];
+          const subCategoryIndex = subCategories.findIndex(
+            (block) => Array.isArray(block) && block[0] === subCategory
+          );
+          if (subCategoryIndex < 0) throw new Error("削除対象のサブカテゴリが見つかりません。");
+          subCategories.splice(subCategoryIndex, 1);
+        };
 
         return {
           getTabBlocks,
@@ -1345,6 +1417,7 @@
           appendItem,
           replaceItem,
           deleteItem,
+          deleteGroup,
         };
       })();
 
@@ -1809,6 +1882,75 @@
         dialogController.close("pathDetailsDialog");
       };
 
+      const getOrganizeSelection = () => ({
+        level: $("organizeLevel")?.value || "subCategory",
+        tab: $("organizeTab")?.value || "",
+        category: $("organizeCategory")?.value || "",
+        subCategory: $("organizeSubCategory")?.value || "",
+      });
+      const getOrganizeItems = ({ level, tab, category, subCategory }) =>
+        state.all.filter((item) => {
+          if (item.tab !== tab) return false;
+          if (level === "tab") return true;
+          if (item.category !== category) return false;
+          if (level === "category") return true;
+          return item.subCategory === subCategory;
+        });
+      const refreshOrganizeDialog = () => {
+        const current = getOrganizeSelection();
+        const tabs = getTabs();
+        const tab = tabs.includes(current.tab) ? current.tab : (tabs[0] || "");
+        setSelectOptions("organizeTab", tabs, tab);
+        const categories = catalogModel.getCategoryBlocks(tab).map((block) => toSafeString(block[0]).trim());
+        const category = categories.includes(current.category) ? current.category : (categories[0] || "");
+        setSelectOptions("organizeCategory", categories, category);
+        const subCategories = catalogModel.getSubCategoryBlocks(tab, category)
+          .map((block) => toSafeString(block[0]).trim());
+        const subCategory = subCategories.includes(current.subCategory)
+          ? current.subCategory
+          : (subCategories[0] || "");
+        setSelectOptions("organizeSubCategory", subCategories, subCategory);
+        const level = $("organizeLevel")?.value || "subCategory";
+        $("organizeCategoryField")?.classList.toggle("hidden", level === "tab");
+        $("organizeSubCategoryField")?.classList.toggle("hidden", level !== "subCategory");
+        const selection = getOrganizeSelection();
+        const count = getOrganizeItems(selection).length;
+        const labels = { tab: "タブ", category: "カテゴリ", subCategory: "サブカテゴリ" };
+        $("organizeSummary").textContent = `この${labels[level]}と、中にあるパス ${count}件を削除します。`;
+        $("deleteGroupButton").disabled = !selection.tab
+          || (level !== "tab" && !selection.category)
+          || (level === "subCategory" && !selection.subCategory);
+      };
+      const openOrganizeDialog = () => {
+        $("organizeLevel").value = "subCategory";
+        $("organizeTab").innerHTML = "";
+        $("organizeCategory").innerHTML = "";
+        $("organizeSubCategory").innerHTML = "";
+        refreshOrganizeDialog();
+        dialogController.open("organizeDialog");
+      };
+      const deleteOrganizeSelection = () => {
+        const selection = getOrganizeSelection();
+        const count = getOrganizeItems(selection).length;
+        const targetName = selection.level === "tab"
+          ? selection.tab
+          : selection.level === "category"
+            ? selection.category
+            : selection.subCategory;
+        if (!targetName) return;
+        const confirmed = window.confirm(
+          `「${targetName}」を削除します。\n`
+          + `中にあるパス ${count}件も削除されます。\n\nこの操作は取り消せません。`
+        );
+        if (!confirmed) return;
+        const result = commitCatalogChange(() => catalogModel.deleteGroup(selection));
+        if (!result.ok) {
+          window.alert("分類を削除できませんでした。");
+          return;
+        }
+        refreshOrganizeDialog();
+      };
+
       let addGroupMode = "";
       let addGroupContext = {};
       const openAddGroupDialog = (mode, context = {}) => {
@@ -2075,6 +2217,7 @@
         closeDataMenu();
         if (action === "import") $("importDataInput")?.click();
         else if (action === "export") exportCatalogData();
+        else if (action === "organize") openOrganizeDialog();
       };
 
       const onThemeAction = (event) => {
@@ -2393,6 +2536,12 @@
         $("editPathDetailsButton")?.addEventListener("click", startPathDetailsEditing);
         $("cancelEditPathButton")?.addEventListener("click", () => setPathDetailsEditing(false));
         $("deletePathButton")?.addEventListener("click", deleteDetailItem);
+        $("closeOrganizeButton")?.addEventListener("click", () => dialogController.close("organizeDialog"));
+        $("deleteGroupButton")?.addEventListener("click", deleteOrganizeSelection);
+        $("organizeLevel")?.addEventListener("change", refreshOrganizeDialog);
+        $("organizeTab")?.addEventListener("change", refreshOrganizeDialog);
+        $("organizeCategory")?.addEventListener("change", refreshOrganizeDialog);
+        $("organizeSubCategory")?.addEventListener("change", refreshOrganizeDialog);
         $("copyDetailPathButton")?.addEventListener("click", () => {
           if (!detailItem) return;
           copyTextToClipboard(detailItem.path, $("detailPath"));
