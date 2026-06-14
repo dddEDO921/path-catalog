@@ -170,6 +170,11 @@
       border-color: transparent;
     }
 
+    .list-row.keyboard-active {
+      background-color: var(--accent-soft);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
     .path-chip {
       display: inline-block;
       max-width: 100%;
@@ -648,7 +653,8 @@
       cursor: pointer;
     }
 
-    .compact-row:hover {
+    .compact-row:hover,
+    .compact-row.keyboard-active {
       background: var(--accent-soft);
       box-shadow: inset 3px 0 var(--accent);
     }
@@ -782,7 +788,8 @@
             <p>操作:</p>
             <ul class="list-disc ml-4 mt-1 space-y-1">
               <li>一覧のパスをクリックでコピー</li>
-              <li>キー: ←/→ タブ、↑/↓ カテゴリ</li>
+              <li>キー: ↑/↓ パス、Enter コピー</li>
+              <li>キー: ←/→ タブ、Alt+↑/↓ カテゴリ</li>
             </ul>
           </div>
 
@@ -1495,6 +1502,7 @@
         cat: "",
       };
       let activeNoteRow = null;
+      let selectedPathId = null;
 
       // 現在の選択状態で絞り込み
       const getFilteredItems = () => state.all.filter(x => {
@@ -1546,9 +1554,13 @@
       const actions = {
         setTab: (tab) => {
           if (tab === state.tab) return;
+          selectedPathId = null;
           setSelection({ tab, cat: "" });
         },
-        setCat: (cat) => setSelection({ cat }),
+        setCat: (cat) => {
+          selectedPathId = null;
+          setSelection({ cat });
+        },
       };
 
       // ===== 描画: HTML生成・画面反映 =====
@@ -1771,7 +1783,8 @@
         const noteText = item.note || "";
         const detailsButton = buildDetailsButton(item);
         return `
-          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-0.5 rounded-md shadow-sm grid grid-cols-[18px_220px_minmax(0,1fr)] gap-x-3 gap-y-0 items-center transition overflow-visible list-row"
+          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-0.5 rounded-md shadow-sm grid grid-cols-[18px_220px_minmax(0,1fr)] gap-x-3 gap-y-0 items-center transition overflow-visible list-row ${item.id === selectedPathId ? "keyboard-active" : ""}"
+              data-list-item-id="${item.id}"
               data-copy="${toHtml(item.path)}"
               data-note="${toHtml(noteText)}">
             <div class="row-accent w-0.5 rounded-full opacity-30 group-hover:opacity-90 transition col-span-3"></div>
@@ -1867,7 +1880,8 @@
 
       const buildCompactMainHtml = (items) => {
         const rows = items.map((item) => `
-          <li class="compact-row"
+          <li class="compact-row ${item.id === selectedPathId ? "keyboard-active" : ""}"
+              data-list-item-id="${item.id}"
               data-copy="${toHtml(item.path)}"
               data-note="${toHtml(item.note || "")}">
             <span class="compact-tag compact-tag--category">${toHtml(item.category)}</span>
@@ -2574,8 +2588,36 @@
         return list[next];
       };
 
-      // キー操作（左右でタブ、上下でカテゴリ）
+      const getVisibleListRows = () =>
+        Array.from(document.querySelectorAll("[data-list-item-id]"))
+          .filter((row) => row.offsetParent !== null);
+      const updateListSelection = (id, { scroll = true } = {}) => {
+        selectedPathId = id;
+        document.querySelectorAll("[data-list-item-id]").forEach((row) => {
+          row.classList.toggle("keyboard-active", Number(row.dataset.listItemId) === selectedPathId);
+        });
+        if (scroll) {
+          document.querySelector(`[data-list-item-id="${selectedPathId}"]`)?.scrollIntoView({ block: "nearest" });
+        }
+      };
+      const moveListSelection = (delta) => {
+        const rows = getVisibleListRows();
+        if (!rows.length) return;
+        const currentIndex = rows.findIndex((row) => Number(row.dataset.listItemId) === selectedPathId);
+        const nextIndex = currentIndex < 0
+          ? (delta > 0 ? 0 : rows.length - 1)
+          : Math.max(0, Math.min(currentIndex + delta, rows.length - 1));
+        updateListSelection(Number(rows[nextIndex].dataset.listItemId));
+      };
+      const getSelectedPath = () => {
+        const row = document.querySelector(`[data-list-item-id="${selectedPathId}"]`);
+        if (!row || row.offsetParent === null) return undefined;
+        return state.all.find((item) => item.id === selectedPathId);
+      };
+
+      // キー操作（左右でタブ、Alt+上下でカテゴリ、上下でパス）
       const onKeydown = (event) => {
+        if (document.querySelector("dialog[open]")) return;
         const isSearchShortcut = (event.ctrlKey || event.metaKey)
           && !event.altKey
           && event.key.toLocaleLowerCase() === "k";
@@ -2590,9 +2632,10 @@
           return;
         }
         if (isEditableTarget(event.target)) return;
-        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        if (event.ctrlKey || event.metaKey) return;
 
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          if (event.altKey) return;
           const tabs = getTabs();
           if (!tabs.length) return;
           const delta = event.key === "ArrowRight" ? 1 : -1;
@@ -2601,12 +2644,32 @@
           return;
         }
 
-        if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        if (event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
           const cats = [""].concat(getCats());
           if (!cats.length) return;
           const delta = event.key === "ArrowDown" ? 1 : -1;
           actions.setCat(getSteppedItem(cats, state.cat, delta));
           event.preventDefault();
+          return;
+        }
+
+        if (!event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+          moveListSelection(event.key === "ArrowDown" ? 1 : -1);
+          event.preventDefault();
+          return;
+        }
+
+        const selected = getSelectedPath();
+        if (!selected || event.altKey) return;
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const row = document.querySelector(`[data-list-item-id="${selectedPathId}"]`);
+          copyTextToClipboard(selected.path, row);
+          return;
+        }
+        if (event.key === " ") {
+          event.preventDefault();
+          openPathDetailsDialog(selected);
         }
       };
 
@@ -2640,6 +2703,8 @@
         if (event.target.closest("[data-path-details]")) return;
         const row = event.target.closest("li[data-copy]");
         if (!row) return;
+        const id = Number(row.getAttribute("data-list-item-id"));
+        if (Number.isFinite(id)) updateListSelection(id, { scroll: false });
         const p = row.getAttribute("data-copy") || "";
         await copyTextToClipboard(p, row);
       };
@@ -2688,6 +2753,9 @@
         const list = btn.parentElement?.nextElementSibling;
         if (!list || !list.classList.contains("subcat-list")) return;
         const willCollapse = !list.classList.contains("hidden");
+        if (willCollapse && list.querySelector(`[data-list-item-id="${selectedPathId}"]`)) {
+          selectedPathId = null;
+        }
         list.classList.toggle("hidden");
         btn.setAttribute("aria-expanded", (!willCollapse).toString());
         if (key) {
