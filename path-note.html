@@ -273,8 +273,13 @@
     }
 
     .search-result:hover,
-    .search-result:focus-within {
+    .search-result:focus-within,
+    .search-result.active {
       background-color: var(--bg-hover);
+    }
+
+    .search-result.active {
+      box-shadow: inset 3px 0 0 var(--accent);
     }
 
     .search-result-path {
@@ -988,7 +993,10 @@
         <input id="searchInput" type="search" autocomplete="off"
           placeholder="名前、パス、ノート、分類から検索"
           class="dialog-input mt-3 w-full rounded-md border px-3 py-2.5 outline-none">
-        <p id="searchSummary" class="dialog-muted mt-2 text-xs"></p>
+        <div class="mt-2 flex flex-wrap items-center justify-between gap-1 text-xs">
+          <p id="searchSummary" class="dialog-muted"></p>
+          <p class="dialog-muted">↑↓ 選択　Enter コピー　Ctrl/Cmd Enter 詳細</p>
+        </div>
       </div>
       <div id="searchResults" class="search-results"></div>
     </div>
@@ -1670,6 +1678,8 @@
       };
 
       const SEARCH_RESULT_LIMIT = 100;
+      let visibleSearchResults = [];
+      let selectedSearchResultIndex = -1;
       const normalizeSearchText = (value) => toSafeString(value).normalize("NFKC").toLocaleLowerCase();
       const getSearchResults = (query) => {
         const terms = normalizeSearchText(query).split(/\s+/).filter(Boolean);
@@ -1686,8 +1696,9 @@
           return terms.every((term) => haystack.includes(term));
         });
       };
-      const buildSearchResultHtml = (item) => `
-        <li class="search-result flex items-start gap-3 px-5 py-3">
+      const buildSearchResultHtml = (item, index) => `
+        <li class="search-result flex items-start gap-3 px-5 py-3 ${index === selectedSearchResultIndex ? "active" : ""}"
+            data-search-result-index="${index}">
           <button type="button" class="min-w-0 flex-1 text-left" data-search-copy="${item.id}">
             <span class="block text-xs" style="color: var(--text-muted);">
               ${toHtml([item.tab, item.category, item.subCategory].filter(Boolean).join(" / "))}
@@ -1710,6 +1721,8 @@
         const summary = $("searchSummary");
         if (!holder || !summary) return;
         if (!query.trim()) {
+          visibleSearchResults = [];
+          selectedSearchResultIndex = -1;
           summary.textContent = `全 ${state.all.length}件から検索します`;
           holder.innerHTML = `
             <p class="dialog-muted px-5 py-8 text-center text-sm">
@@ -1717,13 +1730,38 @@
             </p>`;
           return;
         }
-        const visibleResults = results.slice(0, SEARCH_RESULT_LIMIT);
+        visibleSearchResults = results.slice(0, SEARCH_RESULT_LIMIT);
+        selectedSearchResultIndex = visibleSearchResults.length ? 0 : -1;
         summary.textContent = results.length > SEARCH_RESULT_LIMIT
           ? `${results.length}件見つかりました（先頭${SEARCH_RESULT_LIMIT}件を表示）`
           : `${results.length}件見つかりました`;
         holder.innerHTML = results.length
-          ? `<ul>${visibleResults.map(buildSearchResultHtml).join("")}</ul>`
+          ? `<ul>${visibleSearchResults.map(buildSearchResultHtml).join("")}</ul>`
           : `<p class="dialog-muted px-5 py-8 text-center text-sm">一致するパスがありません</p>`;
+      };
+      const updateSearchResultSelection = (nextIndex, { scroll = true } = {}) => {
+        if (!visibleSearchResults.length) return;
+        selectedSearchResultIndex = Math.max(0, Math.min(nextIndex, visibleSearchResults.length - 1));
+        document.querySelectorAll("[data-search-result-index]").forEach((row) => {
+          row.classList.toggle("active", Number(row.dataset.searchResultIndex) === selectedSearchResultIndex);
+        });
+        if (scroll) {
+          document.querySelector(`[data-search-result-index="${selectedSearchResultIndex}"]`)
+            ?.scrollIntoView({ block: "nearest" });
+        }
+      };
+      const getSelectedSearchResult = () => visibleSearchResults[selectedSearchResultIndex];
+      const copySelectedSearchResult = async () => {
+        const item = getSelectedSearchResult();
+        if (!item) return;
+        const row = document.querySelector(`[data-search-result-index="${selectedSearchResultIndex}"]`);
+        await copyTextToClipboard(item.path, row);
+      };
+      const openSelectedSearchResultDetails = () => {
+        const item = getSelectedSearchResult();
+        if (!item) return;
+        dialogController.close("searchDialog");
+        openPathDetailsDialog(item);
       };
 
       // 一覧の1行分HTML生成
@@ -2607,6 +2645,8 @@
       };
 
       const onSearchResultClick = async (event) => {
+        const row = event.target.closest("[data-search-result-index]");
+        if (row) updateSearchResultSelection(Number(row.dataset.searchResultIndex), { scroll: false });
         const detailsButton = event.target.closest("[data-search-details]");
         if (detailsButton) {
           const id = Number(detailsButton.getAttribute("data-search-details"));
@@ -2620,6 +2660,24 @@
         const item = state.all.find((candidate) => candidate.id === id);
         if (!item) return;
         await copyTextToClipboard(item.path, copyButton);
+      };
+      const onSearchKeydown = async (event) => {
+        if (event.isComposing || event.keyCode === 229) return;
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+          if (!visibleSearchResults.length) return;
+          event.preventDefault();
+          const delta = event.key === "ArrowDown" ? 1 : -1;
+          const nextIndex = selectedSearchResultIndex < 0 ? 0 : selectedSearchResultIndex + delta;
+          updateSearchResultSelection(nextIndex);
+          return;
+        }
+        if (event.key !== "Enter" || !visibleSearchResults.length) return;
+        event.preventDefault();
+        if (event.ctrlKey || event.metaKey) {
+          openSelectedSearchResultDetails();
+          return;
+        }
+        await copySelectedSearchResult();
       };
 
       // イベント委譲: サブカテゴリの折りたたみ
@@ -2686,6 +2744,7 @@
         $("openSearchButton")?.addEventListener("click", openSearchDialog);
         $("closeSearchButton")?.addEventListener("click", () => dialogController.close("searchDialog"));
         $("searchInput")?.addEventListener("input", renderSearchResults);
+        $("searchInput")?.addEventListener("keydown", onSearchKeydown);
         $("searchResults")?.addEventListener("click", onSearchResultClick);
         $("openAddMenuButton")?.addEventListener("click", toggleAddMenu);
         $("addMenu")?.addEventListener("click", onAddMenuAction);
