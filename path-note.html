@@ -253,6 +253,34 @@
       max-width: none;
     }
 
+    .search-dialog {
+      width: min(720px, calc(100vw - 2rem));
+      max-width: none;
+    }
+
+    .search-results {
+      max-height: min(60vh, 560px);
+      overflow-y: auto;
+    }
+
+    .search-result {
+      border-bottom: 1px solid var(--border);
+      transition: background-color 140ms ease;
+    }
+
+    .search-result:last-child {
+      border-bottom: 0;
+    }
+
+    .search-result:hover,
+    .search-result:focus-within {
+      background-color: var(--bg-hover);
+    }
+
+    .search-result-path {
+      color: var(--text-muted);
+    }
+
     @media (max-width: 560px) {
       .detail-path-row {
         flex-direction: column;
@@ -260,6 +288,10 @@
 
       .detail-path-row .primary-button {
         width: 100%;
+      }
+
+      .search-shortcut {
+        display: none;
       }
     }
 
@@ -677,6 +709,11 @@
         </div>
         <div id="tabNav" class="flex flex-wrap items-end gap-1.5 pt-1 pb-1 -mb-[1px]"></div>
         <div class="relative flex items-center gap-2 pb-1">
+          <button id="openSearchButton" type="button"
+            class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold"
+            aria-keyshortcuts="Control+K Meta+K /">
+            検索 <span class="search-shortcut ml-1 text-xs opacity-60">Ctrl K</span>
+          </button>
           <button id="openViewMenuButton" type="button" aria-expanded="false" aria-controls="viewMenu"
             class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold">
             表示
@@ -934,6 +971,26 @@
           </button>
         </div>
       </form>
+    </div>
+  </dialog>
+
+  <dialog id="searchDialog"
+    class="dialog-shell search-dialog rounded-xl border p-0 shadow-2xl">
+    <div>
+      <div class="dialog-divider border-b px-5 py-4">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold">パスを検索</h2>
+          <button id="closeSearchButton" type="button"
+            class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold">
+            閉じる
+          </button>
+        </div>
+        <input id="searchInput" type="search" autocomplete="off"
+          placeholder="名前、パス、ノート、分類から検索"
+          class="dialog-input mt-3 w-full rounded-md border px-3 py-2.5 outline-none">
+        <p id="searchSummary" class="dialog-muted mt-2 text-xs"></p>
+      </div>
+      <div id="searchResults" class="search-results"></div>
     </div>
   </dialog>
 
@@ -1612,6 +1669,63 @@
         `;
       };
 
+      const SEARCH_RESULT_LIMIT = 100;
+      const normalizeSearchText = (value) => toSafeString(value).normalize("NFKC").toLocaleLowerCase();
+      const getSearchResults = (query) => {
+        const terms = normalizeSearchText(query).split(/\s+/).filter(Boolean);
+        if (!terms.length) return [];
+        return state.all.filter((item) => {
+          const haystack = normalizeSearchText([
+            item.name,
+            item.path,
+            item.note,
+            item.tab,
+            item.category,
+            item.subCategory,
+          ].join("\n"));
+          return terms.every((term) => haystack.includes(term));
+        });
+      };
+      const buildSearchResultHtml = (item) => `
+        <li class="search-result flex items-start gap-3 px-5 py-3">
+          <button type="button" class="min-w-0 flex-1 text-left" data-search-copy="${item.id}">
+            <span class="block text-xs" style="color: var(--text-muted);">
+              ${toHtml([item.tab, item.category, item.subCategory].filter(Boolean).join(" / "))}
+            </span>
+            <span class="mt-1 block font-semibold" style="color: var(--text-heading);">
+              ${toHtml(formatDisplayName(item.name))}
+            </span>
+            <span class="search-result-path mt-1 block break-all font-mono text-xs">${toHtml(item.path)}</span>
+          </button>
+          <button type="button" class="secondary-button shrink-0 rounded-md border px-2.5 py-1.5 text-xs font-semibold"
+                  data-search-details="${item.id}">
+            詳細
+          </button>
+        </li>
+      `;
+      const renderSearchResults = () => {
+        const query = $("searchInput")?.value || "";
+        const results = getSearchResults(query);
+        const holder = $("searchResults");
+        const summary = $("searchSummary");
+        if (!holder || !summary) return;
+        if (!query.trim()) {
+          summary.textContent = `全 ${state.all.length}件から検索します`;
+          holder.innerHTML = `
+            <p class="dialog-muted px-5 py-8 text-center text-sm">
+              キーワードを入力してください
+            </p>`;
+          return;
+        }
+        const visibleResults = results.slice(0, SEARCH_RESULT_LIMIT);
+        summary.textContent = results.length > SEARCH_RESULT_LIMIT
+          ? `${results.length}件見つかりました（先頭${SEARCH_RESULT_LIMIT}件を表示）`
+          : `${results.length}件見つかりました`;
+        holder.innerHTML = results.length
+          ? `<ul>${visibleResults.map(buildSearchResultHtml).join("")}</ul>`
+          : `<p class="dialog-muted px-5 py-8 text-center text-sm">一致するパスがありません</p>`;
+      };
+
       // 一覧の1行分HTML生成
       const buildListRow = (item) => {
         const meta = classifyPath(item.path);
@@ -1834,6 +1948,23 @@
         },
         open: (dialogId) => $(dialogId)?.showModal(),
         close: (dialogId) => $(dialogId)?.close(),
+      };
+
+      const openSearchDialog = () => {
+        const input = $("searchInput");
+        const dialog = $("searchDialog");
+        if (dialog?.open) {
+          input?.focus();
+          input?.select();
+          return;
+        }
+        menuController.close("add");
+        menuController.close("data");
+        menuController.close("view");
+        if (input) input.value = "";
+        renderSearchResults();
+        dialogController.open("searchDialog");
+        requestAnimationFrame(() => input?.focus());
       };
 
       let detailItem = null;
@@ -2407,6 +2538,19 @@
 
       // キー操作（左右でタブ、上下でカテゴリ）
       const onKeydown = (event) => {
+        const isSearchShortcut = (event.ctrlKey || event.metaKey)
+          && !event.altKey
+          && event.key.toLocaleLowerCase() === "k";
+        const isSlashShortcut = event.key === "/"
+          && !event.ctrlKey
+          && !event.metaKey
+          && !event.altKey
+          && !isEditableTarget(event.target);
+        if (isSearchShortcut || isSlashShortcut) {
+          event.preventDefault();
+          openSearchDialog();
+          return;
+        }
         if (isEditableTarget(event.target)) return;
         if (event.ctrlKey || event.metaKey || event.altKey) return;
 
@@ -2460,6 +2604,22 @@
         if (!row) return;
         const p = row.getAttribute("data-copy") || "";
         await copyTextToClipboard(p, row);
+      };
+
+      const onSearchResultClick = async (event) => {
+        const detailsButton = event.target.closest("[data-search-details]");
+        if (detailsButton) {
+          const id = Number(detailsButton.getAttribute("data-search-details"));
+          dialogController.close("searchDialog");
+          openPathDetailsDialog(state.all.find((item) => item.id === id));
+          return;
+        }
+        const copyButton = event.target.closest("[data-search-copy]");
+        if (!copyButton) return;
+        const id = Number(copyButton.getAttribute("data-search-copy"));
+        const item = state.all.find((candidate) => candidate.id === id);
+        if (!item) return;
+        await copyTextToClipboard(item.path, copyButton);
       };
 
       // イベント委譲: サブカテゴリの折りたたみ
@@ -2523,6 +2683,10 @@
 
         if (tabNav) tabNav.addEventListener("click", onTabClick);
         if (catList) catList.addEventListener("click", onCatClick);
+        $("openSearchButton")?.addEventListener("click", openSearchDialog);
+        $("closeSearchButton")?.addEventListener("click", () => dialogController.close("searchDialog"));
+        $("searchInput")?.addEventListener("input", renderSearchResults);
+        $("searchResults")?.addEventListener("click", onSearchResultClick);
         $("openAddMenuButton")?.addEventListener("click", toggleAddMenu);
         $("addMenu")?.addEventListener("click", onAddMenuAction);
         $("openViewMenuButton")?.addEventListener("click", toggleViewMenu);
