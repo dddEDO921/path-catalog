@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 92 64" role="img" aria-labelledby="title">
+  <title id="title">パス一覧</title>
+
+  <rect width="92" height="64" rx="14" fill="#332e50"/>
+  <rect x="8" y="25" width="4" height="17" rx="2" fill="#c6a956"/>
+
+  <g font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="8.5" font-weight="700">
+    <text x="17" y="18" fill="#aaa4bc">C:\work</text>
+    <text x="17" y="36" fill="#c6a956">~/docs</text>
+    <text x="17" y="54" fill="#aaa4bc">\\share</text>
+  </g>
+</svg>
