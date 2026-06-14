@@ -216,6 +216,53 @@
       color: var(--text-muted);
     }
 
+    .details-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.4rem;
+      height: 1.4rem;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      font-weight: 700;
+      transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+    }
+
+    .details-button:hover,
+    .details-button:focus-visible {
+      border-color: var(--accent);
+      background-color: var(--accent-soft);
+      color: var(--text-heading);
+      outline: none;
+    }
+
+    .detail-value {
+      color: var(--text-heading);
+    }
+
+    .detail-path {
+      border-color: var(--border);
+      background-color: var(--bg-control);
+      color: var(--text-body);
+    }
+
+    .path-details-dialog {
+      width: min(600px, calc(100vw - 2rem));
+      max-width: none;
+    }
+
+    @media (max-width: 560px) {
+      .detail-path-row {
+        flex-direction: column;
+      }
+
+      .detail-path-row .primary-button {
+        width: 100%;
+      }
+    }
+
     .cat-card {
       background-color: var(--bg-layer);
       border-color: var(--border);
@@ -403,7 +450,6 @@
       color: var(--text-muted) !important;
     }
 
-    .note-badge,
     #emptyMessage {
       border-color: var(--border) !important;
       background-color: var(--bg-control) !important;
@@ -592,6 +638,8 @@
     }
 
     .compact-note {
+      position: relative;
+      min-height: 1.4rem;
       color: var(--text-muted);
       font-size: 0.65rem;
       text-align: center;
@@ -779,6 +827,39 @@
         </button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="pathDetailsDialog"
+    class="dialog-shell path-details-dialog rounded-xl border p-0 shadow-2xl">
+    <div>
+      <div class="dialog-divider flex items-start justify-between gap-4 border-b px-5 py-4">
+        <div class="min-w-0">
+          <p id="detailLocation" class="dialog-muted text-xs"></p>
+          <h2 id="detailName" class="mt-1 break-words text-lg font-semibold"></h2>
+        </div>
+        <button id="closePathDetailsButton" type="button"
+          class="secondary-button shrink-0 rounded-md border px-2.5 py-1.5 text-sm font-semibold"
+          aria-label="詳細を閉じる">
+          閉じる
+        </button>
+      </div>
+      <div class="space-y-4 px-5 py-4">
+        <section>
+          <div class="dialog-label text-xs font-semibold">パス / URL</div>
+          <div class="detail-path-row mt-1 flex items-start gap-2">
+            <div id="detailPath" class="detail-path min-w-0 flex-1 break-all rounded-md border px-3 py-2 font-mono text-sm"></div>
+            <button id="copyDetailPathButton" type="button"
+              class="primary-button shrink-0 rounded-md border px-3 py-2 text-sm font-semibold">
+              コピー
+            </button>
+          </div>
+        </section>
+        <section>
+          <div class="dialog-label text-xs font-semibold">ノート</div>
+          <div id="detailNote" class="detail-value mt-1 whitespace-pre-wrap break-words text-sm"></div>
+        </section>
+      </div>
+    </div>
   </dialog>
 
   <script src="data.js"></script>
@@ -1353,10 +1434,12 @@
 
       // 空欄の表示名はプレースホルダで補完
       const formatDisplayName = (name) => (name ? name : "(no name)");
-      const buildNoteBadge = (note) => {
-        if (!note) return "";
+      const buildDetailsButton = (item) => {
         return `
-          <span class="note-badge absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-xxs bg-slate-900/80">i</span>
+          <button type="button" class="details-button absolute right-0 top-1/2 -translate-y-1/2"
+                  data-path-details="${item.id}"
+                  aria-label="${toHtml(formatDisplayName(item.name))}の詳細を表示"
+                  title="詳細を表示">i</button>
         `;
       };
 
@@ -1365,7 +1448,7 @@
         const meta = classifyPath(item.path);
         const iconHtml = (meta.icon || "").trim();
         const noteText = item.note || "";
-        const noteBadge = buildNoteBadge(noteText);
+        const detailsButton = buildDetailsButton(item);
         return `
           <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-0.5 rounded-md shadow-sm grid grid-cols-[18px_220px_minmax(0,1fr)] gap-x-3 gap-y-0 items-center transition overflow-visible list-row"
               data-copy="${toHtml(item.path)}"
@@ -1379,7 +1462,7 @@
             </div>
             <div class="relative text-xs font-mono tabular-nums col-start-3 col-span-1 pr-7" style="color: var(--text-muted);">
               <span class="path-chip">${toHtml(item.path)}</span>
-              ${noteBadge}
+              ${detailsButton}
             </div>
           </li>
         `;
@@ -1470,7 +1553,7 @@
             <span class="compact-tag">${toHtml(item.subCategory)}</span>
             <span class="compact-name">${toHtml(formatDisplayName(item.name))}</span>
             <span class="compact-path">${toHtml(item.path)}</span>
-            <span class="compact-note">${item.note ? "i" : ""}</span>
+            <span class="compact-note">${buildDetailsButton(item)}</span>
           </li>
         `).join("");
 
@@ -1582,6 +1665,18 @@
         },
         open: (dialogId) => $(dialogId)?.showModal(),
         close: (dialogId) => $(dialogId)?.close(),
+      };
+
+      let detailItem = null;
+      const openPathDetailsDialog = (item) => {
+        if (!item) return;
+        detailItem = item;
+        $("detailLocation").textContent = [item.tab, item.category, item.subCategory].filter(Boolean).join(" / ");
+        $("detailName").textContent = formatDisplayName(item.name);
+        $("detailPath").textContent = item.path;
+        $("detailNote").textContent = item.note || "ノートはありません";
+        $("detailNote").classList.toggle("dialog-muted", !item.note);
+        dialogController.open("pathDetailsDialog");
       };
 
       let addGroupMode = "";
@@ -2020,8 +2115,20 @@
         actions.setCat(btn.getAttribute("data-cat") || "");
       };
 
+      // イベント委譲: パス詳細を表示
+      const onPathDetailsClick = (event) => {
+        const button = event.target.closest("[data-path-details]");
+        if (!button) return;
+        event.stopPropagation();
+        activeNoteRow = null;
+        noteTooltip.hide();
+        const id = Number(button.getAttribute("data-path-details"));
+        openPathDetailsDialog(state.all.find((item) => item.id === id));
+      };
+
       // イベント委譲: クリックでコピー
       const onListClick = async (event) => {
+        if (event.target.closest("[data-path-details]")) return;
         const row = event.target.closest("li[data-copy]");
         if (!row) return;
         const p = row.getAttribute("data-copy") || "";
@@ -2097,6 +2204,11 @@
         $("importDataInput")?.addEventListener("change", (event) => importCatalogData(event.target.files?.[0]));
         $("cancelAddPathButton")?.addEventListener("click", () => dialogController.close("addPathDialog"));
         $("cancelAddGroupButton")?.addEventListener("click", () => dialogController.close("addGroupDialog"));
+        $("closePathDetailsButton")?.addEventListener("click", () => dialogController.close("pathDetailsDialog"));
+        $("copyDetailPathButton")?.addEventListener("click", () => {
+          if (!detailItem) return;
+          copyTextToClipboard(detailItem.path, $("detailPath"));
+        });
         $("addTab")?.addEventListener("input", refreshAddDialogOptions);
         $("addCategory")?.addEventListener("input", refreshAddDialogOptions);
         if (addPathForm) addPathForm.addEventListener("submit", onAddPathSubmit);
@@ -2107,6 +2219,7 @@
           list.addEventListener("click", onAddShortcutClick);
           list.addEventListener("click", onOpenAddGroupClick);
           list.addEventListener("click", onSubcatToggle);
+          list.addEventListener("click", onPathDetailsClick);
           list.addEventListener("click", onListClick);
           list.addEventListener("mouseover", onNoteOver);
           list.addEventListener("mousemove", onNoteMove);

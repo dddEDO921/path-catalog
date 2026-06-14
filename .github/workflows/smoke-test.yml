@@ -40,6 +40,7 @@ jobs:
             "openViewMenuButton",
             "addPathDialog",
             "addGroupDialog",
+            "pathDetailsDialog",
           ];
           requiredIds.forEach((id) => {
             if (!new RegExp(`\\bid=["']${id}["']`).test(html)) {
