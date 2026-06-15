@@ -55,5 +55,18 @@ summary { cursor:pointer; padding:18px 22px; font-weight:800; }.decision-body { 
 .tutorial-step p { color:var(--muted); font-size:12px; }.step-number { display:grid; place-items:center; width:28px; height:28px; margin-bottom:12px; border-radius:50%; background:var(--accent); color:#fff; font-size:11px; font-weight:850; }
 .mini-code { padding:9px; border-radius:6px; background:#282730; color:#f0edf8; font:11px/1.6 Consolas,monospace; }
 .glossary { display:grid; grid-template-columns:repeat(2,1fr); gap:13px; }.term { padding:18px; }.term code { color:var(--accent); font-weight:800; }.term p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+.screen-map { display:grid; grid-template-columns:220px 1fr; grid-template-rows:auto 1fr; min-height:440px; overflow:hidden; }
+.screen-header { grid-column:1/-1; padding:18px; border-bottom:1px solid var(--line); background:var(--accent-soft); }
+.screen-side { padding:20px; border-right:1px solid var(--line); background:#fafafa; }
+.screen-main { padding:20px; }.screen-main-grid { display:grid; gap:13px; }
+.screen-part { padding:15px; border:1px dashed var(--line); border-radius:10px; background:var(--surface); }
+.screen-part strong { display:block; }.screen-part span { color:var(--muted); font-size:12px; }
+.contract-table { width:100%; border-collapse:collapse; overflow:hidden; border-radius:14px; background:var(--surface); box-shadow:var(--shadow); }
+.contract-table th,.contract-table td { padding:14px 16px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; font-size:13px; }
+.contract-table th { background:var(--accent-soft); color:var(--accent); font-size:12px; }.contract-table td { color:var(--muted); }
+.contract-table tr:last-child td { border-bottom:0; }.contract-table code { color:var(--ink); }
+.level-stack { display:grid; gap:10px; }.level { padding:18px; border-left:5px solid var(--accent); border-radius:0 12px 12px 0; background:var(--surface); box-shadow:var(--shadow); }
+.level:nth-child(2) { margin-left:22px; opacity:.95; }.level:nth-child(3) { margin-left:44px; opacity:.9; }.level:nth-child(4) { margin-left:66px; opacity:.85; }
+.level strong { display:inline-block; min-width:120px; }.level span { color:var(--muted); font-size:13px; }
 @media(max-width:850px){.route-grid,.responsibility-grid,.change-grid{grid-template-columns:1fr 1fr}.two-col,.detail-grid,.decision-body{grid-template-columns:1fr}.reading-flow,.flow{grid-template-columns:1fr}.reading-flow i,.flow i{transform:rotate(90deg);text-align:center}.tutorial-steps{grid-template-columns:1fr 1fr}.tutorial-step:nth-child(2){border-right:0}}
-@media(max-width:560px){.page{width:min(100% - 26px,720px);padding-top:20px}.hero{min-height:auto;padding:34px 22px;border-radius:19px}.route-grid,.responsibility-grid,.change-grid,.tutorial-steps,.checklist,.glossary{grid-template-columns:1fr}.tutorial-step{border-right:0;border-bottom:1px solid var(--line)}}
+@media(max-width:560px){.page{width:min(100% - 26px,720px);padding-top:20px}.hero{min-height:auto;padding:34px 22px;border-radius:19px}.route-grid,.responsibility-grid,.change-grid,.tutorial-steps,.checklist,.glossary,.screen-map{grid-template-columns:1fr}.screen-header{grid-column:1}.screen-side{border-right:0;border-bottom:1px solid var(--line)}.tutorial-step{border-right:0;border-bottom:1px solid var(--line)}.contract-table{display:block;overflow-x:auto}.level:nth-child(n){margin-left:0}}
