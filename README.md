@@ -45,7 +45,7 @@
 
 ## 開発資料
 
-仕組みやコードの構成を知りたい場合は、[設計資料の案内](docs/design/README.md)から読み始めてください。
+仕組みやコードの構成を知りたい場合は、ブラウザで[`docs/path-note-guide.html`](docs/path-note-guide.html)を開いてください。
 
 ## License
 

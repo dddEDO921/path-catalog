@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>パスノートのしくみ</title>
+  <style>
+    :root {
+      --ink: #202126;
+      --muted: #696b73;
+      --paper: #f5f4f1;
+      --surface: #ffffff;
+      --line: #deddd8;
+      --accent: #514783;
+      --accent-soft: #eeeaf8;
+      --green: #25735a;
+      --green-soft: #e6f4ee;
+      --orange: #a65d24;
+      --orange-soft: #f9eee4;
+      --blue: #34688d;
+      --blue-soft: #e8f2f8;
+      --shadow: 0 18px 48px rgba(30, 29, 36, 0.08);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Noto Sans JP", "Yu Gothic UI", system-ui, sans-serif;
+      line-height: 1.75;
+    }
+    button { font: inherit; }
+    code, pre, .key, .function-name { font-family: Consolas, "SFMono-Regular", monospace; }
+    .layout { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 28px 20px;
+      border-right: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(18px);
+      overflow-y: auto;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; font-weight: 800; }
+    .brand-mark {
+      width: 38px; height: 30px; border: 2px solid var(--accent); border-radius: 8px;
+      position: relative; background: var(--surface);
+    }
+    .brand-mark::before, .brand-mark::after {
+      content: ""; position: absolute; left: 7px; right: 7px; height: 2px; background: var(--accent);
+    }
+    .brand-mark::before { top: 9px; }
+    .brand-mark::after { top: 17px; width: 13px; }
+    .nav-label { margin: 22px 8px 7px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+    .nav-link {
+      display: block; padding: 8px 10px; border-radius: 8px; color: var(--muted);
+      font-size: 13px; font-weight: 650; text-decoration: none;
+    }
+    .nav-link:hover, .nav-link.active { background: var(--accent-soft); color: var(--accent); }
+    .sidebar-note { margin-top: 28px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 11px; }
+    main { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 48px 0 120px; }
+    section { scroll-margin-top: 28px; margin-bottom: 100px; }
+    .hero {
+      min-height: 78vh; display: grid; align-content: center; padding: 64px;
+      border: 1px solid var(--line); border-radius: 30px; background: var(--surface); box-shadow: var(--shadow);
+      overflow: hidden; position: relative;
+    }
+    .hero::after {
+      content: ""; position: absolute; width: 520px; height: 520px; right: -200px; top: -220px;
+      border-radius: 50%; background: radial-gradient(circle, #e4def7 0, rgba(228,222,247,0) 68%);
+    }
+    .eyebrow { color: var(--accent); font-size: 12px; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { max-width: 720px; margin: 14px 0 18px; font-size: clamp(42px, 7vw, 82px); line-height: 1.08; letter-spacing: -.055em; }
+    .hero-copy { max-width: 640px; color: var(--muted); font-size: 18px; }
+    .hero-path { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 34px; }
+    .hero-path a {
+      padding: 10px 15px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink);
+      background: var(--surface); font-size: 13px; font-weight: 750; text-decoration: none;
+    }
+    .hero-path a:first-child { border-color: var(--accent); background: var(--accent); color: white; }
+    .section-kicker { color: var(--accent); font-size: 12px; font-weight: 850; letter-spacing: .14em; }
+    h2 { margin: 8px 0 12px; font-size: clamp(30px, 4vw, 48px); line-height: 1.2; letter-spacing: -.04em; }
+    h3 { margin: 0 0 8px; font-size: 19px; line-height: 1.4; }
+    .lead { max-width: 760px; margin: 0 0 34px; color: var(--muted); font-size: 17px; }
+    .card { border: 1px solid var(--line); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); }
+    .two-files { display: grid; grid-template-columns: 1fr auto 1fr; gap: 22px; align-items: stretch; }
+    .file-card { padding: 28px; }
+    .file-name { display: inline-block; padding: 4px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); font-weight: 800; }
+    .file-card ul { margin: 20px 0 0; padding-left: 20px; color: var(--muted); }
+    .file-arrow { display: grid; place-items: center; color: var(--muted); font-size: 26px; }
+    .point {
+      margin-top: 24px; padding: 17px 20px; border-left: 4px solid var(--accent);
+      background: var(--accent-soft); border-radius: 0 10px 10px 0;
+    }
+    .story-shell { overflow: hidden; }
+    .story-tabs { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--line); }
+    .story-tab {
+      border: 0; border-right: 1px solid var(--line); padding: 18px 10px; background: #fafafa;
+      color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 800;
+    }
+    .story-tab:last-child { border-right: 0; }
+    .story-tab.active { background: var(--surface); color: var(--accent); box-shadow: inset 0 -3px var(--accent); }
+    .story-body { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 28px; padding: 32px; }
+    .story-visual { padding: 24px; border-radius: 14px; background: var(--paper); }
+    .story-visual .mini-ui { padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: white; }
+    .mini-label { margin-top: 10px; color: var(--muted); font-size: 10px; font-weight: 800; }
+    .mini-input { height: 30px; margin-top: 4px; border: 1px solid var(--line); border-radius: 6px; background: #fafafa; }
+    .mini-button { width: 72px; margin: 14px 0 0 auto; padding: 6px; border-radius: 6px; background: var(--accent); color: white; text-align: center; font-size: 10px; }
+    .story-explain > div { margin-bottom: 18px; }
+    .story-explain p { margin: 4px 0 0; color: var(--muted); }
+    .function-name { display: inline-block; padding: 3px 7px; border: 1px solid #d9d4e8; border-radius: 5px; background: var(--accent-soft); color: var(--accent); font-size: 12px; }
+    .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; gap: 10px; }
+    .flow-node { min-height: 120px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+    .flow-node strong { display: block; margin-bottom: 6px; }
+    .flow-node span { color: var(--muted); font-size: 12px; }
+    .flow-node.seed { border-color: #c8bce8; background: var(--accent-soft); }
+    .flow-node.daily { border-color: #b7dacd; background: var(--green-soft); }
+    .flow-node.portable { border-color: #ead0b8; background: var(--orange-soft); }
+    .flow-arrow { text-align: center; color: var(--muted); }
+    .data-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .code-card { overflow: hidden; }
+    .code-head { padding: 13px 17px; border-bottom: 1px solid var(--line); font-weight: 800; }
+    pre { margin: 0; padding: 20px; overflow: auto; background: #282730; color: #f0edf8; font-size: 12px; line-height: 1.65; }
+    .why { padding: 18px; color: var(--muted); font-size: 13px; }
+    .change-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .change-card { padding: 20px; cursor: pointer; transition: transform .15s, border-color .15s; }
+    .change-card:hover, .change-card.active { transform: translateY(-3px); border-color: var(--accent); }
+    .change-card p { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+    .change-detail { margin-top: 18px; padding: 28px; }
+    .change-detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .change-detail p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .decisions { display: grid; gap: 16px; }
+    details { border: 1px solid var(--line); border-radius: 15px; background: var(--surface); box-shadow: var(--shadow); }
+    summary { cursor: pointer; padding: 20px 24px; font-weight: 800; }
+    .decision-body { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding: 0 24px 24px; }
+    .decision-cell { padding: 16px; border-radius: 10px; background: var(--paper); }
+    .decision-cell strong { display: block; margin-bottom: 6px; font-size: 12px; }
+    .decision-cell p { margin: 0; color: var(--muted); font-size: 13px; }
+    .glossary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .term { padding: 19px; }
+    .term code { color: var(--accent); font-weight: 800; }
+    .term p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .footer { margin-top: 80px; padding-top: 28px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    @media (max-width: 900px) {
+      .layout { display: block; }
+      .sidebar { position: static; width: auto; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      .sidebar nav, .sidebar-note { display: none; }
+      main { width: min(100% - 28px, 720px); padding-top: 20px; }
+      .hero { min-height: auto; padding: 36px 24px; border-radius: 20px; }
+      .two-files, .story-body, .data-compare, .change-detail-grid, .decision-body { grid-template-columns: 1fr; }
+      .file-arrow { transform: rotate(90deg); }
+      .flow { grid-template-columns: 1fr; }
+      .flow-arrow { transform: rotate(90deg); }
+      .change-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 560px) {
+      .story-tabs { grid-template-columns: 1fr; }
+      .story-tab { border-right: 0; border-bottom: 1px solid var(--line); }
+      .change-grid, .glossary { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark"></span><span>パスノートのしくみ</span></div>
+      <nav>
+        <div class="nav-label">INTRODUCTION</div>
+        <a class="nav-link active" href="#start">この資料について</a>
+        <a class="nav-link" href="#two-files">まず知る2ファイル</a>
+        <div class="nav-label">UNDERSTAND</div>
+        <a class="nav-link" href="#add-story">パス追加を追体験</a>
+        <a class="nav-link" href="#data-flow">データはどこへ行く？</a>
+        <a class="nav-link" href="#two-shapes">なぜ形式が2つある？</a>
+        <div class="nav-label">CHANGE</div>
+        <a class="nav-link" href="#change-map">変更したい場所から探す</a>
+        <a class="nav-link" href="#decisions">設計判断</a>
+        <a class="nav-link" href="#glossary">用語集</a>
+      </nav>
+      <div class="sidebar-note">行番号ではなく、章コメントと関数名でコードを探します。</div>
+    </aside>
+
+    <main>
+      <section id="start" class="hero">
+        <div class="eyebrow">Interactive system guide</div>
+        <h1>コードを読む前に、<br>動きを理解する。</h1>
+        <p class="hero-copy">この資料は、巨大な<code>path-note.html</code>を上から説明するものではありません。利用者の操作を追いながら、データと画面がどう動くかを理解するためのガイドです。</p>
+        <div class="hero-path">
+          <a href="#add-story">パス追加から理解する</a>
+          <a href="#change-map">変更したい場所から探す</a>
+          <a href="#decisions">設計判断を読む</a>
+        </div>
+      </section>
+
+      <section id="two-files">
+        <div class="section-kicker">01 / FIRST PRINCIPLE</div>
+        <h2>まず、2つのファイルだけ覚える</h2>
+        <p class="lead">パスノートにはビルド処理もサーバーもありません。利用者が扱う製品は、画面と処理を持つHTMLと、持ち運べるデータの2つです。</p>
+        <div class="two-files">
+          <article class="card file-card">
+            <span class="file-name">path-note.html</span>
+            <h3>見えるものと、動かすもの</h3>
+            <ul><li>画面の構造</li><li>色やレイアウト</li><li>追加・検索・編集などの処理</li><li>ブラウザへの保存処理</li></ul>
+          </article>
+          <div class="file-arrow">＋</div>
+          <article class="card file-card">
+            <span class="file-name">data.js</span>
+            <h3>最初のデータと、持ち運ぶデータ</h3>
+            <ul><li>初めて開いたときの内容</li><li>バックアップ</li><li>別のブラウザや人への受け渡し</li></ul>
+          </article>
+        </div>
+        <div class="point"><strong>なぜHTMLを分割しない？</strong><br>利用者がコピーして使い始めるファイルを、2つのままに保つためです。コードが大きくなる代償は、この説明資料と章コメントで補います。</div>
+      </section>
+
+      <section id="add-story">
+        <div class="section-kicker">02 / FOLLOW ONE ACTION</div>
+        <h2>「パスを追加する」を追体験する</h2>
+        <p class="lead">ひとつの操作を最後まで追うと、画面・データ・保存・再描画の関係が見えてきます。下のステップを選んでください。</p>
+        <div class="card story-shell">
+          <div class="story-tabs">
+            <button class="story-tab active" data-story="input">1. 入力する</button>
+            <button class="story-tab" data-story="validate">2. 整える</button>
+            <button class="story-tab" data-story="change">3. 追加する</button>
+            <button class="story-tab" data-story="save">4. 保存する</button>
+            <button class="story-tab" data-story="render">5. 表示する</button>
+          </div>
+          <div class="story-body">
+            <div class="story-visual" id="storyVisual"></div>
+            <div class="story-explain" id="storyExplain"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-flow">
+        <div class="section-kicker">03 / DATA FLOW</div>
+        <h2>ブラウザで追加したデータは、どこへ行く？</h2>
+        <p class="lead">普段の最新データはブラウザ内にあります。<code>data.js</code>は最初の種と、持ち運び用のファイルです。</p>
+        <div class="flow">
+          <div class="flow-node seed"><strong>data.js</strong><span>初回表示の種。バックアップや受け渡しにも使う。</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node daily"><strong>localStorage</strong><span>ブラウザで使っている最新データ。追加・編集のたびに更新。</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node portable"><strong>新しい data.js</strong><span>残したいときにブラウザから書き出す。</span></div>
+        </div>
+        <div class="point"><strong>大切な考え方</strong><br><code>data.js</code>を編集しても、すでにlocalStorageへデータがあるブラウザには自動反映されません。普段の正本はlocalStorageです。</div>
+      </section>
+
+      <section id="two-shapes">
+        <div class="section-kicker">04 / TWO DATA SHAPES</div>
+        <h2>なぜ、同じパスを2つの形式で持つ？</h2>
+        <p class="lead">保存するときは分類の木構造が便利です。検索や画面表示では、1件ずつ独立したオブジェクトの方が扱いやすくなります。</p>
+        <div class="data-compare">
+          <article class="card code-card">
+            <div class="code-head">保存用: 分類の中にあるパス</div>
+            <pre><code>["共通", [
+  ["申請", [
+    ["経費", [
+      ["経費精算フォルダ",
+       "\\\\server\\expense",
+       "年度ごとに格納"]
+    ]]
+  ]]
+]]</code></pre>
+            <div class="why">分類の順番や、まだパスがない空の分類も保持できます。</div>
+          </article>
+          <article class="card code-card">
+            <div class="code-head">画面用: 1件ずつ取り出したパス</div>
+            <pre><code>{
+  tab: "共通",
+  category: "申請",
+  subCategory: "経費",
+  name: "経費精算フォルダ",
+  path: "\\\\server\\expense",
+  note: "年度ごとに格納",
+  _meta: { t: 0, c: 0, s: 0, i: 0 }
+}</code></pre>
+            <div class="why">検索、絞り込み、一覧表示が簡単になります。<code>_meta</code>は保存用データ内の元の場所です。</div>
+          </article>
+        </div>
+      </section>
+
+      <section id="change-map">
+        <div class="section-kicker">05 / START FROM YOUR GOAL</div>
+        <h2>変更したい場所から探す</h2>
+        <p class="lead">コードの章ではなく、あなたが実現したいことを選んでください。見る場所、処理のつながり、注意点を表示します。</p>
+        <div class="change-grid" id="changeGrid"></div>
+        <article class="card change-detail" id="changeDetail"></article>
+      </section>
+
+      <section id="decisions">
+        <div class="section-kicker">06 / WHY IT IS BUILT THIS WAY</div>
+        <h2>設計判断には、必ず代償がある</h2>
+        <p class="lead">「正しい設計」ではなく、パスノートが何を優先したかを記録します。判断を変えるときは、得るものと失うものを再評価します。</p>
+        <div class="decisions">
+          <details open><summary>JavaScriptとCSSを別ファイルへ分割しない</summary><div class="decision-body"><div class="decision-cell"><strong>得られるもの</strong><p>利用者が扱う製品ファイルを2つに保てる。</p></div><div class="decision-cell"><strong>代償</strong><p><code>path-note.html</code>が大きくなり、コードを追いにくい。</p></div><div class="decision-cell"><strong>対策</strong><p>責務ごとの章コメントと、この設計ガイドを維持する。</p></div></div></details>
+          <details><summary>localStorageを日常利用の正本にする</summary><div class="decision-body"><div class="decision-cell"><strong>得られるもの</strong><p>ブラウザ上の追加・編集をすぐ保存できる。</p></div><div class="decision-cell"><strong>代償</strong><p>端末やブラウザを越えて自動同期されない。</p></div><div class="decision-cell"><strong>対策</strong><p><code>data.js</code>の読み込み・書き出しで移行する。</p></div></div></details>
+          <details><summary>フレームワークを使わない</summary><div class="decision-body"><div class="decision-cell"><strong>得られるもの</strong><p>ビルド不要で、HTMLを開くだけで動く。</p></div><div class="decision-cell"><strong>代償</strong><p>状態管理やDOM更新を自分たちで整理する必要がある。</p></div><div class="decision-cell"><strong>対策</strong><p>build・apply・renderの役割を分け、変更処理を共通化する。</p></div></div></details>
+        </div>
+      </section>
+
+      <section id="glossary">
+        <div class="section-kicker">07 / WORDS YOU WILL SEE</div>
+        <h2>コードを読むための用語集</h2>
+        <p class="lead">すべてを暗記する必要はありません。コード検索で見つけた名前の意味を確認する場所です。</p>
+        <div class="glossary">
+          <article class="card term"><code>catalog</code><p><code>data.js</code>と同じ、保存・編集用の階層データ。</p></article>
+          <article class="card term"><code>state.all</code><p>検索と画面表示で使う、平坦化されたパス一覧。</p></article>
+          <article class="card term"><code>catalogModel</code><p>階層データへ追加・編集・削除するための操作窓口。</p></article>
+          <article class="card term"><code>commitCatalogChange</code><p>データ変更、保存、失敗時の復元、再描画をまとめる処理。</p></article>
+          <article class="card term"><code>inspectCatalog</code><p>読み込んだデータの形が正しいか確認する処理。</p></article>
+          <article class="card term"><code>normalize</code><p>階層データを画面用のパス一覧へ変換する処理。</p></article>
+          <article class="card term"><code>build...Html</code><p>画面へ表示するHTML文字列を組み立てる処理。</p></article>
+          <article class="card term"><code>renderAll</code><p>タブ、カテゴリ、パス一覧をまとめて描き直す処理。</p></article>
+        </div>
+      </section>
+
+      <div class="footer">この資料は、コードの変更に合わせて育てる設計ガイドです。関数名はエディター内検索の入口として記載しています。</div>
+    </main>
+  </div>
+
+  <script>
+    const stories = {
+      input: {
+        visual: `<div class="mini-ui"><strong>パスを追加</strong><div class="mini-label">タブ</div><div class="mini-input"></div><div class="mini-label">表示名</div><div class="mini-input"></div><div class="mini-label">パス / URL</div><div class="mini-input"></div><div class="mini-button">保存</div></div>`,
+        title: "利用者がフォームへ入力する",
+        visible: "追加ダイアログで、分類・表示名・パス・ノートを入力します。",
+        inside: "入力欄は静的HTMLにあり、送信時にフォームの値をまとめて読み取ります。",
+        functions: ["addPathDialog", "onAddPathSubmit"]
+      },
+      validate: {
+        visual: `<div class="mini-ui"><strong>入力を整える</strong><p style="color:#696b73;font-size:12px">前後の空白を除去<br>必須項目を確認<br>安全な文字列へ変換</p><div class="mini-button">OK</div></div>`,
+        title: "保存前に入力を整える",
+        visible: "必須項目が足りなければ、フォーム内にエラーが表示されます。",
+        inside: "入力を文字列へ変換し、名前やパスの前後にある余分な空白を取り除きます。",
+        functions: ["toSafeString", "onAddPathSubmit"]
+      },
+      change: {
+        visual: `<div class="mini-ui"><strong>分類の木へ追加</strong><p style="font:12px monospace;color:#514783">タブ<br>└ カテゴリ<br>&nbsp;&nbsp;└ サブカテゴリ<br>&nbsp;&nbsp;&nbsp;&nbsp;└ 新しいパス</p></div>`,
+        title: "保存用の階層データへ追加する",
+        visible: "利用者からは見えません。",
+        inside: "指定された分類を探し、存在しなければ作成して、その中へ新しいパスを追加します。",
+        functions: ["catalogModel.appendItem", "findOrCreateBlock"]
+      },
+      save: {
+        visual: `<div class="mini-ui"><strong>ブラウザへ保存</strong><div style="margin:18px 0;padding:12px;border-radius:8px;background:#e6f4ee;color:#25735a;font-weight:800;text-align:center">localStorage</div><p style="color:#696b73;font-size:11px">失敗した場合は変更前へ戻す</p></div>`,
+        title: "localStorageへ保存する",
+        visible: "保存に失敗した場合は、フォーム内にエラーが表示されます。",
+        inside: "変更前のデータを複製してから保存します。保存できなければ、変更前へ戻します。",
+        functions: ["commitCatalogChange", "saveCatalog"]
+      },
+      render: {
+        visual: `<div class="mini-ui"><strong>画面へ反映</strong><div style="margin-top:12px;padding:9px;border-left:3px solid #514783;background:#eeeaf8">経費精算フォルダ</div><div style="margin-top:6px;padding:9px;border-left:3px solid #514783;background:#eeeaf8">新しく追加したパス</div></div>`,
+        title: "最新データから一覧を描き直す",
+        visible: "追加した分類へ移動し、新しいパスが一覧に表示されます。",
+        inside: "保存用データを検査・平坦化し、現在の選択状態に合わせて画面を再描画します。",
+        functions: ["refreshCatalog", "normalize", "renderAll"]
+      }
+    };
+
+    const changes = [
+      { title: "一覧の見た目を変えたい", note: "名前、パス、カード、表示モード", where: "描画の章とCSS", flow: "buildListRow → buildMainHtml → renderMain", caution: "スタンダード・オープン・コンパクトの3表示を確認する。" },
+      { title: "検索を変えたい", note: "検索対象、結果、操作", where: "getSearchResults と検索ダイアログ", flow: "入力 → getSearchResults → buildSearchResultHtml", caution: "大量一致時の描画件数と、検索結果からのコピー・詳細表示を確認する。" },
+      { title: "入力項目を増やしたい", note: "パスに新しい情報を追加", where: "data.js構造、inspectCatalog、追加・編集フォーム", flow: "入力 → catalogModel → 保存 → normalize → 描画", caution: "保存形式を変えるため、既存data.jsとの互換性を先に決める。" },
+      { title: "保存方法を変えたい", note: "localStorage、読み込み、書き出し", where: "設定・永続化とデータ入出力の章", flow: "loadCatalog / saveCatalog / buildDataJs / parseDataJs", caution: "初回表示、既存利用者、バックアップの扱いすべてに影響する。" },
+      { title: "新しい画面を追加したい", note: "ダイアログ、メニュー、操作", where: "静的HTML、dialogController、bind", flow: "HTMLを置く → 開く処理 → イベント登録", caution: "必須IDをスモークチェックへ追加し、狭い画面も確認する。" },
+      { title: "データを変更したい", note: "追加、編集、削除、並び替え", where: "catalogModel と commitCatalogChange", flow: "変更前を複製 → catalogModelで変更 → 保存 → 再描画", caution: "catalogを直接変更して保存処理を迂回しない。" }
+    ];
+
+    const storyVisual = document.getElementById("storyVisual");
+    const storyExplain = document.getElementById("storyExplain");
+    function showStory(key) {
+      const story = stories[key];
+      storyVisual.innerHTML = story.visual;
+      storyExplain.innerHTML = `<div><div class="eyebrow">この段階</div><h3>${story.title}</h3></div><div><strong>利用者から見えること</strong><p>${story.visible}</p></div><div><strong>内部で起きていること</strong><p>${story.inside}</p></div><div><strong>コードを探す入口</strong><p>${story.functions.map(name => `<span class="function-name">${name}</span>`).join(" ")}</p></div>`;
+      document.querySelectorAll(".story-tab").forEach(button => button.classList.toggle("active", button.dataset.story === key));
+    }
+    document.querySelectorAll(".story-tab").forEach(button => button.addEventListener("click", () => showStory(button.dataset.story)));
+    showStory("input");
+
+    const changeGrid = document.getElementById("changeGrid");
+    const changeDetail = document.getElementById("changeDetail");
+    function showChange(index) {
+      const change = changes[index];
+      changeDetail.innerHTML = `<h3>${change.title}</h3><div class="change-detail-grid"><div><strong>最初に見る場所</strong><p>${change.where}</p></div><div><strong>処理のつながり</strong><p class="function-name">${change.flow}</p></div><div><strong>変更時の注意</strong><p>${change.caution}</p></div></div>`;
+      document.querySelectorAll(".change-card").forEach((card, cardIndex) => card.classList.toggle("active", cardIndex === index));
+    }
+    changeGrid.innerHTML = changes.map((change, index) => `<article class="card change-card" data-change="${index}"><h3>${change.title}</h3><p>${change.note}</p></article>`).join("");
+    changeGrid.addEventListener("click", event => {
+      const card = event.target.closest("[data-change]");
+      if (card) showChange(Number(card.dataset.change));
+    });
+    showChange(0);
+
+    const links = Array.from(document.querySelectorAll(".nav-link"));
+    const sections = links.map(link => document.querySelector(link.getAttribute("href"))).filter(Boolean);
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        links.forEach(link => link.classList.toggle("active", link.getAttribute("href") === `#${entry.target.id}`));
+      });
+    }, { rootMargin: "-20% 0px -70%" });
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>
