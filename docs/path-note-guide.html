@@ -131,6 +131,40 @@
     .change-detail { margin-top: 18px; padding: 28px; }
     .change-detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
     .change-detail p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .code-map { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; }
+    .code-map-menu { display: grid; gap: 8px; align-content: start; }
+    .code-map-button {
+      border: 1px solid var(--line); border-radius: 11px; padding: 13px 15px; background: var(--surface);
+      color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 800; text-align: left;
+    }
+    .code-map-button.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+    .code-map-detail { padding: 28px; }
+    .code-map-detail > p { color: var(--muted); }
+    .responsibility-flow { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0; }
+    .responsibility-flow span {
+      padding: 7px 10px; border-radius: 7px; background: var(--paper); color: var(--ink);
+      font-family: Consolas, "SFMono-Regular", monospace; font-size: 11px; font-weight: 700;
+    }
+    .responsibility-flow i { align-self: center; color: var(--muted); font-style: normal; }
+    .code-map-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .code-map-note { padding: 15px; border-radius: 10px; background: var(--paper); }
+    .code-map-note strong { display: block; margin-bottom: 4px; font-size: 12px; }
+    .code-map-note p { margin: 0; color: var(--muted); font-size: 12px; }
+    .tutorial { overflow: hidden; }
+    .tutorial-head { padding: 26px 28px; border-bottom: 1px solid var(--line); background: var(--accent-soft); }
+    .tutorial-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .tutorial-steps { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .tutorial-step { padding: 22px; border-right: 1px solid var(--line); }
+    .tutorial-step:last-child { border-right: 0; }
+    .step-number {
+      display: grid; place-items: center; width: 28px; height: 28px; margin-bottom: 13px;
+      border-radius: 50%; background: var(--accent); color: white; font-size: 11px; font-weight: 850;
+    }
+    .tutorial-step p { margin: 6px 0 14px; color: var(--muted); font-size: 12px; }
+    .tutorial-code { padding: 10px; border-radius: 7px; background: #282730; color: #f0edf8; font: 11px/1.6 Consolas, monospace; }
+    .checklist { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+    .check-item { padding: 16px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); font-size: 12px; }
+    .check-item strong { display: block; margin-bottom: 5px; color: var(--green); }
     .decisions { display: grid; gap: 16px; }
     details { border: 1px solid var(--line); border-radius: 15px; background: var(--surface); box-shadow: var(--shadow); }
     summary { cursor: pointer; padding: 20px 24px; font-weight: 800; }
@@ -149,16 +183,22 @@
       .sidebar nav, .sidebar-note { display: none; }
       main { width: min(100% - 28px, 720px); padding-top: 20px; }
       .hero { min-height: auto; padding: 36px 24px; border-radius: 20px; }
-      .two-files, .story-body, .data-compare, .change-detail-grid, .decision-body { grid-template-columns: 1fr; }
+      .two-files, .story-body, .data-compare, .change-detail-grid, .decision-body, .code-map { grid-template-columns: 1fr; }
       .file-arrow { transform: rotate(90deg); }
       .flow { grid-template-columns: 1fr; }
       .flow-arrow { transform: rotate(90deg); }
       .change-grid { grid-template-columns: 1fr 1fr; }
+      .code-map-menu { grid-template-columns: repeat(3, 1fr); }
+      .tutorial-steps { grid-template-columns: 1fr 1fr; }
+      .tutorial-step:nth-child(2) { border-right: 0; }
+      .tutorial-step:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
     }
     @media (max-width: 560px) {
       .story-tabs { grid-template-columns: 1fr; }
       .story-tab { border-right: 0; border-bottom: 1px solid var(--line); }
-      .change-grid, .glossary { grid-template-columns: 1fr; }
+      .change-grid, .glossary, .code-map-menu, .code-map-notes, .tutorial-steps, .checklist { grid-template-columns: 1fr; }
+      .tutorial-step { border-right: 0; border-bottom: 1px solid var(--line); }
+      .tutorial-step:last-child { border-bottom: 0; }
     }
   </style>
 </head>
@@ -174,7 +214,9 @@
         <a class="nav-link" href="#add-story">パス追加を追体験</a>
         <a class="nav-link" href="#data-flow">データはどこへ行く？</a>
         <a class="nav-link" href="#two-shapes">なぜ形式が2つある？</a>
+        <a class="nav-link" href="#code-map">巨大HTMLの歩き方</a>
         <div class="nav-label">CHANGE</div>
+        <a class="nav-link" href="#tutorial">変更を一度やってみる</a>
         <a class="nav-link" href="#change-map">変更したい場所から探す</a>
         <a class="nav-link" href="#decisions">設計判断</a>
         <a class="nav-link" href="#glossary">用語集</a>
@@ -189,6 +231,7 @@
         <p class="hero-copy">この資料は、巨大な<code>path-note.html</code>を上から説明するものではありません。利用者の操作を追いながら、データと画面がどう動くかを理解するためのガイドです。</p>
         <div class="hero-path">
           <a href="#add-story">パス追加から理解する</a>
+          <a href="#code-map">コードの地図を見る</a>
           <a href="#change-map">変更したい場所から探す</a>
           <a href="#decisions">設計判断を読む</a>
         </div>
@@ -281,8 +324,42 @@
         </div>
       </section>
 
+      <section id="code-map">
+        <div class="section-kicker">05 / HOW TO READ THE BIG HTML</div>
+        <h2>巨大なHTMLは、上から読まない</h2>
+        <p class="lead">ファイルは1つでも、内部の役割は分かれています。目的に合う章コメントを検索し、そこから関数のつながりを追います。</p>
+        <div class="code-map">
+          <div class="code-map-menu" id="codeMapMenu"></div>
+          <article class="card code-map-detail" id="codeMapDetail"></article>
+        </div>
+        <div class="point"><strong>読み方の基本</strong><br>入口のイベント処理を見つけ、呼ばれる処理を内側へ追います。CSSや関係のない機能まで、最初から理解する必要はありません。</div>
+      </section>
+
+      <section id="tutorial">
+        <div class="section-kicker">06 / TRY ONE SMALL CHANGE</div>
+        <h2>変更を一度、最後までやってみる</h2>
+        <p class="lead">例として「検索結果にノートを表示する」を考えます。保存形式を変えず、表示だけを変える小さな変更です。</p>
+        <article class="card tutorial">
+          <div class="tutorial-head">
+            <h3>検索結果にノートを1行追加する</h3>
+            <p>実装前に、データがどこまで届いているかを確認すると変更範囲を小さくできます。</p>
+          </div>
+          <div class="tutorial-steps">
+            <div class="tutorial-step"><span class="step-number">1</span><h3>入口を探す</h3><p>検索結果の見た目を作る関数名を、変更マップから特定します。</p><div class="tutorial-code">buildSearchResultHtml</div></div>
+            <div class="tutorial-step"><span class="step-number">2</span><h3>データを確認</h3><p>引数の<code>item</code>には、すでにノートが含まれています。</p><div class="tutorial-code">item.note</div></div>
+            <div class="tutorial-step"><span class="step-number">3</span><h3>表示を足す</h3><p>HTML文字列へ1行追加し、必ず安全な文字列へ変換します。</p><div class="tutorial-code">${toHtml(item.note)}</div></div>
+            <div class="tutorial-step"><span class="step-number">4</span><h3>影響を確認</h3><p>空のノート、長いノート、検索結果100件を確認します。</p><div class="tutorial-code">renderSearchResults</div></div>
+          </div>
+        </article>
+        <div class="checklist">
+          <div class="check-item"><strong>変更不要</strong><code>data.js</code>とlocalStorage。保存形式は変わりません。</div>
+          <div class="check-item"><strong>変更する</strong><code>buildSearchResultHtml</code>と、必要なら表示用CSS。</div>
+          <div class="check-item"><strong>確認する</strong>検索、詳細表示、モバイル幅、長い文字列。</div>
+        </div>
+      </section>
+
       <section id="change-map">
-        <div class="section-kicker">05 / START FROM YOUR GOAL</div>
+        <div class="section-kicker">07 / START FROM YOUR GOAL</div>
         <h2>変更したい場所から探す</h2>
         <p class="lead">コードの章ではなく、あなたが実現したいことを選んでください。見る場所、処理のつながり、注意点を表示します。</p>
         <div class="change-grid" id="changeGrid"></div>
@@ -290,7 +367,7 @@
       </section>
 
       <section id="decisions">
-        <div class="section-kicker">06 / WHY IT IS BUILT THIS WAY</div>
+        <div class="section-kicker">08 / WHY IT IS BUILT THIS WAY</div>
         <h2>設計判断には、必ず代償がある</h2>
         <p class="lead">「正しい設計」ではなく、パスノートが何を優先したかを記録します。判断を変えるときは、得るものと失うものを再評価します。</p>
         <div class="decisions">
@@ -301,7 +378,7 @@
       </section>
 
       <section id="glossary">
-        <div class="section-kicker">07 / WORDS YOU WILL SEE</div>
+        <div class="section-kicker">09 / WORDS YOU WILL SEE</div>
         <h2>コードを読むための用語集</h2>
         <p class="lead">すべてを暗記する必要はありません。コード検索で見つけた名前の意味を確認する場所です。</p>
         <div class="glossary">
@@ -368,6 +445,57 @@
       { title: "データを変更したい", note: "追加、編集、削除、並び替え", where: "catalogModel と commitCatalogChange", flow: "変更前を複製 → catalogModelで変更 → 保存 → 再描画", caution: "catalogを直接変更して保存処理を迂回しない。" }
     ];
 
+    const codeAreas = [
+      {
+        label: "画面を描く",
+        title: "描画: データを画面へ変える",
+        summary: "画面の見た目や、一覧に表示する情報を変えるときの入口です。",
+        flow: ["build...Html", "apply...", "render...", "renderAll"],
+        start: "一覧なら buildListRow、検索結果なら buildSearchResultHtml から探します。",
+        boundary: "描画処理から catalog や localStorage を直接変更しません。"
+      },
+      {
+        label: "データを変える",
+        title: "データモデル: 階層データを操作する",
+        summary: "タブ、カテゴリ、サブカテゴリ、パスの追加・編集・削除を担当します。",
+        flow: ["catalogModel", "commitCatalogChange", "refreshCatalog", "renderAll"],
+        start: "catalogModel 内の appendItem、replaceItem、deleteItem、deleteGroup を探します。",
+        boundary: "変更は commitCatalogChange を通し、保存失敗時に元へ戻せるようにします。"
+      },
+      {
+        label: "操作を受ける",
+        title: "UI制御とイベント: 利用者の操作を処理へ渡す",
+        summary: "クリック、フォーム送信、キー操作が、どの処理を呼ぶかを決めます。",
+        flow: ["bind", "on...Click / on...Submit", "処理本体", "画面更新"],
+        start: "要素IDや data-* 属性を探し、bind のイベント登録から入口へ進みます。",
+        boundary: "イベント処理を巨大にせず、データ変更や描画は担当関数へ渡します。"
+      },
+      {
+        label: "保存・読込",
+        title: "永続化と入出力: ブラウザと data.js をつなぐ",
+        summary: "普段の保存、初回データ、バックアップの読み書きを担当します。",
+        flow: ["loadCatalog", "saveCatalog", "buildDataJs / parseDataJs", "catalog"],
+        start: "ブラウザ内の保存は loadCatalog / saveCatalog、ファイルは buildDataJs / parseDataJs です。",
+        boundary: "保存形式の変更は既存利用者のデータと、過去の data.js に影響します。"
+      },
+      {
+        label: "状態を選ぶ",
+        title: "状態管理: 今どこを見ているかを持つ",
+        summary: "選択中のタブ・カテゴリと、画面用のパス一覧を管理します。",
+        flow: ["state", "actions / setSelection", "getFilteredItems", "renderAll"],
+        start: "選択を変えるときは actions、絞り込み結果は getFilteredItems を見ます。",
+        boundary: "state の値を各所から直接変えず、選択変更の窓口を使います。"
+      },
+      {
+        label: "安全に整える",
+        title: "共通処理と検査: 外から来る値を信用しすぎない",
+        summary: "文字列の安全な表示、データ形式の検査、パス種別の判定を担当します。",
+        flow: ["toSafeString / toHtml", "inspectCatalog", "normalize", "利用処理"],
+        start: "画面へ文字を出すなら toHtml、読み込むデータなら inspectCatalog を確認します。",
+        boundary: "外部データや入力値を、そのまま innerHTML へ入れません。"
+      }
+    ];
+
     const storyVisual = document.getElementById("storyVisual");
     const storyExplain = document.getElementById("storyExplain");
     function showStory(key) {
@@ -378,6 +506,20 @@
     }
     document.querySelectorAll(".story-tab").forEach(button => button.addEventListener("click", () => showStory(button.dataset.story)));
     showStory("input");
+
+    const codeMapMenu = document.getElementById("codeMapMenu");
+    const codeMapDetail = document.getElementById("codeMapDetail");
+    function showCodeArea(index) {
+      const area = codeAreas[index];
+      codeMapDetail.innerHTML = `<div class="eyebrow">責務のまとまり</div><h3>${area.title}</h3><p>${area.summary}</p><div class="responsibility-flow">${area.flow.map((name, flowIndex) => `${flowIndex ? "<i>→</i>" : ""}<span>${name}</span>`).join("")}</div><div class="code-map-notes"><div class="code-map-note"><strong>最初に見る場所</strong><p>${area.start}</p></div><div class="code-map-note"><strong>越えない境界</strong><p>${area.boundary}</p></div></div>`;
+      document.querySelectorAll(".code-map-button").forEach((button, buttonIndex) => button.classList.toggle("active", buttonIndex === index));
+    }
+    codeMapMenu.innerHTML = codeAreas.map((area, index) => `<button class="code-map-button" data-code-area="${index}">${area.label}</button>`).join("");
+    codeMapMenu.addEventListener("click", event => {
+      const button = event.target.closest("[data-code-area]");
+      if (button) showCodeArea(Number(button.dataset.codeArea));
+    });
+    showCodeArea(0);
 
     const changeGrid = document.getElementById("changeGrid");
     const changeDetail = document.getElementById("changeDetail");
