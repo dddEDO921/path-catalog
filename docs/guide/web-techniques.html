@@ -31,7 +31,93 @@
       <tr><td><code>try</code> / <code>catch</code></td><td>保存や読込の失敗を受け止め、画面へ伝える。</td><td><code>commitCatalogChange</code>、localStorage操作。</td></tr>
     </tbody></table></section>
 
-    <section><div class="section-kicker">04 / IMPLEMENTATION PATTERNS</div><h2>規模を抑えるための実装パターン</h2><div style="display:grid;gap:14px">
+    <section><div class="section-kicker">04 / SAMPLE CODE</div><h2>短いサンプルコードで見る</h2><p class="lead">実装の考え方だけを取り出した例です。実ファイルでは、これに入力検査やエラー表示が加わります。</p><div class="sample-grid">
+      <article class="card sample-card"><div class="code-head">dialog: 開く・閉じるを共通化する</div><pre><code>&lt;dialog id="searchDialog"&gt;
+  &lt;input id="searchInput"&gt;
+&lt;/dialog&gt;
+
+const dialogController = {
+  open: (id) =&gt; $(id)?.showModal(),
+  close: (id) =&gt; $(id)?.close(),
+};
+
+dialogController.open("searchDialog");</code></pre><div class="why"><strong>見る場所:</strong> <code>dialogController</code>、<code>openSearchDialog</code></div></article>
+      <article class="card sample-card"><div class="code-head">datalist: 自由入力と候補を両立する</div><pre><code>&lt;input id="addTab" list="addTabOptions"&gt;
+&lt;datalist id="addTabOptions"&gt;&lt;/datalist&gt;
+
+const setDatalistOptions = (id, values) =&gt; {
+  $(id).innerHTML = values
+    .map((value) =&gt;
+      `&lt;option value="${toHtml(value)}"&gt;&lt;/option&gt;`)
+    .join("");
+};</code></pre><div class="why"><strong>見る場所:</strong> <code>setDatalistOptions</code>、<code>refreshAddDialogOptions</code></div></article>
+      <article class="card sample-card"><div class="code-head">イベント委譲: 動的な一覧をまとめて扱う</div><pre><code>&lt;section id="list"&gt;&lt;/section&gt;
+
+list.addEventListener("click", (event) =&gt; {
+  const button = event.target.closest("[data-path-details]");
+  if (!button) return;
+
+  const id = Number(button.dataset.pathDetails);
+  openPathDetailsDialog(findItem(id));
+});</code></pre><div class="why"><strong>ポイント:</strong> 一覧を再描画しても、親のイベント登録はそのまま使えます。</div></article>
+      <article class="card sample-card"><div class="code-head">localStorage: JSONへ変換して保存する</div><pre><code>const storage = {
+  readJson: (key) =&gt; {
+    const value = localStorage.getItem(key);
+    return value === null ? null : JSON.parse(value);
+  },
+  writeJson: (key, value) =&gt;
+    localStorage.setItem(key, JSON.stringify(value)),
+};
+
+storage.writeJson("pathCatalog.catalog.v1", catalog);</code></pre><div class="why"><strong>注意:</strong> localStorageは文字列保存なので、構造化データはJSONへ変換します。</div></article>
+      <article class="card sample-card"><div class="code-head">安全なHTML生成: 値をエスケープする</div><pre><code>const escapeHtml = (str) =&gt;
+  str.replace(/[&amp;&lt;&gt;"']/g, (m) =&gt; ({
+    "&amp;": "&amp;amp;",
+    "&lt;": "&amp;lt;",
+    "&gt;": "&amp;gt;",
+    '"': "&amp;quot;",
+    "'": "&amp;#39;",
+  }[m]));
+
+const row = `&lt;span&gt;${escapeHtml(name)}&lt;/span&gt;`;</code></pre><div class="why"><strong>理由:</strong> data.jsや入力値をHTMLとして実行させないためです。</div></article>
+      <article class="card sample-card"><div class="code-head">data.js読み込み: 実行せずJSONだけ読む</div><pre><code>const parseDataJs = (text) =&gt; {
+  const match = text.match(
+    /^\s*window\.PATH_CATALOG\s*=\s*([\s\S]*?)\s*;\s*$/
+  );
+  if (!match) throw new Error("形式が違います");
+
+  const catalog = JSON.parse(match[1]);
+  inspectCatalog(catalog, { strict: true });
+  return catalog;
+};</code></pre><div class="why"><strong>ポイント:</strong> <code>eval</code>せず、決めた形のJSON部分だけを解析します。</div></article>
+      <article class="card sample-card"><div class="code-head">Blob: data.jsを書き出す</div><pre><code>const exportData = (catalog) =&gt; {
+  const text = `window.PATH_CATALOG = ${
+    JSON.stringify(catalog, null, 2)
+  };\n`;
+  const blob = new Blob([text], { type: "text/javascript" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "data.js";
+  link.click();
+  URL.revokeObjectURL(url);
+};</code></pre><div class="why"><strong>見る場所:</strong> <code>buildDataJs</code>、<code>exportCatalogData</code></div></article>
+      <article class="card sample-card"><div class="code-head">build / apply / render: 役割を分ける</div><pre><code>const buildListRow = (item) =&gt;
+  `&lt;li data-copy="${toHtml(item.path)}"&gt;
+     ${toHtml(item.name)}
+   &lt;/li&gt;`;
+
+const applyMain = (html) =&gt; {
+  $("list").innerHTML = html;
+};
+
+const renderMain = () =&gt; {
+  applyMain(items.map(buildListRow).join(""));
+};</code></pre><div class="why"><strong>利点:</strong> HTML生成、DOM反映、再描画の責務が混ざりにくくなります。</div></article>
+    </div></section>
+
+    <section><div class="section-kicker">05 / IMPLEMENTATION PATTERNS</div><h2>規模を抑えるための実装パターン</h2><div style="display:grid;gap:14px">
       <article class="card pattern"><div><h3>イベント委譲</h3><p>親要素へ1つだけイベントを登録する。</p></div><div><p><code>list.addEventListener("click", ...)</code> と <code>event.target.closest("[data-path-details]")</code>を組み合わせます。再描画で子要素が入れ替わっても、イベントを登録し直す必要がありません。</p></div></article>
       <article class="card pattern"><div><h3>IIFEで閉じ込める</h3><p>内部変数を外へ漏らさない。</p></div><div><p><code>catalogModel</code>、<code>menuController</code>、<code>noteTooltip</code>は即時実行関数で作られています。外側へ公開する操作だけを<code>return</code>します。</p></div></article>
       <article class="card pattern"><div><h3>build / apply / render</h3><p>HTML生成とDOM更新を分ける。</p></div><div><p><code>build...Html</code>は文字列を作り、<code>apply...</code>はDOMへ反映し、<code>render...</code>が両者をまとめます。変更箇所とテスト対象を絞りやすくします。</p></div></article>
@@ -39,14 +125,14 @@
       <article class="card pattern"><div><h3>状態から再描画する</h3><p>DOMを正本にしない。</p></div><div><p>選択状態は<code>state</code>、データは<code>catalog</code>と<code>state.all</code>へ持ちます。画面はそれらから再生成するため、表示とデータのずれを抑えられます。</p></div></article>
     </div></section>
 
-    <section><div class="section-kicker">05 / SAFETY</div><h2>安全に扱うための技</h2><div class="tech-grid">
+    <section><div class="section-kicker">06 / SAFETY</div><h2>安全に扱うための技</h2><div class="tech-grid">
       <article class="card tech-card"><span class="tech-tag">XSS</span><h3>画面へ出す文字をエスケープ</h3><p>利用者入力やdata.jsの文字列をHTMLとして解釈させません。</p><div class="tech-meta"><div><strong>実装:</strong> <code>toHtml</code> / <code>escapeHtml</code></div><div><strong>原則:</strong> 動的な値をテンプレートへ入れる前に変換する。</div></div></article>
       <article class="card tech-card"><span class="tech-tag">IMPORT</span><h3><code>eval</code>を使わずJSON解析</h3><p>data.jsをJavaScriptとして実行せず、決められた代入文からJSON部分だけを取り出します。</p><div class="tech-meta"><div><strong>実装:</strong> 正規表現 → <code>JSON.parse</code> → <code>inspectCatalog</code></div><div><strong>効果:</strong> 読み込んだファイル内の任意コードを実行しない。</div></div></article>
       <article class="card tech-card"><span class="tech-tag">VALIDATION</span><h3>外部データを検査する</h3><p>配列構造、文字列型、必須項目を確認してから利用します。</p><div class="tech-meta"><div><strong>通常起動:</strong> 警告しながら表示を継続。</div><div><strong>インポート:</strong> strict検査で不正なら全体を拒否。</div></div></article>
       <article class="card tech-card"><span class="tech-tag">NORMALIZATION</span><h3>文字列とデータ形を整える</h3><p>未定義や表記ゆれを、後続処理が扱いやすい形へ変換します。</p><div class="tech-meta"><div><strong>実装:</strong> <code>toSafeString</code> / <code>normalize</code></div><div><strong>検索:</strong> Unicode NFKC正規化と小文字化を使う。</div></div></article>
     </div></section>
 
-    <section><div class="section-kicker">06 / WHAT IS NOT USED</div><h2>あえて使っていないもの</h2><div class="two-col"><article class="card pad"><h3>フロントエンドフレームワーク</h3><p>ReactやVueは使っていません。ビルド不要でHTMLを開くだけで動かすことを優先しています。</p></article><article class="card pad"><h3>バックエンド・データベース</h3><p>サーバーへ送信せず、ブラウザ内のlocalStorageとdata.jsで完結します。</p></article><article class="card pad"><h3>モジュール分割</h3><p>製品のJavaScriptとCSSはHTML内に置き、配布する製品を2ファイルに保っています。</p></article><article class="card pad"><h3>任意JavaScriptの実行</h3><p>インポートしたdata.jsは実行せず、JSON互換部分だけを安全に解析します。</p></article></div></section>
+    <section><div class="section-kicker">07 / WHAT IS NOT USED</div><h2>あえて使っていないもの</h2><div class="two-col"><article class="card pad"><h3>フロントエンドフレームワーク</h3><p>ReactやVueは使っていません。ビルド不要でHTMLを開くだけで動かすことを優先しています。</p></article><article class="card pad"><h3>バックエンド・データベース</h3><p>サーバーへ送信せず、ブラウザ内のlocalStorageとdata.jsで完結します。</p></article><article class="card pad"><h3>モジュール分割</h3><p>製品のJavaScriptとCSSはHTML内に置き、配布する製品を2ファイルに保っています。</p></article><article class="card pad"><h3>任意JavaScriptの実行</h3><p>インポートしたdata.jsは実行せず、JSON互換部分だけを安全に解析します。</p></article></div></section>
   </main>
 </body>
 </html>
