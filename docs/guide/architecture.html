@@ -2,7 +2,7 @@
 <html lang="ja">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>アーキテクチャ | パスノート</title><link rel="stylesheet" href="guide.css"></head>
 <body>
-  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a class="active" href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a></nav></header>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a class="active" href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a></nav></header>
   <main class="page">
     <section class="hero"><div class="eyebrow">ARCHITECTURE</div><h1>データが動く仕組みを<br>先に理解する。</h1><p class="lead">コードの詳細へ入る前に、製品ファイル、保存場所、画面用データの関係を理解します。</p></section>
     <section><div class="section-kicker">01 / PRODUCT FILES</div><h2>利用者へ渡すのは2ファイル</h2><div class="two-col"><article class="card pad"><h3><code>path-note.html</code></h3><p>画面、見た目、追加・検索・編集などの処理、ブラウザへの保存処理を持ちます。</p></article><article class="card pad"><h3><code>data.js</code></h3><p>初回表示のデータです。ブラウザから書き出し、バックアップや受け渡しにも使います。</p></article></div><div class="point"><strong>資料は分割する</strong><br>製品は配りやすさを優先して2ファイルに保ちます。開発資料は、理解しやすさを優先して役割別に分けます。</div></section>

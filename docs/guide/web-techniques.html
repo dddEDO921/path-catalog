@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Web技術と実装パターン | パスノート</title><link rel="stylesheet" href="guide.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a class="active" href="web-techniques.html">Web技術</a></nav></header>
+  <main class="page">
+    <section class="hero"><div class="eyebrow">WEB TECHNIQUES</div><h1>書き方ではなく、<br>使う理由から知る。</h1><p class="lead">パスノートで実際に使っているHTML、ブラウザAPI、JavaScriptの技を、解決したい問題と結びつけて整理します。</p></section>
+
+    <section><div class="section-kicker">01 / HTML</div><h2>HTML標準機能を使う</h2><div class="tech-grid">
+      <article class="card tech-card"><span class="tech-tag">HTML</span><h3><code>&lt;dialog&gt;</code></h3><p>追加、詳細、検索などを、画面上に重ねて表示します。</p><div class="tech-meta"><div><strong>利点:</strong> 開閉状態、Escで閉じる動作、フォーカス制御をブラウザが支援する。</div><div><strong>実装:</strong> <code>showModal()</code> / <code>close()</code></div></div></article>
+      <article class="card tech-card"><span class="tech-tag">HTML</span><h3><code>&lt;datalist&gt;</code></h3><p>自由入力を残しながら、既存のタブやカテゴリを候補表示します。</p><div class="tech-meta"><div><strong>利点:</strong> 新規入力と既存選択を同じ入力欄で扱える。</div><div><strong>実装:</strong> <code>addTabOptions</code> / <code>setDatalistOptions</code></div></div></article>
+      <article class="card tech-card"><span class="tech-tag">HTML</span><h3><code>data-*</code> 属性</h3><p>動的に生成したボタンや一覧行へ、操作対象や種類を埋め込みます。</p><div class="tech-meta"><div><strong>利点:</strong> 要素ごとに個別のイベント登録をしなくてよい。</div><div><strong>実装:</strong> <code>data-path-details</code> / <code>data-add-action</code></div></div></article>
+      <article class="card tech-card"><span class="tech-tag">ACCESSIBILITY</span><h3><code>aria-*</code> 属性</h3><p>メニューの開閉状態、ショートカット、ボタンの意味を支援技術へ伝えます。</p><div class="tech-meta"><div><strong>利点:</strong> 見た目だけに依存しない操作説明になる。</div><div><strong>実装:</strong> <code>aria-expanded</code> / <code>aria-controls</code> / <code>aria-keyshortcuts</code></div></div></article>
+    </div></section>
+
+    <section><div class="section-kicker">02 / BROWSER APIS</div><h2>サーバーなしで機能を作る</h2><div class="tech-grid">
+      <article class="card tech-card"><span class="tech-tag">STORAGE</span><h3><code>localStorage</code></h3><p>ブラウザ内へカタログ、表示モード、開閉状態を保存します。</p><div class="tech-meta"><div><strong>特徴:</strong> 文字列だけを保存するため、データはJSONへ変換する。</div><div><strong>注意:</strong> ブラウザや端末を越えて自動同期されない。</div></div></article>
+      <article class="card tech-card"><span class="tech-tag">FILE</span><h3><code>Blob</code> とObject URL</h3><p>メモリ上で作ったdata.jsを、ファイルとしてダウンロードします。</p><div class="tech-meta"><div><strong>流れ:</strong> <code>Blob</code> → <code>URL.createObjectURL</code> → 一時リンクをクリック。</div><div><strong>後始末:</strong> <code>URL.revokeObjectURL</code>でURLを解放する。</div></div></article>
+      <article class="card tech-card"><span class="tech-tag">CLIPBOARD</span><h3>Clipboard API</h3><p>一覧のパスをクリックしてクリップボードへコピーします。</p><div class="tech-meta"><div><strong>実装:</strong> <code>navigator.clipboard.writeText</code></div><div><strong>工夫:</strong> 利用できない環境向けの代替コピー処理を持つ。</div></div></article>
+      <article class="card tech-card"><span class="tech-tag">TIMING</span><h3><code>requestAnimationFrame</code></h3><p>ダイアログを開いた直後、表示が反映された次の描画タイミングで入力欄へフォーカスします。</p><div class="tech-meta"><div><strong>理由:</strong> 開く処理とフォーカス処理のタイミング競合を避ける。</div><div><strong>実装:</strong> <code>openSearchDialog</code></div></div></article>
+    </div></section>
+
+    <section><div class="section-kicker">03 / JAVASCRIPT LANGUAGE</div><h2>よく使うJavaScriptの技</h2><table class="contract-table"><thead><tr><th>技</th><th>目的</th><th>パスノートでの例</th></tr></thead><tbody>
+      <tr><td>配列の <code>map</code> / <code>filter</code> / <code>flatMap</code></td><td>元データを直接壊さず、表示や候補に必要な配列を作る。</td><td>一覧HTML生成、検索、分類候補の収集。</td></tr>
+      <tr><td><code>Set</code></td><td>重複のない値や、開閉状態の集合を扱う。</td><td><code>dedupe</code>、<code>collapsedSubcats</code>。</td></tr>
+      <tr><td><code>Map</code></td><td>計算済みの値をキーごとに記憶する。</td><td>カテゴリ色の<code>colorCache</code>。</td></tr>
+      <tr><td>Optional chaining <code>?.</code></td><td>途中の値が存在しなくても例外にせず、安全に参照する。</td><td><code>catalog?.[t]?.[1]</code>、<code>dialog?.open</code>。</td></tr>
+      <tr><td>分割代入</td><td>オブジェクトから必要な値だけを短く取り出す。</td><td><code>THEME_CONFIG.map(({ key, label }) =&gt; ...)</code></td></tr>
+      <tr><td>テンプレートリテラル</td><td>値を埋め込んだHTMLやdata.js文字列を作る。</td><td><code>buildListRow</code>、<code>buildDataJs</code>。</td></tr>
+      <tr><td><code>async</code> / <code>await</code></td><td>ファイル読込やコピーなど、完了を待つ処理を順番に書く。</td><td><code>importCatalogData</code>、<code>copyTextToClipboard</code>。</td></tr>
+      <tr><td><code>try</code> / <code>catch</code></td><td>保存や読込の失敗を受け止め、画面へ伝える。</td><td><code>commitCatalogChange</code>、localStorage操作。</td></tr>
+    </tbody></table></section>
+
+    <section><div class="section-kicker">04 / IMPLEMENTATION PATTERNS</div><h2>規模を抑えるための実装パターン</h2><div style="display:grid;gap:14px">
+      <article class="card pattern"><div><h3>イベント委譲</h3><p>親要素へ1つだけイベントを登録する。</p></div><div><p><code>list.addEventListener("click", ...)</code> と <code>event.target.closest("[data-path-details]")</code>を組み合わせます。再描画で子要素が入れ替わっても、イベントを登録し直す必要がありません。</p></div></article>
+      <article class="card pattern"><div><h3>IIFEで閉じ込める</h3><p>内部変数を外へ漏らさない。</p></div><div><p><code>catalogModel</code>、<code>menuController</code>、<code>noteTooltip</code>は即時実行関数で作られています。外側へ公開する操作だけを<code>return</code>します。</p></div></article>
+      <article class="card pattern"><div><h3>build / apply / render</h3><p>HTML生成とDOM更新を分ける。</p></div><div><p><code>build...Html</code>は文字列を作り、<code>apply...</code>はDOMへ反映し、<code>render...</code>が両者をまとめます。変更箇所とテスト対象を絞りやすくします。</p></div></article>
+      <article class="card pattern"><div><h3>変更前を複製する</h3><p>保存失敗時に元へ戻す。</p></div><div><p><code>commitCatalogChange</code>は変更前のcatalogを複製します。変更後のlocalStorage保存に失敗した場合、元のデータへ戻します。</p></div></article>
+      <article class="card pattern"><div><h3>状態から再描画する</h3><p>DOMを正本にしない。</p></div><div><p>選択状態は<code>state</code>、データは<code>catalog</code>と<code>state.all</code>へ持ちます。画面はそれらから再生成するため、表示とデータのずれを抑えられます。</p></div></article>
+    </div></section>
+
+    <section><div class="section-kicker">05 / SAFETY</div><h2>安全に扱うための技</h2><div class="tech-grid">
+      <article class="card tech-card"><span class="tech-tag">XSS</span><h3>画面へ出す文字をエスケープ</h3><p>利用者入力やdata.jsの文字列をHTMLとして解釈させません。</p><div class="tech-meta"><div><strong>実装:</strong> <code>toHtml</code> / <code>escapeHtml</code></div><div><strong>原則:</strong> 動的な値をテンプレートへ入れる前に変換する。</div></div></article>
+      <article class="card tech-card"><span class="tech-tag">IMPORT</span><h3><code>eval</code>を使わずJSON解析</h3><p>data.jsをJavaScriptとして実行せず、決められた代入文からJSON部分だけを取り出します。</p><div class="tech-meta"><div><strong>実装:</strong> 正規表現 → <code>JSON.parse</code> → <code>inspectCatalog</code></div><div><strong>効果:</strong> 読み込んだファイル内の任意コードを実行しない。</div></div></article>
+      <article class="card tech-card"><span class="tech-tag">VALIDATION</span><h3>外部データを検査する</h3><p>配列構造、文字列型、必須項目を確認してから利用します。</p><div class="tech-meta"><div><strong>通常起動:</strong> 警告しながら表示を継続。</div><div><strong>インポート:</strong> strict検査で不正なら全体を拒否。</div></div></article>
+      <article class="card tech-card"><span class="tech-tag">NORMALIZATION</span><h3>文字列とデータ形を整える</h3><p>未定義や表記ゆれを、後続処理が扱いやすい形へ変換します。</p><div class="tech-meta"><div><strong>実装:</strong> <code>toSafeString</code> / <code>normalize</code></div><div><strong>検索:</strong> Unicode NFKC正規化と小文字化を使う。</div></div></article>
+    </div></section>
+
+    <section><div class="section-kicker">06 / WHAT IS NOT USED</div><h2>あえて使っていないもの</h2><div class="two-col"><article class="card pad"><h3>フロントエンドフレームワーク</h3><p>ReactやVueは使っていません。ビルド不要でHTMLを開くだけで動かすことを優先しています。</p></article><article class="card pad"><h3>バックエンド・データベース</h3><p>サーバーへ送信せず、ブラウザ内のlocalStorageとdata.jsで完結します。</p></article><article class="card pad"><h3>モジュール分割</h3><p>製品のJavaScriptとCSSはHTML内に置き、配布する製品を2ファイルに保っています。</p></article><article class="card pad"><h3>任意JavaScriptの実行</h3><p>インポートしたdata.jsは実行せず、JSON互換部分だけを安全に解析します。</p></article></div></section>
+  </main>
+</body>
+</html>
