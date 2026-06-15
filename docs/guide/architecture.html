@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>アーキテクチャ | パスノート</title><link rel="stylesheet" href="guide.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a class="active" href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a></nav></header>
+  <main class="page">
+    <section class="hero"><div class="eyebrow">ARCHITECTURE</div><h1>データが動く仕組みを<br>先に理解する。</h1><p class="lead">コードの詳細へ入る前に、製品ファイル、保存場所、画面用データの関係を理解します。</p></section>
+    <section><div class="section-kicker">01 / PRODUCT FILES</div><h2>利用者へ渡すのは2ファイル</h2><div class="two-col"><article class="card pad"><h3><code>path-note.html</code></h3><p>画面、見た目、追加・検索・編集などの処理、ブラウザへの保存処理を持ちます。</p></article><article class="card pad"><h3><code>data.js</code></h3><p>初回表示のデータです。ブラウザから書き出し、バックアップや受け渡しにも使います。</p></article></div><div class="point"><strong>資料は分割する</strong><br>製品は配りやすさを優先して2ファイルに保ちます。開発資料は、理解しやすさを優先して役割別に分けます。</div></section>
+    <section><div class="section-kicker">02 / DATA FLOW</div><h2>普段の正本はlocalStorage</h2><div class="flow"><div class="flow-node"><h3>data.js</h3><span>初回表示の種</span></div><i>→</i><div class="flow-node" style="background:var(--green-soft)"><h3>localStorage</h3><span>日常利用の最新データ</span></div><i>→</i><div class="flow-node" style="background:var(--orange-soft)"><h3>新しい data.js</h3><span>書き出したバックアップ</span></div></div><div class="point"><code>data.js</code>を直接編集しても、すでにlocalStorageへデータがあるブラウザには自動反映されません。</div></section>
+    <section><div class="section-kicker">03 / TWO DATA SHAPES</div><h2>保存用と画面用を使い分ける</h2><div class="two-col"><article class="card code-card"><div class="code-head">保存用: catalog</div><pre><code>["共通", [
+  ["申請", [
+    ["経費", [
+      ["経費精算", "\\\\server\\expense", "年度ごと"]
+    ]]
+  ]]
+]]</code></pre><div class="why">分類の順番と、空の分類を保持できます。</div></article><article class="card code-card"><div class="code-head">画面用: state.all</div><pre><code>{
+  tab: "共通",
+  category: "申請",
+  subCategory: "経費",
+  name: "経費精算",
+  path: "\\\\server\\expense",
+  note: "年度ごと",
+  _meta: { t: 0, c: 0, s: 0, i: 0 }
+}</code></pre><div class="why">検索、絞り込み、一覧表示が簡単になります。</div></article></div></section>
+    <section><div class="section-kicker">04 / CHANGE FLOW</div><h2>データ変更の共通ルート</h2><div class="reading-flow"><div><b>1</b><span><code>catalogModel</code><br>階層データを変更</span></div><i>→</i><div><b>2</b><span><code>commitCatalogChange</code><br>保存・失敗時復元</span></div><i>→</i><div><b>3</b><span><code>refreshCatalog</code><br>検査・平坦化・再描画</span></div></div></section>
+    <section><div class="section-kicker">05 / DECISIONS</div><h2>設計判断と代償</h2>
+      <details open><summary>製品のJavaScriptとCSSを別ファイルへ分割しない</summary><div class="decision-body"><div class="decision-cell"><strong>優先</strong><p>利用者が扱う製品を2ファイルに保つ。</p></div><div class="decision-cell"><strong>代償</strong><p>HTMLが大きくなる。</p></div><div class="decision-cell"><strong>対策</strong><p>章コメントと役割別資料で補う。</p></div></div></details>
+      <details><summary>フレームワークを使わない</summary><div class="decision-body"><div class="decision-cell"><strong>優先</strong><p>ビルド不要で開くだけで動く。</p></div><div class="decision-cell"><strong>代償</strong><p>状態とDOM更新を自分たちで整理する。</p></div><div class="decision-cell"><strong>対策</strong><p>build・apply・renderの役割を分ける。</p></div></div></details>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>変更ガイド | パスノート</title><link rel="stylesheet" href="guide.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a class="active" href="change-guide.html">変更ガイド</a></nav></header>
+  <main class="page">
+    <section class="hero"><div class="eyebrow">CHANGE GUIDE</div><h1>変更範囲を絞って、<br>最後まで確認する。</h1><p class="lead">実現したいことから入口を探し、データ・表示・操作への影響を整理してから実装します。</p></section>
+    <section><div class="section-kicker">01 / START FROM YOUR GOAL</div><h2>変更したいことを選ぶ</h2><div class="change-grid" id="changeGrid"></div><article class="card detail" id="changeDetail"></article></section>
+    <section><div class="section-kicker">02 / SMALL TUTORIAL</div><h2>小さな変更を最後まで追う</h2><p class="lead">例として「検索結果にノートを表示する」を考えます。保存形式を変えず、表示だけを変える変更です。</p><article class="card tutorial-steps">
+      <div class="tutorial-step"><span class="step-number">1</span><h3>入口を探す</h3><p>検索結果の見た目を作る関数を特定します。</p><div class="mini-code">buildSearchResultHtml</div></div>
+      <div class="tutorial-step"><span class="step-number">2</span><h3>データを確認</h3><p>引数のitemには、すでにノートがあります。</p><div class="mini-code">item.note</div></div>
+      <div class="tutorial-step"><span class="step-number">3</span><h3>安全に表示する</h3><p>HTML文字列へ追加し、安全な文字列へ変換します。</p><div class="mini-code">${toHtml(item.note)}</div></div>
+      <div class="tutorial-step"><span class="step-number">4</span><h3>影響を確認する</h3><p>空・長いノート・大量結果を確認します。</p><div class="mini-code">renderSearchResults</div></div>
+    </article><div class="checklist" style="margin-top:16px"><div class="check-item"><strong>変更不要</strong><p><code>data.js</code>とlocalStorage。</p></div><div class="check-item"><strong>変更する</strong><p><code>buildSearchResultHtml</code>と必要なCSS。</p></div><div class="check-item"><strong>確認する</strong><p>検索、詳細、モバイル幅、長い文字列。</p></div></div></section>
+    <section><div class="section-kicker">03 / BEFORE CODING</div><h2>実装前に答えること</h2><div class="two-col"><article class="card pad"><h3>データは変わるか</h3><p>保存形式が変わるなら、既存localStorageと過去のdata.jsの互換性を決めます。</p></article><article class="card pad"><h3>どの操作から始まるか</h3><p>クリック、フォーム送信、キー操作など、入口となるイベントを特定します。</p></article><article class="card pad"><h3>どの表示へ影響するか</h3><p>スタンダード・オープン・コンパクト、検索、詳細画面を確認します。</p></article><article class="card pad"><h3>失敗したらどうなるか</h3><p>保存失敗、壊れたデータ、対象が見つからない場合を考えます。</p></article></div></section>
+    <section><div class="section-kicker">04 / DONE CHECK</div><h2>完了の基準</h2><div class="checklist"><div class="check-item"><strong>構文</strong><p>インラインJavaScriptの構文エラーがない。</p></div><div class="check-item"><strong>主要操作</strong><p>対象機能と近接する操作が動く。</p></div><div class="check-item"><strong>画面幅</strong><p>PCとモバイルで崩れない。</p></div><div class="check-item"><strong>データ</strong><p>再読込・書き出し・読み込み後も保たれる。</p></div><div class="check-item"><strong>失敗時</strong><p>エラーが利用者へ伝わり、データを壊さない。</p></div><div class="check-item"><strong>資料</strong><p>設計や操作が変わった場合は対応資料も直す。</p></div></div></section>
+  </main>
+  <script>
+    const changes = [
+      {title:"一覧の見た目を変えたい",note:"名前、パス、カード、表示モード",where:"描画の章とCSS",flow:"buildListRow → buildMainHtml → renderMain",check:"3表示モードとモバイル幅"},
+      {title:"検索を変えたい",note:"検索対象、結果、操作",where:"getSearchResults と検索ダイアログ",flow:"入力 → getSearchResults → buildSearchResultHtml",check:"大量一致、コピー、詳細表示"},
+      {title:"入力項目を増やしたい",note:"パスに新しい情報を追加",where:"data.js構造、inspectCatalog、追加・編集フォーム",flow:"入力 → catalogModel → 保存 → normalize → 描画",check:"既存データとの互換性"},
+      {title:"保存方法を変えたい",note:"localStorage、読み込み、書き出し",where:"設定・永続化とデータ入出力",flow:"loadCatalog / saveCatalog / buildDataJs / parseDataJs",check:"初回・既存利用者・バックアップ"},
+      {title:"新しい画面を追加したい",note:"ダイアログ、メニュー、操作",where:"静的HTML、dialogController、bind",flow:"HTML → 開く処理 → イベント登録",check:"狭い画面、閉じ方、フォーカス"},
+      {title:"データを変更したい",note:"追加、編集、削除、並び替え",where:"catalogModel と commitCatalogChange",flow:"複製 → 変更 → 保存 → 再描画",check:"保存失敗時に元へ戻ること"}
+    ];
+    const grid=document.getElementById("changeGrid"), detail=document.getElementById("changeDetail");
+    function showChange(i){const x=changes[i];detail.innerHTML=`<h3>${x.title}</h3><div class="detail-grid"><div class="detail-cell"><strong>最初に見る場所</strong><p>${x.where}</p></div><div class="detail-cell"><strong>処理のつながり</strong><p>${x.flow}</p></div><div class="detail-cell"><strong>必ず確認すること</strong><p>${x.check}</p></div></div>`;document.querySelectorAll(".change-card").forEach((x,n)=>x.classList.toggle("active",n===i));}
+    grid.innerHTML=changes.map((x,i)=>`<article class="card change-card" data-change="${i}"><h3>${x.title}</h3><p>${x.note}</p></article>`).join("");
+    grid.addEventListener("click",e=>{const card=e.target.closest("[data-change]");if(card)showChange(Number(card.dataset.change));});showChange(0);
+  </script>
+</body>
+</html>
