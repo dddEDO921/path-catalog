@@ -6,14 +6,41 @@
   <main class="page">
     <section class="hero"><div class="eyebrow">CSS GUIDE</div><h1>CSSは、<br>変数と上書きで読む。</h1><p class="lead">パスノートのCSSはHTML内にあります。ファイル分割はしませんが、章コメント、CSS変数、表示モードごとの上書きで追えるようにしています。</p></section>
 
-    <section><div class="section-kicker">01 / STRUCTURE</div><h2>CSSの章構成</h2><table class="contract-table"><thead><tr><th>章コメント</th><th>読む目的</th><th>代表セレクタ</th></tr></thead><tbody>
+    <section><div class="section-kicker">01 / LAYERS</div><h2>CSSは3層でできている</h2><div class="reading-flow"><div><b>1</b><span>Tailwind CDN<br>レイアウトと余白</span></div><i>→</i><div><b>2</b><span>生CSS<br>意味のある部品</span></div><i>→</i><div><b>3</b><span>CSS変数<br>表示モード</span></div></div><div class="point"><strong>役割を混ぜない</strong><br>Tailwindは細かい配置を素早く書くために使います。色、テーマ、状態、コンポーネントの意味は生CSS側へ寄せます。</div></section>
+
+    <section><div class="section-kicker">02 / TAILWIND</div><h2>Tailwind CDNの使い方</h2><p class="lead">パスノートはビルドなしで動かすため、TailwindはCDN版を使っています。HTML内のユーティリティクラスで、レイアウト・余白・グリッド・レスポンシブ指定を素早く書きます。</p><div class="two-col">
+      <article class="card pad"><h3>Tailwindに任せるもの</h3><ul><li>flex / grid</li><li>padding / margin</li><li>width / min-width</li><li>gap</li><li>position</li><li>簡単な文字サイズ</li></ul></article>
+      <article class="card pad"><h3>Tailwindに任せないもの</h3><ul><li>テーマ色</li><li>表示モード差分</li><li>コンポーネントの状態</li><li>カテゴリ色</li><li>dialogの見た目</li><li>プロダクト固有の命名</li></ul></article>
+    </div><pre style="margin-top:18px"><code>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;
+&lt;script&gt;
+  tailwind.config = {
+    theme: {
+      fontSize: {
+        xxs: "10px",
+        xs: "11px",
+        sm: "12px",
+        base: "13px"
+      }
+    }
+  };
+&lt;/script&gt;</code></pre><div class="point"><strong>CDN版の前提</strong><br>Tailwindを使っていても、ビルド工程はありません。利用者が扱う製品ファイルを増やさないための選択です。</div></section>
+
+    <section><div class="section-kicker">03 / UTILITY CLASSES</div><h2>Tailwindユーティリティの読み方</h2><table class="contract-table"><thead><tr><th>種類</th><th>例</th><th>意味</th><th>CSSへ移す目安</th></tr></thead><tbody>
+      <tr><td>レイアウト</td><td><code>flex</code>、<code>grid</code>、<code>grid-cols-[260px_1fr]</code></td><td>画面の骨格を作る。</td><td>複数箇所で同じ構造を使うならCSS化する。</td></tr>
+      <tr><td>余白</td><td><code>px-5</code>、<code>py-4</code>、<code>gap-3</code></td><td>局所的な間隔を調整する。</td><td>意味のある部品の標準余白ならCSS化する。</td></tr>
+      <tr><td>配置</td><td><code>sticky</code>、<code>absolute</code>、<code>right-0</code></td><td>メニューやヘッダーの位置を決める。</td><td>状態やテーマと連動するならCSS化する。</td></tr>
+      <tr><td>表示制御</td><td><code>hidden</code>、<code>overflow-y-auto</code></td><td>表示・スクロールの基礎。</td><td>JSが切り替える状態名なら意味のあるクラスを検討する。</td></tr>
+      <tr><td>レスポンシブ</td><td><code>sm:grid-cols-2</code>、<code>sm:col-span-2</code></td><td>フォームの列数を画面幅で変える。</td><td>複雑化したらCSSのmedia queryへ移す。</td></tr>
+    </tbody></table></section>
+
+    <section><div class="section-kicker">04 / STRUCTURE</div><h2>生CSSの章構成</h2><table class="contract-table"><thead><tr><th>章コメント</th><th>読む目的</th><th>代表セレクタ</th></tr></thead><tbody>
       <tr><td><code>テーマ変数</code></td><td>色、背景、文字、角丸、影、パス表示の基準値。</td><td><code>:root</code>、<code>[data-theme="open"]</code></td></tr>
       <tr><td><code>共通UI</code></td><td>表示モードをまたいで使う基本部品。</td><td><code>.tab-btn</code>、<code>.cat-btn</code>、<code>.list-row</code></td></tr>
       <tr><td><code>操作UI</code></td><td>メニュー、ダイアログ、ボタン、通知。</td><td><code>.add-menu</code>、<code>.dialog-shell</code>、<code>.primary-button</code></td></tr>
       <tr><td><code>表示モード</code></td><td>スタンダード、オープン、コンパクト固有の見た目。</td><td><code>[data-theme="open"] .cat-card</code>、<code>.compact-list</code></td></tr>
     </tbody></table></section>
 
-    <section><div class="section-kicker">02 / DESIGN TOKENS</div><h2>まずCSS変数を見る</h2><p class="lead">色や形を部品ごとに直接指定せず、変数を通して指定します。表示モードの差分も、まず変数の上書きで吸収します。</p><div class="swatch-grid">
+    <section><div class="section-kicker">05 / DESIGN TOKENS</div><h2>まずCSS変数を見る</h2><p class="lead">色や形を部品ごとに直接指定せず、変数を通して指定します。表示モードの差分も、まず変数の上書きで吸収します。</p><div class="swatch-grid">
       <article class="card swatch"><div class="swatch-color" style="background:#0f172a"></div><div class="swatch-body"><strong><code>--bg-base</code></strong><span>画面の土台。</span></div></article>
       <article class="card swatch"><div class="swatch-color" style="background:#111827"></div><div class="swatch-body"><strong><code>--bg-layer</code></strong><span>カードやヘッダー。</span></div></article>
       <article class="card swatch"><div class="swatch-color" style="background:#7c3aed"></div><div class="swatch-body"><strong><code>--accent</code></strong><span>選択と主要操作。</span></div></article>
@@ -36,7 +63,7 @@
   --path-bg: transparent;
 }</code></pre></section>
 
-    <section><div class="section-kicker">03 / VARIABLE GROUPS</div><h2>変数の役割</h2><table class="contract-table"><thead><tr><th>グループ</th><th>変数</th><th>変更時の影響</th></tr></thead><tbody>
+    <section><div class="section-kicker">06 / VARIABLE GROUPS</div><h2>変数の役割</h2><table class="contract-table"><thead><tr><th>グループ</th><th>変数</th><th>変更時の影響</th></tr></thead><tbody>
       <tr><td>背景</td><td><code>--bg-base</code>、<code>--bg-layer</code>、<code>--bg-sidebar</code>、<code>--bg-control</code></td><td>画面全体、ヘッダー、サイドバー、入力欄。</td></tr>
       <tr><td>強調</td><td><code>--accent</code>、<code>--accent-hover</code>、<code>--accent-soft</code></td><td>主要ボタン、選択状態、hover背景。</td></tr>
       <tr><td>文字</td><td><code>--text-heading</code>、<code>--text-body</code>、<code>--text-muted</code></td><td>見出し、本文、補助テキスト。</td></tr>
@@ -45,14 +72,14 @@
       <tr><td>ダイアログ</td><td><code>--dialog-backdrop</code></td><td>モーダル表示時の背景の強さ。</td></tr>
     </tbody></table></section>
 
-    <section><div class="section-kicker">04 / COMPONENT CSS</div><h2>部品CSSの読み方</h2><div class="tech-grid">
+    <section><div class="section-kicker">07 / COMPONENT CSS</div><h2>部品CSSの読み方</h2><div class="tech-grid">
       <article class="card tech-card"><span class="tech-tag">TAB</span><h3><code>.tab-btn</code></h3><p>タブはボタンですが、タブらしく下線で選択を示します。背景を強くしないことで、ヘッダーの情報量を抑えます。</p><div class="tech-meta"><div><strong>状態:</strong> <code>:hover</code>、<code>.active</code></div><div><strong>見る値:</strong> <code>border-bottom-color</code>、<code>color</code></div></div></article>
       <article class="card tech-card"><span class="tech-tag">CATEGORY</span><h3><code>.cat-btn</code></h3><p>カテゴリはサイドバーの行です。左の短いラインを伸ばして、hoverと選択を示します。</p><div class="tech-meta"><div><strong>状態:</strong> <code>.cat-btn:hover .cat-line</code>、<code>.cat-btn.active</code></div><div><strong>色:</strong> <code>--cat-color</code></div></div></article>
       <article class="card tech-card"><span class="tech-tag">PATH</span><h3><code>.list-row</code> / <code>.path-chip</code></h3><p>一覧行は透明な面から始め、hoverで操作可能性を示します。長いパスは折り返せるようにしています。</p><div class="tech-meta"><div><strong>重要:</strong> <code>word-break: break-all</code></div><div><strong>動き:</strong> <code>transform: translateY(-1px)</code></div></div></article>
       <article class="card tech-card"><span class="tech-tag">DIALOG</span><h3><code>.dialog-shell</code></h3><p>フォーム、検索、詳細で共通の面を使います。背景は<code>dialog::backdrop</code>で弱めます。</p><div class="tech-meta"><div><strong>状態:</strong> <code>dialog::backdrop</code></div><div><strong>変数:</strong> <code>--dialog-backdrop</code></div></div></article>
     </div></section>
 
-    <section><div class="section-kicker">05 / VIEW MODE OVERRIDES</div><h2>表示モードは上書きで作る</h2><p class="lead">共通UIを土台にし、表示モード固有の差分だけを下の章で上書きします。</p><div class="mode-grid">
+    <section><div class="section-kicker">08 / VIEW MODE OVERRIDES</div><h2>表示モードは上書きで作る</h2><p class="lead">共通UIを土台にし、表示モード固有の差分だけを下の章で上書きします。</p><div class="mode-grid">
       <article class="card mode-card"><h3>スタンダード</h3><p>変数定義が基準。暗色、カード、影、チップ表現を使います。</p><p><span class="function-name">[data-theme="current"]</span></p></article>
       <article class="card mode-card"><h3>オープン</h3><p>カードを消し、見出し線と余白で構成します。個別セレクタでカード周りを上書きします。</p><p><span class="function-name">[data-theme="open"] .cat-card</span></p></article>
       <article class="card mode-card"><h3>コンパクト</h3><p>カテゴリカードではなく、表形式に近い独自クラスを使います。</p><p><span class="function-name">.compact-list</span></p></article>
@@ -67,7 +94,7 @@
   grid-template-columns: 78px 110px 220px minmax(0, 1fr) 24px;
 }</code></pre></section>
 
-    <section><div class="section-kicker">06 / STATE STYLING</div><h2>状態の表現</h2><table class="contract-table"><thead><tr><th>状態</th><th>使うもの</th><th>理由</th></tr></thead><tbody>
+    <section><div class="section-kicker">09 / STATE STYLING</div><h2>状態の表現</h2><table class="contract-table"><thead><tr><th>状態</th><th>使うもの</th><th>理由</th></tr></thead><tbody>
       <tr><td>選択中</td><td><code>.active</code></td><td>タブ、カテゴリ、表示モードなど、アプリ内状態を明示する。</td></tr>
       <tr><td>hover</td><td><code>:hover</code></td><td>クリックできることを軽く示す。</td></tr>
       <tr><td>focus</td><td><code>:focus-visible</code></td><td>キーボード操作時に現在位置を示す。</td></tr>
@@ -83,14 +110,23 @@
   opacity: 0.35;
 }</code></pre></section>
 
-    <section><div class="section-kicker">07 / CATEGORY COLORS</div><h2>カテゴリ色はCSS変数で注入する</h2><p class="lead">カテゴリごとの色はJavaScriptで生成し、HTMLのstyle属性にCSS変数として渡します。CSS側はその変数を使うだけです。</p><div class="reading-flow"><div><b>1</b><span><code>colorForCat</code><br>色を作る</span></div><i>→</i><div><b>2</b><span><code>buildCategoryStyleVars</code><br>変数名へ変換</span></div><i>→</i><div><b>3</b><span><code>.cat-card</code><br>CSSで利用</span></div></div><pre style="margin-top:18px"><code>style="--cat-color: hsl(...); --cat-glow: ...;"
+    <section><div class="section-kicker">10 / CASCADE AND IMPORTANT</div><h2>カスケードと<code>!important</code></h2><p class="lead">Tailwindのユーティリティクラスと生CSSが同じ要素に当たるため、プロダクト固有の見た目では一部<code>!important</code>を使っています。乱用するのではなく、Tailwindよりテーマ変数を優先したい場所に限定します。</p><table class="contract-table"><thead><tr><th>使ってよい場面</th><th>避ける場面</th><th>例</th></tr></thead><tbody>
+      <tr><td>Tailwindの汎用色やborderを、テーマ変数で必ず上書きしたい。</td><td>単に詳細度で負けたから、とりあえず付ける。</td><td><code>.primary-button</code>、<code>.dialog-shell</code></td></tr>
+      <tr><td>表示モードの見た目を統一して守りたい。</td><td>1箇所だけの微調整。</td><td><code>.cat-card</code>の影や角丸。</td></tr>
+    </tbody></table><pre style="margin-top:18px"><code>.primary-button {
+  border-color: var(--accent) !important;
+  background-color: var(--accent) !important;
+  color: var(--text-on-accent) !important;
+}</code></pre></section>
+
+    <section><div class="section-kicker">11 / CATEGORY COLORS</div><h2>カテゴリ色はCSS変数で注入する</h2><p class="lead">カテゴリごとの色はJavaScriptで生成し、HTMLのstyle属性にCSS変数として渡します。CSS側はその変数を使うだけです。</p><div class="reading-flow"><div><b>1</b><span><code>colorForCat</code><br>色を作る</span></div><i>→</i><div><b>2</b><span><code>buildCategoryStyleVars</code><br>変数名へ変換</span></div><i>→</i><div><b>3</b><span><code>.cat-card</code><br>CSSで利用</span></div></div><pre style="margin-top:18px"><code>style="--cat-color: hsl(...); --cat-glow: ...;"
 
 .cat-card__pill,
 .subcat-line {
   background-color: var(--cat-color, var(--accent));
 }</code></pre></section>
 
-    <section><div class="section-kicker">08 / RESPONSIVE CSS</div><h2>レスポンシブの考え方</h2><div class="checklist">
+    <section><div class="section-kicker">12 / RESPONSIVE CSS</div><h2>レスポンシブの考え方</h2><div class="checklist">
       <div class="check-item"><strong>560px以下</strong><p>詳細画面のパス行は縦並びにする。</p></div>
       <div class="check-item"><strong>検索ボタン</strong><p>狭い画面ではショートカット表記を隠す。</p></div>
       <div class="check-item"><strong>長いパス</strong><p><code>word-break</code>や省略で横はみ出しを防ぐ。</p></div>
@@ -99,15 +135,17 @@
       <div class="check-item"><strong>タッチ操作</strong><p>ボタンの押せる範囲を削りすぎない。</p></div>
     </div></section>
 
-    <section><div class="section-kicker">09 / CHANGE RECIPES</div><h2>CSS変更の進め方</h2><div style="display:grid;gap:14px">
+    <section><div class="section-kicker">13 / CHANGE RECIPES</div><h2>CSS変更の進め方</h2><div style="display:grid;gap:14px">
       <article class="card pattern"><div><h3>色を変える</h3><p>まず変数。</p></div><div><p><code>--accent</code>や<code>--bg-base</code>を変えます。部品CSSを直接変えるのは、変数では意味が合わない場合だけにします。</p></div></article>
       <article class="card pattern"><div><h3>部品の形を変える</h3><p>共通UIを見る。</p></div><div><p>タブなら<code>.tab-btn</code>、カテゴリなら<code>.cat-btn</code>、パスなら<code>.path-chip</code>を見ます。3表示モードへの影響も確認します。</p></div></article>
+      <article class="card pattern"><div><h3>余白だけ変える</h3><p>Tailwindを見る。</p></div><div><p>HTML上の<code>px-*</code>、<code>py-*</code>、<code>gap-*</code>を調整します。ただし同じ調整が複数箇所に広がるなら、意味のあるCSSクラスに移します。</p></div></article>
       <article class="card pattern"><div><h3>オープンだけ変える</h3><p>表示モード章で上書き。</p></div><div><p><code>[data-theme="open"] ...</code>の形で差分を書きます。共通UIを壊さないようにします。</p></div></article>
       <article class="card pattern"><div><h3>新しい表示モードを足す</h3><p>変数、JS、描画をセットで見る。</p></div><div><p>CSSだけでは足りません。<code>THEME_CONFIG</code>、<code>buildMainHtml</code>、表示モードメニューも更新します。</p></div></article>
     </div></section>
 
-    <section><div class="section-kicker">10 / CSS REVIEW CHECKLIST</div><h2>確認項目</h2><div class="checklist">
+    <section><div class="section-kicker">14 / CSS REVIEW CHECKLIST</div><h2>確認項目</h2><div class="checklist">
       <div class="check-item"><strong>変数で済むか</strong><p>直接色指定を増やしていないか。</p></div>
+      <div class="check-item"><strong>Tailwindで済むか</strong><p>単発の余白・配置なのにCSSを増やしていないか。</p></div>
       <div class="check-item"><strong>3モード</strong><p>スタンダード、オープン、コンパクトで確認したか。</p></div>
       <div class="check-item"><strong>状態</strong><p>hover、active、focus、disabledを確認したか。</p></div>
       <div class="check-item"><strong>長い文字</strong><p>長いパスやカテゴリ名で崩れないか。</p></div>
