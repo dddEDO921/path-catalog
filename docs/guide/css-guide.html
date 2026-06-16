@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CSSガイド | パスノート</title><link rel="stylesheet" href="guide.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="design-guide.html">デザイン</a><a class="active" href="css-guide.html">CSS</a></nav></header>
+  <main class="page">
+    <section class="hero"><div class="eyebrow">CSS GUIDE</div><h1>CSSは、<br>変数と上書きで読む。</h1><p class="lead">パスノートのCSSはHTML内にあります。ファイル分割はしませんが、章コメント、CSS変数、表示モードごとの上書きで追えるようにしています。</p></section>
+
+    <section><div class="section-kicker">01 / STRUCTURE</div><h2>CSSの章構成</h2><table class="contract-table"><thead><tr><th>章コメント</th><th>読む目的</th><th>代表セレクタ</th></tr></thead><tbody>
+      <tr><td><code>テーマ変数</code></td><td>色、背景、文字、角丸、影、パス表示の基準値。</td><td><code>:root</code>、<code>[data-theme="open"]</code></td></tr>
+      <tr><td><code>共通UI</code></td><td>表示モードをまたいで使う基本部品。</td><td><code>.tab-btn</code>、<code>.cat-btn</code>、<code>.list-row</code></td></tr>
+      <tr><td><code>操作UI</code></td><td>メニュー、ダイアログ、ボタン、通知。</td><td><code>.add-menu</code>、<code>.dialog-shell</code>、<code>.primary-button</code></td></tr>
+      <tr><td><code>表示モード</code></td><td>スタンダード、オープン、コンパクト固有の見た目。</td><td><code>[data-theme="open"] .cat-card</code>、<code>.compact-list</code></td></tr>
+    </tbody></table></section>
+
+    <section><div class="section-kicker">02 / DESIGN TOKENS</div><h2>まずCSS変数を見る</h2><p class="lead">色や形を部品ごとに直接指定せず、変数を通して指定します。表示モードの差分も、まず変数の上書きで吸収します。</p><div class="swatch-grid">
+      <article class="card swatch"><div class="swatch-color" style="background:#0f172a"></div><div class="swatch-body"><strong><code>--bg-base</code></strong><span>画面の土台。</span></div></article>
+      <article class="card swatch"><div class="swatch-color" style="background:#111827"></div><div class="swatch-body"><strong><code>--bg-layer</code></strong><span>カードやヘッダー。</span></div></article>
+      <article class="card swatch"><div class="swatch-color" style="background:#7c3aed"></div><div class="swatch-body"><strong><code>--accent</code></strong><span>選択と主要操作。</span></div></article>
+      <article class="card swatch"><div class="swatch-color" style="background:#1f2937"></div><div class="swatch-body"><strong><code>--border</code></strong><span>区切り線。</span></div></article>
+    </div><pre style="margin-top:18px"><code>:root,
+[data-theme="current"] {
+  --bg-base: #0f172a;
+  --bg-layer: #111827;
+  --accent: #7c3aed;
+  --card-radius: 0.75rem;
+  --path-bg: rgba(15, 23, 42, 0.35);
+}
+
+[data-theme="open"],
+[data-theme="compact"] {
+  --bg-base: #f4f4f5;
+  --bg-layer: #ffffff;
+  --accent: #4f477b;
+  --card-radius: 0;
+  --path-bg: transparent;
+}</code></pre></section>
+
+    <section><div class="section-kicker">03 / VARIABLE GROUPS</div><h2>変数の役割</h2><table class="contract-table"><thead><tr><th>グループ</th><th>変数</th><th>変更時の影響</th></tr></thead><tbody>
+      <tr><td>背景</td><td><code>--bg-base</code>、<code>--bg-layer</code>、<code>--bg-sidebar</code>、<code>--bg-control</code></td><td>画面全体、ヘッダー、サイドバー、入力欄。</td></tr>
+      <tr><td>強調</td><td><code>--accent</code>、<code>--accent-hover</code>、<code>--accent-soft</code></td><td>主要ボタン、選択状態、hover背景。</td></tr>
+      <tr><td>文字</td><td><code>--text-heading</code>、<code>--text-body</code>、<code>--text-muted</code></td><td>見出し、本文、補助テキスト。</td></tr>
+      <tr><td>カード</td><td><code>--card-radius</code>、<code>--card-shadow</code></td><td>カテゴリカードや一覧のまとまり感。</td></tr>
+      <tr><td>パス</td><td><code>--path-bg</code>、<code>--path-border</code>、<code>--path-radius</code></td><td>パス文字列のチップ表現。</td></tr>
+      <tr><td>ダイアログ</td><td><code>--dialog-backdrop</code></td><td>モーダル表示時の背景の強さ。</td></tr>
+    </tbody></table></section>
+
+    <section><div class="section-kicker">04 / COMPONENT CSS</div><h2>部品CSSの読み方</h2><div class="tech-grid">
+      <article class="card tech-card"><span class="tech-tag">TAB</span><h3><code>.tab-btn</code></h3><p>タブはボタンですが、タブらしく下線で選択を示します。背景を強くしないことで、ヘッダーの情報量を抑えます。</p><div class="tech-meta"><div><strong>状態:</strong> <code>:hover</code>、<code>.active</code></div><div><strong>見る値:</strong> <code>border-bottom-color</code>、<code>color</code></div></div></article>
+      <article class="card tech-card"><span class="tech-tag">CATEGORY</span><h3><code>.cat-btn</code></h3><p>カテゴリはサイドバーの行です。左の短いラインを伸ばして、hoverと選択を示します。</p><div class="tech-meta"><div><strong>状態:</strong> <code>.cat-btn:hover .cat-line</code>、<code>.cat-btn.active</code></div><div><strong>色:</strong> <code>--cat-color</code></div></div></article>
+      <article class="card tech-card"><span class="tech-tag">PATH</span><h3><code>.list-row</code> / <code>.path-chip</code></h3><p>一覧行は透明な面から始め、hoverで操作可能性を示します。長いパスは折り返せるようにしています。</p><div class="tech-meta"><div><strong>重要:</strong> <code>word-break: break-all</code></div><div><strong>動き:</strong> <code>transform: translateY(-1px)</code></div></div></article>
+      <article class="card tech-card"><span class="tech-tag">DIALOG</span><h3><code>.dialog-shell</code></h3><p>フォーム、検索、詳細で共通の面を使います。背景は<code>dialog::backdrop</code>で弱めます。</p><div class="tech-meta"><div><strong>状態:</strong> <code>dialog::backdrop</code></div><div><strong>変数:</strong> <code>--dialog-backdrop</code></div></div></article>
+    </div></section>
+
+    <section><div class="section-kicker">05 / VIEW MODE OVERRIDES</div><h2>表示モードは上書きで作る</h2><p class="lead">共通UIを土台にし、表示モード固有の差分だけを下の章で上書きします。</p><div class="mode-grid">
+      <article class="card mode-card"><h3>スタンダード</h3><p>変数定義が基準。暗色、カード、影、チップ表現を使います。</p><p><span class="function-name">[data-theme="current"]</span></p></article>
+      <article class="card mode-card"><h3>オープン</h3><p>カードを消し、見出し線と余白で構成します。個別セレクタでカード周りを上書きします。</p><p><span class="function-name">[data-theme="open"] .cat-card</span></p></article>
+      <article class="card mode-card"><h3>コンパクト</h3><p>カテゴリカードではなく、表形式に近い独自クラスを使います。</p><p><span class="function-name">.compact-list</span></p></article>
+    </div><pre style="margin-top:18px"><code>[data-theme="open"] .cat-card {
+  border: 0;
+  background: transparent;
+  box-shadow: none !important;
+}
+
+.compact-row {
+  display: grid;
+  grid-template-columns: 78px 110px 220px minmax(0, 1fr) 24px;
+}</code></pre></section>
+
+    <section><div class="section-kicker">06 / STATE STYLING</div><h2>状態の表現</h2><table class="contract-table"><thead><tr><th>状態</th><th>使うもの</th><th>理由</th></tr></thead><tbody>
+      <tr><td>選択中</td><td><code>.active</code></td><td>タブ、カテゴリ、表示モードなど、アプリ内状態を明示する。</td></tr>
+      <tr><td>hover</td><td><code>:hover</code></td><td>クリックできることを軽く示す。</td></tr>
+      <tr><td>focus</td><td><code>:focus-visible</code></td><td>キーボード操作時に現在位置を示す。</td></tr>
+      <tr><td>開閉</td><td><code>[aria-expanded]</code></td><td>見た目とアクセシビリティ上の状態を一致させる。</td></tr>
+      <tr><td>無効</td><td><code>:disabled</code></td><td>押せない理由がある操作を弱く見せる。</td></tr>
+    </tbody></table><pre style="margin-top:18px"><code>.theme-option.active::after {
+  content: "選択中";
+  color: var(--accent);
+}
+
+.subcat-toggle[aria-expanded="false"] .subcat-line {
+  width: 6px;
+  opacity: 0.35;
+}</code></pre></section>
+
+    <section><div class="section-kicker">07 / CATEGORY COLORS</div><h2>カテゴリ色はCSS変数で注入する</h2><p class="lead">カテゴリごとの色はJavaScriptで生成し、HTMLのstyle属性にCSS変数として渡します。CSS側はその変数を使うだけです。</p><div class="reading-flow"><div><b>1</b><span><code>colorForCat</code><br>色を作る</span></div><i>→</i><div><b>2</b><span><code>buildCategoryStyleVars</code><br>変数名へ変換</span></div><i>→</i><div><b>3</b><span><code>.cat-card</code><br>CSSで利用</span></div></div><pre style="margin-top:18px"><code>style="--cat-color: hsl(...); --cat-glow: ...;"
+
+.cat-card__pill,
+.subcat-line {
+  background-color: var(--cat-color, var(--accent));
+}</code></pre></section>
+
+    <section><div class="section-kicker">08 / RESPONSIVE CSS</div><h2>レスポンシブの考え方</h2><div class="checklist">
+      <div class="check-item"><strong>560px以下</strong><p>詳細画面のパス行は縦並びにする。</p></div>
+      <div class="check-item"><strong>検索ボタン</strong><p>狭い画面ではショートカット表記を隠す。</p></div>
+      <div class="check-item"><strong>長いパス</strong><p><code>word-break</code>や省略で横はみ出しを防ぐ。</p></div>
+      <div class="check-item"><strong>コンパクト表示</strong><p>列幅が固定なので、狭い画面での確認を必須にする。</p></div>
+      <div class="check-item"><strong>ダイアログ</strong><p><code>calc(100vw - 2rem)</code>で画面幅に収める。</p></div>
+      <div class="check-item"><strong>タッチ操作</strong><p>ボタンの押せる範囲を削りすぎない。</p></div>
+    </div></section>
+
+    <section><div class="section-kicker">09 / CHANGE RECIPES</div><h2>CSS変更の進め方</h2><div style="display:grid;gap:14px">
+      <article class="card pattern"><div><h3>色を変える</h3><p>まず変数。</p></div><div><p><code>--accent</code>や<code>--bg-base</code>を変えます。部品CSSを直接変えるのは、変数では意味が合わない場合だけにします。</p></div></article>
+      <article class="card pattern"><div><h3>部品の形を変える</h3><p>共通UIを見る。</p></div><div><p>タブなら<code>.tab-btn</code>、カテゴリなら<code>.cat-btn</code>、パスなら<code>.path-chip</code>を見ます。3表示モードへの影響も確認します。</p></div></article>
+      <article class="card pattern"><div><h3>オープンだけ変える</h3><p>表示モード章で上書き。</p></div><div><p><code>[data-theme="open"] ...</code>の形で差分を書きます。共通UIを壊さないようにします。</p></div></article>
+      <article class="card pattern"><div><h3>新しい表示モードを足す</h3><p>変数、JS、描画をセットで見る。</p></div><div><p>CSSだけでは足りません。<code>THEME_CONFIG</code>、<code>buildMainHtml</code>、表示モードメニューも更新します。</p></div></article>
+    </div></section>
+
+    <section><div class="section-kicker">10 / CSS REVIEW CHECKLIST</div><h2>確認項目</h2><div class="checklist">
+      <div class="check-item"><strong>変数で済むか</strong><p>直接色指定を増やしていないか。</p></div>
+      <div class="check-item"><strong>3モード</strong><p>スタンダード、オープン、コンパクトで確認したか。</p></div>
+      <div class="check-item"><strong>状態</strong><p>hover、active、focus、disabledを確認したか。</p></div>
+      <div class="check-item"><strong>長い文字</strong><p>長いパスやカテゴリ名で崩れないか。</p></div>
+      <div class="check-item"><strong>モバイル</strong><p>560px以下で横スクロールが出ないか。</p></div>
+      <div class="check-item"><strong>意味</strong><p>見た目の変更がUI/UX判断と矛盾していないか。</p></div>
+    </div></section>
+  </main>
+</body>
+</html>
