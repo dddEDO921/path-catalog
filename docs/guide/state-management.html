@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>状態管理 | パスノート</title><link rel="stylesheet" href="guide.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a class="active" href="state-management.html">状態管理</a><a href="io-security.html">入出力安全</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
+  <main class="page">
+    <section class="hero"><div class="eyebrow">STATE MANAGEMENT</div><h1>何を正本にするかを<br>先に決める。</h1><p class="lead">パスノートの状態管理は、保存用データ、画面用データ、表示設定、一時的なUI状態を分けて考えます。混ぜると、編集後の表示や検索、削除後の再描画が壊れやすくなります。</p></section>
+
+    <section><div class="section-kicker">01 / FOUR STATE TYPES</div><h2>状態は4種類ある</h2><table class="contract-table"><thead><tr><th>種類</th><th>主な変数・保存先</th><th>役割</th><th>変更方法</th></tr></thead><tbody>
+      <tr><td>保存用データ</td><td><code>catalog</code></td><td>タブ、カテゴリ、サブカテゴリ、パスの正本。</td><td><code>catalogModel</code>経由で変更する。</td></tr>
+      <tr><td>画面用データ</td><td><code>state.all</code></td><td>検索、絞り込み、一覧表示のための平坦な配列。</td><td><code>refreshCatalog</code>で作り直す。</td></tr>
+      <tr><td>表示状態</td><td><code>state.tab</code>、<code>state.cat</code>、表示モード</td><td>今どこを見ているか、どう表示するか。</td><td><code>setSelection</code>、<code>applyTheme</code>で変える。</td></tr>
+      <tr><td>一時UI状態</td><td>ダイアログ、メニュー、詳細編集中の項目</td><td>その場限りの操作状態。</td><td>専用関数で開閉・更新する。</td></tr>
+    </tbody></table></section>
+
+    <section><div class="section-kicker">02 / SOURCE OF TRUTH</div><h2>正本のルール</h2><div class="two-col"><article class="card pad"><h3><code>catalog</code>がデータの正本</h3><p>タブやカテゴリの空グループ、表示順、パスの追加・編集・削除は<code>catalog</code>が持ちます。localStorageは永続化先であり、実行中に直接参照し続ける正本ではありません。</p></article><article class="card pad"><h3><code>state.all</code>は派生データ</h3><p><code>catalog</code>から作る検索・表示用の配列です。ここだけを書き換えても保存データは変わりません。データ変更後は必ず作り直します。</p></article></div><div class="point"><strong>DOMは正本ではない</strong><br>画面上のHTMLからデータを復元しようとしません。DOMは最後に描かれた結果であり、次の描画で置き換えられるものです。</div></section>
+
+    <section><div class="section-kicker">03 / DATA SHAPES</div><h2>保存用と画面用の違い</h2><div class="two-col"><article class="card code-card"><div class="code-head">保存用 catalog</div><pre><code>["共通", [
+  ["申請", [
+    ["経費", [
+      ["経費精算フォルダ", "\\\\server\\expense", ""]
+    ]]
+  ]]
+]]</code></pre><div class="why">空の分類と順番を保持できます。</div></article><article class="card code-card"><div class="code-head">画面用 state.all</div><pre><code>{
+  id: 12,
+  tab: "共通",
+  category: "申請",
+  subCategory: "経費",
+  name: "経費精算フォルダ",
+  path: "\\\\server\\expense",
+  _meta: { t: 0, c: 0, s: 0, i: 0 }
+}</code></pre><div class="why">検索、コピー、詳細表示、編集対象の特定が簡単になります。</div></article></div></section>
+
+    <section><div class="section-kicker">04 / SELECTION STATE</div><h2>選択状態は表示の文脈</h2><div class="tech-grid">
+      <article class="card tech-card"><span class="tech-tag">TAB</span><h3><code>state.tab</code></h3><p>常に1つ選択されます。カテゴリ追加は、この選択中タブを前提にできます。</p></article>
+      <article class="card tech-card"><span class="tech-tag">CATEGORY</span><h3><code>state.cat</code></h3><p>空文字なら「すべて」です。編集後に勝手に絞り込みを変えないため、選択状態は明示的に扱います。</p></article>
+      <article class="card tech-card"><span class="tech-tag">SUBCATEGORY</span><h3>近接操作の文脈</h3><p>サブカテゴリ追加やパス追加は、押した場所からカテゴリ・サブカテゴリを受け取ります。</p></article>
+      <article class="card tech-card"><span class="tech-tag">THEME</span><h3>表示モード</h3><p>スタンダード、オープン、コンパクトは同じデータを別の密度で見る状態です。</p></article>
+    </div></section>
+
+    <section><div class="section-kicker">05 / UPDATE RULES</div><h2>状態を変えるときのルール</h2><div class="checklist">
+      <div class="check-item"><strong>データ変更</strong><p><code>catalogModel</code>で変更し、<code>commitCatalogChange</code>へ渡す。</p></div>
+      <div class="check-item"><strong>画面用データ</strong><p><code>state.all</code>を直接編集せず、<code>refreshCatalog</code>で作り直す。</p></div>
+      <div class="check-item"><strong>選択変更</strong><p><code>setSelection</code>を通して、タブ・カテゴリの整合性を保つ。</p></div>
+      <div class="check-item"><strong>表示モード</strong><p><code>applyTheme</code>でDOM属性とlocalStorageを同期する。</p></div>
+      <div class="check-item"><strong>開閉状態</strong><p>サブカテゴリの開閉は専用Setで扱い、localStorageへ保存する。</p></div>
+      <div class="check-item"><strong>一時状態</strong><p>詳細ダイアログや編集中項目は、閉じるときにリセットする。</p></div>
+    </div></section>
+
+    <section><div class="section-kicker">06 / COMMON MISTAKES</div><h2>壊れやすい変更</h2><div class="two-col">
+      <article class="card pad"><h3><code>state.all</code>だけを書き換える</h3><p>画面は変わったように見えても、保存・書き出し・再読込で消えます。保存したい変更は必ず<code>catalog</code>へ入れます。</p></article>
+      <article class="card pad"><h3>DOMから値を拾いすぎる</h3><p>一覧は表示モードで形が変わります。対象特定には<code>data-*</code>属性や<code>_meta</code>を使います。</p></article>
+      <article class="card pad"><h3>保存後に選択状態を変える</h3><p>編集後に勝手にカテゴリを絞ると、ユーザーの前の文脈が失われます。必要なときだけ明示的に変えます。</p></article>
+      <article class="card pad"><h3>localStorageを直接読み続ける</h3><p>起動時に読み、実行中はメモリ上の<code>catalog</code>と<code>state</code>を使います。保存は変更確定時に行います。</p></article>
+    </div></section>
+  </main>
+</body>
+</html>

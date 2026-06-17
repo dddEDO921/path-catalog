@@ -2,7 +2,7 @@
 <html lang="ja">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>コードの地図 | パスノート</title><link rel="stylesheet" href="guide.css"></head>
 <body>
-  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a class="active" href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a class="active" href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a href="state-management.html">状態管理</a><a href="io-security.html">入出力安全</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
   <main class="page">
     <section class="hero"><div class="eyebrow">CODE MAP</div><h1>巨大なHTMLは、<br>上から読まない。</h1><p class="lead">目的に合う章コメントを検索し、入口のイベントから必要な関数だけを追います。</p></section>
     <section><div class="section-kicker">01 / READING RULE</div><h2>読む範囲を先に絞る</h2><div class="reading-flow"><div><b>1</b><span>画面の要素や<br>章コメントを探す</span></div><i>→</i><div><b>2</b><span>イベント処理から<br>呼び先を追う</span></div><i>→</i><div><b>3</b><span>変更する責務の<br>内側だけ読む</span></div></div><div class="point">行番号は変更でずれます。<code>===== 描画</code>のような章コメントと、関数名を検索の入口にします。</div></section>

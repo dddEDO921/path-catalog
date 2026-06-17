@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>入出力と安全性 | パスノート</title><link rel="stylesheet" href="guide.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a href="state-management.html">状態管理</a><a class="active" href="io-security.html">入出力安全</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
+  <main class="page">
+    <section class="hero"><div class="eyebrow">I/O AND SAFETY</div><h1>便利な入出力ほど、<br>境界をはっきりさせる。</h1><p class="lead">パスノートはブラウザだけで追加・編集・書き出し・読み込みを行います。サーバーがない分、ファイル、localStorage、画面表示の境界で何を信用するかを明確にします。</p></section>
+
+    <section><div class="section-kicker">01 / TRUST BOUNDARIES</div><h2>信用するもの・しないもの</h2><table class="contract-table"><thead><tr><th>入力元</th><th>信用度</th><th>扱い</th></tr></thead><tbody>
+      <tr><td>同梱の<code>data.js</code></td><td>初期データとして使う</td><td>起動時に検査し、画面用データへ変換する。</td></tr>
+      <tr><td>localStorage</td><td>利用者環境内だが壊れる可能性あり</td><td>JSON解析に失敗したら捨て、data.jsへ戻す。</td></tr>
+      <tr><td>インポートされたdata.js</td><td>信用しない</td><td>実行せず、決めた形式のJSON部分だけを解析し、strict検査する。</td></tr>
+      <tr><td>フォーム入力</td><td>信用しない</td><td>空文字を拒否し、画面へ出すときはHTMLエスケープする。</td></tr>
+    </tbody></table></section>
+
+    <section><div class="section-kicker">02 / EXPORT</div><h2>書き出しは再利用できるdata.jsを作る</h2><div class="two-col"><article class="card code-card"><div class="code-head">出力形式</div><pre><code>// パスノート data
+window.PATH_CATALOG = [
+  ["共通", [
+    ["申請", [
+      ["経費", [
+        ["経費精算", "\\\\server\\expense", ""]
+      ]]
+    ]]
+  ]]
+];</code></pre><div class="why">HTMLから読み込めて、インポート時はJSON部分だけを解析できます。</div></article><article class="card pad"><h3>設計の要点</h3><ul><li><code>JSON.stringify</code>で文字列を通常のJSON形式にする</li><li><code>String.raw</code>形式へ戻さない</li><li><code>Blob</code>でファイル化する</li><li>ダウンロード後にObject URLを解放する</li></ul><p><span class="function-name">buildDataJs</span><span class="function-name">exportCatalogData</span></p></article></div></section>
+
+    <section><div class="section-kicker">03 / IMPORT</div><h2>読み込みは実行しない</h2><div class="flow"><div class="flow-node"><h3>ファイル選択</h3><span><code>importDataInput</code></span></div><i>→</i><div class="flow-node"><h3>文字列として読む</h3><span><code>file.text()</code></span></div><i>→</i><div class="flow-node"><h3>JSONだけ解析</h3><span><code>parseDataJs</code></span></div></div><div class="point"><strong><code>eval</code>しない</strong><br>data.jsはJavaScriptファイルですが、インポート時にはJavaScriptとして実行しません。<code>window.PATH_CATALOG = ...;</code>の形だけを受け取り、右辺を<code>JSON.parse</code>します。</div><div class="sample-grid" style="margin-top:18px">
+      <article class="card sample-card"><div class="code-head">解析の考え方</div><pre><code>const parseDataJs = (text) => {
+  const match = text.match(
+    /^\s*window\.PATH_CATALOG\s*=\s*([\s\S]*?)\s*;\s*$/
+  );
+  if (!match) throw new Error("形式が違います");
+
+  return JSON.parse(match[1]);
+};</code></pre><div class="why">実コードではコメントとBOMにも対応し、strict検査まで行います。</div></article>
+      <article class="card sample-card"><div class="code-head">読み込み後の確認</div><pre><code>const imported = parseDataJs(text);
+inspectCatalog(imported, { strict: true });
+
+if (confirm("現在のデータを置き換えますか？")) {
+  commitCatalogChange(() => {
+    catalog = cloneCatalog(imported);
+  });
+}</code></pre><div class="why">壊れたデータや意図しない置き換えを防ぎます。</div></article>
+    </div></section>
+
+    <section><div class="section-kicker">04 / HTML OUTPUT</div><h2>画面へ出す前にエスケープする</h2><div class="two-col"><article class="card code-card"><div class="code-head">危険な例</div><pre><code>main.innerHTML = `
+  &lt;span&gt;${item.name}&lt;/span&gt;
+`;</code></pre><div class="why">入力値にHTMLが含まれると、DOMとして解釈されます。</div></article><article class="card code-card"><div class="code-head">安全な例</div><pre><code>main.innerHTML = `
+  &lt;span&gt;${toHtml(item.name)}&lt;/span&gt;
+`;</code></pre><div class="why">動的な文字列は<code>toHtml</code>を通してからHTMLへ入れます。</div></article></div><div class="point"><strong>テンプレートリテラルは便利だが境界が曖昧になりやすい</strong><br>HTMLの形を作る場所では、固定のタグと利用者由来の値を分けて考えます。値は表示直前に必ずエスケープします。</div></section>
+
+    <section><div class="section-kicker">05 / STORAGE FAILURES</div><h2>保存失敗でデータを壊さない</h2><div class="reading-flow"><div><b>1</b><span>変更前を複製<br><code>cloneCatalog</code></span></div><i>→</i><div><b>2</b><span>変更を適用<br><code>catalogModel</code></span></div><i>→</i><div><b>3</b><span>保存失敗なら戻す<br><code>commitCatalogChange</code></span></div></div><table class="contract-table" style="margin-top:18px"><thead><tr><th>失敗</th><th>想定される原因</th><th>守り方</th></tr></thead><tbody>
+      <tr><td>localStorage保存失敗</td><td>容量不足、ブラウザ設定、プライベート環境</td><td>変更前の<code>catalog</code>へ戻し、通知する。</td></tr>
+      <tr><td>JSON解析失敗</td><td>localStorageの破損、手編集ミス</td><td>保存値を使わず、data.jsから初期化する。</td></tr>
+      <tr><td>インポート検査失敗</td><td>形式違い、必須項目不足、型違い</td><td>現在のデータを置き換えず、エラーを表示する。</td></tr>
+    </tbody></table></section>
+
+    <section><div class="section-kicker">06 / SECURITY CHECKLIST</div><h2>変更時の確認項目</h2><div class="checklist">
+      <div class="check-item"><strong>外部入力</strong><p>ファイル、localStorage、フォーム入力をそのまま信用していないか。</p></div>
+      <div class="check-item"><strong>HTML出力</strong><p>利用者由来の値を<code>toHtml</code>なしで<code>innerHTML</code>へ入れていないか。</p></div>
+      <div class="check-item"><strong>インポート</strong><p>読み込んだdata.jsを実行していないか。</p></div>
+      <div class="check-item"><strong>検査</strong><p>strict検査が必要な境界で、通常検査だけにしていないか。</p></div>
+      <div class="check-item"><strong>保存失敗</strong><p>変更前へ戻せる構造になっているか。</p></div>
+      <div class="check-item"><strong>破壊的操作</strong><p>削除・インポート前に利用者へ確認しているか。</p></div>
+    </div></section>
+  </main>
+</body>
+</html>
