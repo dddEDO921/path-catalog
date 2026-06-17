@@ -4,32 +4,41 @@
 <body>
   <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a class="active" href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
   <main class="page">
-    <section class="hero"><div class="eyebrow">DESIGN PHILOSOPHY</div><h1>思い出すための、<br>静かな道具。</h1><p class="lead">パスノートは、パスを美しく管理するための画面ではありません。「あれ、どこだっけ」を短くするための道具です。デザインは、整理の正しさよりも、発見の速さと使い続けやすさを支えます。</p></section>
+    <section class="hero"><div class="eyebrow">DESIGN PHILOSOPHY</div><h1>UIは、考える量を<br>減らすためにある。</h1><p class="lead">パスノートのデザインは、見た目を整えるためだけのものではありません。利用者が覚える、迷う、探す、入力する負担を減らすための設計です。</p></section>
 
-    <section><div class="section-kicker">01 / CORE</div><h2>中心思想</h2><div class="point"><strong>分類させるより、思い出させる。</strong><br>利用者は、正しいカテゴリ名を覚えているとは限りません。だから、分類・検索・文脈追加のどこからでも目的のパスへ近づける設計にします。</div></section>
+    <section><div class="section-kicker">01 / CORE</div><h2>中心思想</h2><div class="point"><strong>記憶より認識。操作より発見。</strong><br>ユーザーに正しい場所や手順を思い出させるのではなく、画面を見れば次に取れる行動が分かる状態を目指します。</div></section>
 
-    <section><div class="section-kicker">02 / PRINCIPLES TO UI</div><h2>思想と表現</h2><div style="display:grid;gap:14px">
-      <article class="card pattern"><div><h3>探す前に迷わせない</h3><p>入口を明確にする。</p></div><div><p><strong>表現:</strong> 検索はヘッダーに常設。カテゴリはサイドバーに固定。追加は「＋ 追加」に集約。</p><p><strong>判断:</strong> 新しい操作を増やすとき、入口が散らばるならメニューへまとめる。</p></div></article>
-      <article class="card pattern"><div><h3>分類は主役にしない</h3><p>主役はパス。</p></div><div><p><strong>表現:</strong> カテゴリは色線や見出しで控えめに示し、一覧ではパス名とパス文字列を優先する。</p><p><strong>判断:</strong> 分類の装飾がパスより目立つなら弱める。</p></div></article>
-      <article class="card pattern"><div><h3>文脈があるなら選ばせない</h3><p>今いる場所を使う。</p></div><div><p><strong>表現:</strong> サブカテゴリ追加やパス追加は、そのカテゴリ・サブカテゴリの近くに置く。</p><p><strong>判断:</strong> 追加先が画面上で明らかなのに、プルダウンで再選択させない。</p></div></article>
-      <article class="card pattern"><div><h3>整理と登録を混ぜない</h3><p>目的を分ける。</p></div><div><p><strong>表現:</strong> タブ・カテゴリの追加と、パス登録を別の入口にする。空のパス行を先に作らない。</p><p><strong>判断:</strong> 「分類を整えたいだけ」の人に、パス入力を要求しない。</p></div></article>
-      <article class="card pattern"><div><h3>密度は選べるべき</h3><p>使い方は一つではない。</p></div><div><p><strong>表現:</strong> スタンダード、オープン、コンパクトの3表示を持つ。</p><p><strong>判断:</strong> 表示モードは色違いではなく、読み方や情報密度の違いを持たせる。</p></div></article>
-      <article class="card pattern"><div><h3>操作の反応は静かでよい</h3><p>作業を止めない。</p></div><div><p><strong>表現:</strong> コピーや保存は軽いトースト。詳細・編集だけダイアログで集中させる。</p><p><strong>判断:</strong> 成功通知のためにモーダルを出さない。</p></div></article>
+    <section><div class="section-kicker">02 / PRINCIPLES TO UI</div><h2>原則と表現</h2><div style="display:grid;gap:14px">
+      <article class="card pattern"><div><h3>認識できること</h3><p>RecallよりRecognition。</p></div><div><p><strong>考え方:</strong> ユーザーに場所や名前を正確に思い出させない。見れば候補や現在地が分かるようにする。</p><p><strong>このツールでの表現:</strong> カテゴリをサイドバーに固定し、検索をヘッダーに常設する。タブ・カテゴリ・サブカテゴリの階層を画面上に見せる。</p></div></article>
+      <article class="card pattern"><div><h3>入口が明確であること</h3><p>迷わせない。</p></div><div><p><strong>考え方:</strong> 重要な操作は探させない。複数の操作がある場合は、入口を整理して選ばせる。</p><p><strong>このツールでの表現:</strong> 全体の追加操作は「＋ 追加」に集約する。検索、表示、データ管理はヘッダーへまとめる。</p></div></article>
+      <article class="card pattern"><div><h3>文脈を保つこと</h3><p>今いる場所を使う。</p></div><div><p><strong>考え方:</strong> 画面上で対象が明らかな操作では、同じ情報を再入力・再選択させない。</p><p><strong>このツールでの表現:</strong> サブカテゴリ追加やパス追加は、対象カテゴリの近くに置く。追加先が決まっている場合は入力欄をロックする。</p></div></article>
+      <article class="card pattern"><div><h3>段階的に開示すること</h3><p>最初から全部見せない。</p></div><div><p><strong>考え方:</strong> 普段必要な情報を優先し、編集・削除・詳細確認のような重い操作は必要になったときだけ出す。</p><p><strong>このツールでの表現:</strong> 一覧ではコピーと識別を優先する。詳細・編集・削除は詳細ダイアログに分ける。</p></div></article>
+      <article class="card pattern"><div><h3>作業を止めないこと</h3><p>軽い反応にする。</p></div><div><p><strong>考え方:</strong> 成功やコピーのたびに大きな確認を出さない。流れを止める通知は、本当に判断が必要なときに限る。</p><p><strong>このツールでの表現:</strong> コピーや保存はトーストで軽く伝える。削除やインポートのような破壊的操作だけ確認を出す。</p></div></article>
+      <article class="card pattern"><div><h3>密度を選べること</h3><p>使い方に合わせる。</p></div><div><p><strong>考え方:</strong> 初見で理解しやすい画面と、大量データを素早く見る画面は同じではない。ユーザーの状況に合わせて表示密度を変えられるべき。</p><p><strong>このツールでの表現:</strong> スタンダード、オープン、コンパクトの3表示を用意する。単なる色違いではなく、読み方と密度を変える。</p></div></article>
     </div></section>
 
-    <section><div class="section-kicker">03 / VIEW MODES</div><h2>表示モードの思想</h2><div class="mode-grid">
-      <article class="card mode-card"><div class="mode-preview"><div class="preview-card"><strong>スタンダード</strong><div class="preview-line"></div><div class="preview-line short"></div></div></div><h3>構造をつかむ</h3><p>初見向け。カードとまとまりで、タブ・カテゴリ・サブカテゴリの階層を理解しやすくする。</p></article>
-      <article class="card mode-card mode-open"><div class="mode-preview"><div class="preview-card"><strong>オープン</strong><div class="preview-line"></div><div class="preview-line short"></div></div></div><h3>軽く読む</h3><p>カードを減らし、見出しと線で流し読みする。情報の圧を下げる。</p></article>
-      <article class="card mode-card mode-compact"><div class="mode-preview"><div class="preview-card"><div class="preview-line"></div><div class="preview-line"></div><div class="preview-line"></div></div></div><h3>大量に見る</h3><p>表に近い密度で、件数が多いときの比較とスキャンを優先する。</p></article>
+    <section><div class="section-kicker">03 / VIEW MODES</div><h2>表示モードの意味</h2><div class="mode-grid">
+      <article class="card mode-card"><div class="mode-preview"><div class="preview-card"><strong>スタンダード</strong><div class="preview-line"></div><div class="preview-line short"></div></div></div><h3>理解する</h3><p>カードとまとまりで構造を把握する。初見や少量データ向け。</p></article>
+      <article class="card mode-card mode-open"><div class="mode-preview"><div class="preview-card"><strong>オープン</strong><div class="preview-line"></div><div class="preview-line short"></div></div></div><h3>読む</h3><p>装飾を減らし、見出しと線で軽く読む。情報の圧を下げる。</p></article>
+      <article class="card mode-card mode-compact"><div class="mode-preview"><div class="preview-card"><div class="preview-line"></div><div class="preview-line"></div><div class="preview-line"></div></div></div><h3>走査する</h3><p>表に近い密度で、大量のパスを比較・スキャンする。</p></article>
     </div></section>
 
-    <section><div class="section-kicker">04 / DO NOT</div><h2>避けること</h2><div class="checklist">
-      <div class="check-item"><strong>装飾が主役</strong><p>色、影、アイコンがパスより目立つ。</p></div>
-      <div class="check-item"><strong>入口が多すぎる</strong><p>便利そうなボタンを画面中に置く。</p></div>
-      <div class="check-item"><strong>分類を強制する</strong><p>きれいに分類しないと登録できない。</p></div>
-      <div class="check-item"><strong>色違いの表示モード</strong><p>密度や読み方の差がない。</p></div>
-      <div class="check-item"><strong>説明前提の操作</strong><p>READMEを読まないと分からない。</p></div>
-      <div class="check-item"><strong>管理者目線だけ</strong><p>日々探す人の行動を軽視する。</p></div>
+    <section><div class="section-kicker">04 / DECISION CHECK</div><h2>判断基準</h2><div class="checklist">
+      <div class="check-item"><strong>認識できるか</strong><p>ユーザーに覚えさせていないか。</p></div>
+      <div class="check-item"><strong>入口は明確か</strong><p>重要操作が散らばっていないか。</p></div>
+      <div class="check-item"><strong>文脈を保てるか</strong><p>今いる場所を再選択させていないか。</p></div>
+      <div class="check-item"><strong>段階的か</strong><p>最初から重い情報を見せていないか。</p></div>
+      <div class="check-item"><strong>流れを止めないか</strong><p>不要な確認や通知を出していないか。</p></div>
+      <div class="check-item"><strong>密度を選べるか</strong><p>少量・大量のどちらかに偏っていないか。</p></div>
+    </div></section>
+
+    <section><div class="section-kicker">05 / DO NOT</div><h2>避けること</h2><div class="checklist">
+      <div class="check-item"><strong>分類を強制する</strong><p>正しい分類を知らないと使えない。</p></div>
+      <div class="check-item"><strong>入口を増やしすぎる</strong><p>便利そうなボタンが画面全体を騒がせる。</p></div>
+      <div class="check-item"><strong>装飾が主役になる</strong><p>色や影がパスより目立つ。</p></div>
+      <div class="check-item"><strong>空の登録を作る</strong><p>あとで埋める前提の空データを増やす。</p></div>
+      <div class="check-item"><strong>色違いだけのモード</strong><p>表示モードに役割の違いがない。</p></div>
+      <div class="check-item"><strong>説明を前提にする</strong><p>読まないと使えないUIにする。</p></div>
     </div></section>
   </main>
 </body>
