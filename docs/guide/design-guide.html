@@ -8,13 +8,14 @@
 
     <section><div class="section-kicker">01 / CORE</div><h2>中心思想</h2><div class="point"><strong>記憶より認識。操作より発見。</strong><br>ユーザーに正しい場所や手順を思い出させるのではなく、画面を見れば次に取れる行動が分かる状態を目指します。主な土台は Jakob Nielsen のユーザビリティヒューリスティックです。</div></section>
 
-    <section><div class="section-kicker">02 / PRINCIPLES TO UI</div><h2>原則と表現</h2><div style="display:grid;gap:14px">
+    <section><div class="section-kicker">02 / PRINCIPLES TO UI</div><h2>原則と表現</h2><p class="note">ここでは、先にあるUIを正当化するために原則を貼るのではなく、原則から見て説明できる判断だけを残します。対応が弱いものは、無理に出典へ寄せず、別の原則として分けます。</p><div style="display:grid;gap:14px">
       <article class="card pattern"><div><h3>認識できること</h3><p>Recognition rather than recall</p></div><div><p><strong>考え方:</strong> ユーザーに場所や名前を正確に思い出させない。見れば候補や現在地が分かるようにする。</p><p><strong>このツールでの表現:</strong> カテゴリをサイドバーに固定し、検索をヘッダーに常設する。タブ・カテゴリ・サブカテゴリの階層を画面上に見せる。</p><p><strong>出典:</strong> Jakob Nielsen「Recognition Rather than Recall」</p></div></article>
-      <article class="card pattern"><div><h3>入口が明確であること</h3><p>Visibility / Consistency</p></div><div><p><strong>考え方:</strong> 重要な操作は探させない。複数の操作がある場合は、入口を整理して選ばせる。</p><p><strong>このツールでの表現:</strong> 全体の追加操作は「＋ 追加」に集約する。検索、表示、データ管理はヘッダーへまとめる。</p><p><strong>出典:</strong> Jakob Nielsen「Visibility of System Status」「Consistency and Standards」</p></div></article>
-      <article class="card pattern"><div><h3>文脈を保つこと</h3><p>Match to users' task</p></div><div><p><strong>考え方:</strong> 画面上で対象が明らかな操作では、同じ情報を再入力・再選択させない。</p><p><strong>このツールでの表現:</strong> サブカテゴリ追加やパス追加は、対象カテゴリの近くに置く。追加先が決まっている場合は入力欄をロックする。</p><p><strong>出典:</strong> Jakob Nielsen「Match Between the System and the Real World」</p></div></article>
+      <article class="card pattern"><div><h3>選択肢を整理すること</h3><p>Aesthetic and minimalist design / Consistency and standards</p></div><div><p><strong>考え方:</strong> 重要な操作を見つけやすくするには、入口を増やすのではなく、意味ごとに整理する。不要な情報は、必要な情報の見つけやすさを下げる。</p><p><strong>このツールでの表現:</strong> 全体の追加操作は「＋ 追加」に集約する。検索、表示、データ管理はヘッダーへまとめる。同じ種類の操作は同じ見た目と位置関係で扱う。</p><p><strong>出典:</strong> Jakob Nielsen「Aesthetic and Minimalist Design」「Consistency and Standards」</p></div></article>
+      <article class="card pattern"><div><h3>作業文脈に沿うこと</h3><p>Match between system and the real world</p></div><div><p><strong>考え方:</strong> UIの都合ではなく、利用者が実際に考えている単位に合わせる。今見ているカテゴリに追加する、今見ているパスを編集する、という自然な流れを壊さない。</p><p><strong>このツールでの表現:</strong> サブカテゴリ追加やパス追加は、対象カテゴリの近くに置く。追加先が決まっている場合は入力欄をロックする。</p><p><strong>出典:</strong> Jakob Nielsen「Match Between the System and the Real World」</p></div></article>
       <article class="card pattern"><div><h3>段階的に開示すること</h3><p>Progressive disclosure</p></div><div><p><strong>考え方:</strong> 普段必要な情報を優先し、編集・削除・詳細確認のような重い操作は必要になったときだけ出す。</p><p><strong>このツールでの表現:</strong> 一覧ではコピーと識別を優先する。詳細・編集・削除は詳細ダイアログに分ける。</p><p><strong>出典:</strong> Nielsen Norman Group「Progressive Disclosure」</p></div></article>
-      <article class="card pattern"><div><h3>作業を止めないこと</h3><p>Visibility / Error prevention</p></div><div><p><strong>考え方:</strong> 成功やコピーのたびに大きな確認を出さない。流れを止める通知は、本当に判断が必要なときに限る。</p><p><strong>このツールでの表現:</strong> コピーや保存はトーストで軽く伝える。削除やインポートのような破壊的操作だけ確認を出す。</p><p><strong>出典:</strong> Jakob Nielsen「Visibility of System Status」「Error Prevention」</p></div></article>
-      <article class="card pattern"><div><h3>密度を選べること</h3><p>Flexibility and efficiency</p></div><div><p><strong>考え方:</strong> 初見で理解しやすい画面と、大量データを素早く見る画面は同じではない。ユーザーの状況に合わせて表示密度を変えられるべき。</p><p><strong>このツールでの表現:</strong> スタンダード、オープン、コンパクトの3表示を用意する。単なる色違いではなく、読み方と密度を変える。</p><p><strong>出典:</strong> Jakob Nielsen「Flexibility and Efficiency of Use」</p></div></article>
+      <article class="card pattern"><div><h3>状態を軽く伝えること</h3><p>Visibility of system status</p></div><div><p><strong>考え方:</strong> ユーザーの操作結果は、すぐ分かる必要がある。ただし、コピーや保存のような軽い操作で流れを止める必要はない。</p><p><strong>このツールでの表現:</strong> コピーや保存はトーストで軽く伝える。選択中のタブ、カテゴリ、表示モードは画面上で分かるようにする。</p><p><strong>出典:</strong> Jakob Nielsen「Visibility of System Status」</p></div></article>
+      <article class="card pattern"><div><h3>失敗を事前に防ぐこと</h3><p>Error prevention</p></div><div><p><strong>考え方:</strong> 起きた後にエラーを説明するより、危険な操作を確定する前に防ぐ。特に削除やインポートは、戻しにくい影響を持つ。</p><p><strong>このツールでの表現:</strong> 削除やインポートのような破壊的操作だけ確認を出す。空の登録は作らせず、種類を選んだ後に必要な入力へ進める。</p><p><strong>出典:</strong> Jakob Nielsen「Error Prevention」</p></div></article>
+      <article class="card pattern"><div><h3>効率を選べること</h3><p>Flexibility and efficiency of use</p></div><div><p><strong>考え方:</strong> 初見で理解しやすい画面と、大量データを素早く見る画面は同じではない。ユーザーの状況に合わせて表示密度や操作速度を変えられるべき。</p><p><strong>このツールでの表現:</strong> スタンダード、オープン、コンパクトの3表示を用意する。単なる色違いではなく、読み方と密度を変える。検索やキーボード操作で、慣れた人の速度も上げる。</p><p><strong>出典:</strong> Jakob Nielsen「Flexibility and Efficiency of Use」</p></div></article>
     </div></section>
 
     <section><div class="section-kicker">03 / VIEW MODES</div><h2>表示モードの意味</h2><div class="mode-grid">
@@ -25,11 +26,12 @@
 
     <section><div class="section-kicker">04 / DECISION CHECK</div><h2>判断基準</h2><div class="checklist">
       <div class="check-item"><strong>認識できるか</strong><p>ユーザーに覚えさせていないか。</p></div>
-      <div class="check-item"><strong>入口は明確か</strong><p>重要操作が散らばっていないか。</p></div>
-      <div class="check-item"><strong>文脈を保てるか</strong><p>今いる場所を再選択させていないか。</p></div>
+      <div class="check-item"><strong>選択肢は整理されているか</strong><p>重要操作が散らばっていないか。不要な要素が主役を邪魔していないか。</p></div>
+      <div class="check-item"><strong>作業文脈に沿っているか</strong><p>今いる場所を再選択させていないか。ユーザーの考える単位とUIの単位がずれていないか。</p></div>
       <div class="check-item"><strong>段階的か</strong><p>最初から重い情報を見せていないか。</p></div>
-      <div class="check-item"><strong>流れを止めないか</strong><p>不要な確認や通知を出していないか。</p></div>
-      <div class="check-item"><strong>密度を選べるか</strong><p>少量・大量のどちらかに偏っていないか。</p></div>
+      <div class="check-item"><strong>状態は分かるか</strong><p>操作結果や現在地が、重すぎない形で伝わっているか。</p></div>
+      <div class="check-item"><strong>失敗を防げるか</strong><p>破壊的操作や空データ登録を、確定前に防げているか。</p></div>
+      <div class="check-item"><strong>効率を選べるか</strong><p>少量・大量、初見・慣れた人のどちらかに偏っていないか。</p></div>
     </div></section>
 
     <section><div class="section-kicker">05 / DO NOT</div><h2>避けること</h2><div class="checklist">
@@ -42,10 +44,11 @@
     </div></section>
 
     <section><div class="section-kicker">06 / REFERENCES</div><h2>参考にした原則</h2><table class="contract-table"><thead><tr><th>原則</th><th>出典</th><th>この資料での扱い</th></tr></thead><tbody>
-      <tr><td>10 Usability Heuristics</td><td><a href="https://www.nngroup.com/articles/ten-usability-heuristics/">Jakob Nielsen / Nielsen Norman Group</a></td><td>認識、状態の可視化、一貫性、エラー予防、柔軟性、ミニマルデザインの土台。</td></tr>
+      <tr><td>10 Usability Heuristics</td><td><a href="https://www.nngroup.com/articles/ten-usability-heuristics/">Jakob Nielsen / Nielsen Norman Group</a></td><td>認識、現実世界との対応、状態の可視化、一貫性、エラー予防、柔軟性、ミニマルデザインの土台。</td></tr>
       <tr><td>Recognition Rather than Recall</td><td><a href="https://www.nngroup.com/articles/recognition-and-recall/">Nielsen Norman Group</a></td><td>カテゴリ固定、候補表示、検索常設の根拠。</td></tr>
       <tr><td>Progressive Disclosure</td><td><a href="https://www.nngroup.com/articles/progressive-disclosure/">Nielsen Norman Group</a></td><td>一覧では軽く、詳細・編集・削除は必要時に出す判断。</td></tr>
-      <tr><td>Flexibility and Efficiency of Use</td><td><a href="https://www.nngroup.com/articles/flexibility-efficiency-heuristic/">Nielsen Norman Group</a></td><td>表示モード、ショートカット、熟練者向け効率化の根拠。</td></tr>
+      <tr><td>Aesthetic and Minimalist Design</td><td><a href="https://www.nngroup.com/articles/aesthetic-minimalist-design/">Nielsen Norman Group</a></td><td>入口の集約、装飾の抑制、情報の優先順位づけの根拠。</td></tr>
+      <tr><td>Flexibility and Efficiency of Use</td><td><a href="https://www.nngroup.com/articles/flexibility-efficiency-heuristic/">Nielsen Norman Group</a></td><td>表示モード、検索、ショートカット、熟練者向け効率化の根拠。</td></tr>
     </tbody></table></section>
   </main>
 </body>

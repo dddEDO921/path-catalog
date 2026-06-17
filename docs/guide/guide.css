@@ -35,6 +35,7 @@ h3 { margin:0 0 8px; font-size:19px; line-height:1.4; }
 .reading-flow div,.flow-node { padding:22px; border:1px solid var(--line); border-radius:14px; background:var(--surface); }
 .reading-flow b { display:block; color:var(--accent); }.reading-flow i,.flow i { color:var(--muted); font-style:normal; }
 .point { margin-top:24px; padding:17px 20px; border-left:4px solid var(--accent); border-radius:0 10px 10px 0; background:var(--accent-soft); }
+.note { margin:0 0 18px; padding:14px 17px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--muted); font-size:13px; }
 .two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }.pad { padding:26px; }.pad p,.pad li { color:var(--muted); }
 .code-card { overflow:hidden; }.code-head { padding:13px 17px; border-bottom:1px solid var(--line); font-weight:800; }
 pre { margin:0; padding:20px; overflow:auto; background:#282730; color:#f0edf8; font-size:12px; line-height:1.65; }
