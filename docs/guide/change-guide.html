@@ -4,7 +4,7 @@
 <body>
   <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a class="active" href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a href="state-management.html">状態管理</a><a href="io-security.html">入出力安全</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
   <main class="page">
-    <section class="hero"><div class="eyebrow">CHANGE GUIDE</div><h1>変更範囲を絞って、<br>最後まで確認する。</h1><div class="doc-tags"><span>実装</span><span>変更手順</span><span>ビギナー</span></div><p class="lead">実現したいことから入口を探し、データ・表示・操作への影響を整理してから実装します。</p></section>
+    <section class="hero"><div class="eyebrow">CHANGE GUIDE</div><h1>変更範囲を絞って、<br>最後まで確認する。</h1><div class="doc-tags"><span>入門</span><span>手順</span><span>実装</span></div><p class="lead">実現したいことから入口を探し、データ・表示・操作への影響を整理してから実装します。</p></section>
     <section><div class="section-kicker">01 / START FROM YOUR GOAL</div><h2>変更したいことを選ぶ</h2><div class="change-grid" id="changeGrid"></div><article class="card detail" id="changeDetail"></article></section>
     <section><div class="section-kicker">02 / SMALL TUTORIAL</div><h2>小さな変更を最後まで追う</h2><p class="lead">例として「検索結果にノートを表示する」を考えます。保存形式を変えず、表示だけを変える変更です。</p><article class="card tutorial-steps">
       <div class="tutorial-step"><span class="step-number">1</span><h3>入口を探す</h3><p>検索結果の見た目を作る関数を特定します。</p><div class="mini-code">buildSearchResultHtml</div></div>

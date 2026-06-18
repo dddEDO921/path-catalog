@@ -4,7 +4,7 @@
 <body>
   <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a href="state-management.html">状態管理</a><a class="active" href="io-security.html">入出力安全</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
   <main class="page">
-    <section class="hero"><div class="eyebrow">I/O AND SAFETY</div><h1>便利な入出力ほど、<br>境界をはっきりさせる。</h1><div class="doc-tags"><span>安全性</span><span>データ</span><span>実装</span></div><p class="lead">パスノートはブラウザだけで追加・編集・書き出し・読み込みを行います。サーバーがない分、ファイル、localStorage、画面表示の境界で何を信用するかを明確にします。</p></section>
+    <section class="hero"><div class="eyebrow">I/O AND SAFETY</div><h1>便利な入出力ほど、<br>境界をはっきりさせる。</h1><div class="doc-tags"><span>詳細</span><span>安全性</span><span>データ</span></div><p class="lead">パスノートはブラウザだけで追加・編集・書き出し・読み込みを行います。サーバーがない分、ファイル、localStorage、画面表示の境界で何を信用するかを明確にします。</p></section>
 
     <section><div class="section-kicker">01 / TRUST BOUNDARIES</div><h2>信用するもの・しないもの</h2><table class="contract-table"><thead><tr><th>入力元</th><th>信用度</th><th>扱い</th></tr></thead><tbody>
       <tr><td>同梱の<code>data.js</code></td><td>初期データとして使う</td><td>起動時に検査し、画面用データへ変換する。</td></tr>

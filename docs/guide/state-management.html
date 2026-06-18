@@ -4,7 +4,7 @@
 <body>
   <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a class="active" href="state-management.html">状態管理</a><a href="io-security.html">入出力安全</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
   <main class="page">
-    <section class="hero"><div class="eyebrow">STATE MANAGEMENT</div><h1>何を正本にするかを<br>先に決める。</h1><div class="doc-tags"><span>設計</span><span>実装</span><span>状態管理</span></div><p class="lead">パスノートの状態管理は、保存用データ、画面用データ、表示設定、一時的なUI状態を分けて考えます。混ぜると、編集後の表示や検索、削除後の再描画が壊れやすくなります。</p></section>
+    <section class="hero"><div class="eyebrow">STATE MANAGEMENT</div><h1>何を正本にするかを<br>先に決める。</h1><div class="doc-tags"><span>詳細</span><span>構造</span><span>設計</span></div><p class="lead">パスノートの状態管理は、保存用データ、画面用データ、表示設定、一時的なUI状態を分けて考えます。混ぜると、編集後の表示や検索、削除後の再描画が壊れやすくなります。</p></section>
 
     <section><div class="section-kicker">01 / FOUR STATE TYPES</div><h2>状態は4種類ある</h2><table class="contract-table"><thead><tr><th>種類</th><th>主な変数・保存先</th><th>役割</th><th>変更方法</th></tr></thead><tbody>
       <tr><td>保存用データ</td><td><code>catalog</code></td><td>タブ、カテゴリ、サブカテゴリ、パスの正本。</td><td><code>catalogModel</code>経由で変更する。</td></tr>
