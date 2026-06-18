@@ -4,7 +4,7 @@
 <body>
   <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a class="active" href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a href="state-management.html">状態管理</a><a href="io-security.html">入出力安全</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
   <main class="page">
-    <section class="hero"><div class="eyebrow">CODE MAP</div><h1>巨大なHTMLは、<br>上から読まない。</h1><p class="lead">目的に合う章コメントを検索し、入口のイベントから必要な関数だけを追います。</p></section>
+    <section class="hero"><div class="eyebrow">CODE MAP</div><h1>巨大なHTMLは、<br>上から読まない。</h1><div class="doc-tags"><span>実装</span><span>コード読解</span><span>中級</span></div><p class="lead">目的に合う章コメントを検索し、入口のイベントから必要な関数だけを追います。</p></section>
     <section><div class="section-kicker">01 / READING RULE</div><h2>読む範囲を先に絞る</h2><div class="reading-flow"><div><b>1</b><span>画面の要素や<br>章コメントを探す</span></div><i>→</i><div><b>2</b><span>イベント処理から<br>呼び先を追う</span></div><i>→</i><div><b>3</b><span>変更する責務の<br>内側だけ読む</span></div></div><div class="point">行番号は変更でずれます。<code>===== 描画</code>のような章コメントと、関数名を検索の入口にします。</div></section>
     <section><div class="section-kicker">02 / RESPONSIBILITIES</div><h2>コードは6つの責務で見る</h2><p class="lead">カードを選ぶと、処理のつながりと境界を確認できます。</p><div class="responsibility-grid" id="areaGrid"></div><article class="card detail" id="areaDetail"></article></section>
     <section><div class="section-kicker">03 / MAIN FLOWS</div><h2>よく追う処理の流れ</h2><div class="two-col">

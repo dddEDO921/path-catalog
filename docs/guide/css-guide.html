@@ -4,7 +4,7 @@
 <body>
   <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a href="state-management.html">状態管理</a><a href="io-security.html">入出力安全</a><a href="design-guide.html">デザイン</a><a class="active" href="css-guide.html">CSS</a></nav></header>
   <main class="page">
-    <section class="hero"><div class="eyebrow">CSS GUIDE</div><h1>CSSは、<br>変数と上書きで読む。</h1><p class="lead">パスノートのCSSはHTML内にあります。ファイル分割はしませんが、章コメント、CSS変数、表示モードごとの上書きで追えるようにしています。</p></section>
+    <section class="hero"><div class="eyebrow">CSS GUIDE</div><h1>CSSは、<br>変数と上書きで読む。</h1><div class="doc-tags"><span>実装</span><span>CSS</span><span>見た目</span></div><p class="lead">パスノートのCSSはHTML内にあります。ファイル分割はしませんが、章コメント、CSS変数、表示モードごとの上書きで追えるようにしています。</p></section>
 
     <section><div class="section-kicker">01 / LAYERS</div><h2>CSSは3層でできている</h2><div class="reading-flow"><div><b>1</b><span>Tailwind CDN<br>レイアウトと余白</span></div><i>→</i><div><b>2</b><span>生CSS<br>意味のある部品</span></div><i>→</i><div><b>3</b><span>CSS変数<br>表示モード</span></div></div><div class="point"><strong>役割を混ぜない</strong><br>Tailwindは細かい配置を素早く書くために使います。色、テーマ、状態、コンポーネントの意味は生CSS側へ寄せます。</div></section>
 

@@ -4,7 +4,7 @@
 <body>
   <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a class="active" href="runtime-flow.html">実行フロー</a><a href="state-management.html">状態管理</a><a href="io-security.html">入出力安全</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
   <main class="page">
-    <section class="hero"><div class="eyebrow">RUNTIME FLOW</div><h1>画面が動く順番を<br>一本の流れで追う。</h1><p class="lead">パスノートはフレームワークを使わないため、起動、描画、イベント、保存、再描画の流れを自分たちで管理しています。まずは関数単体ではなく、処理の順番を押さえます。</p></section>
+    <section class="hero"><div class="eyebrow">RUNTIME FLOW</div><h1>画面が動く順番を<br>一本の流れで追う。</h1><div class="doc-tags"><span>実装</span><span>処理フロー</span><span>中級</span></div><p class="lead">パスノートはフレームワークを使わないため、起動、描画、イベント、保存、再描画の流れを自分たちで管理しています。まずは関数単体ではなく、処理の順番を押さえます。</p></section>
 
     <section><div class="section-kicker">01 / BIG PICTURE</div><h2>基本の循環</h2><div class="reading-flow"><div><b>1</b><span>データを読む<br><code>loadCatalog</code></span></div><i>→</i><div><b>2</b><span>状態を作る<br><code>refreshCatalog</code></span></div><i>→</i><div><b>3</b><span>画面を描く<br><code>renderAll</code></span></div></div><div class="point"><strong>DOMを正本にしない</strong><br>画面の見た目は、保存用の<code>catalog</code>と画面用の<code>state</code>から毎回作ります。DOMを直接正本にすると、検索・編集・削除で状態がずれやすくなります。</div></section>
 
