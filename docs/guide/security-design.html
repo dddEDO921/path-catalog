@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>セキュリティ設計思想 | パスノート</title><link rel="stylesheet" href="guide.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a href="state-management.html">状態管理</a><a href="io-security.html">入出力安全</a><a href="vanilla-js-design.html">Vanilla JS設計</a><a class="active" href="security-design.html">安全設計</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
+  <main class="page">
+    <section class="hero"><div class="eyebrow">SECURITY DESIGN</div><h1>安全性は、<br>境界の設計から考える。</h1><div class="doc-tags"><span>詳細</span><span>設計</span><span>安全性</span></div><p class="lead">パスノートはサーバーを持たないローカルHTMLアプリです。それでも安全性を無視できるわけではありません。ファイル、localStorage、フォーム入力、HTML出力の境界で、何を信用しないかを決めます。</p></section>
+
+    <section><div class="section-kicker">01 / POSITION</div><h2>この資料の立場</h2><div class="point"><strong>これは注意事項ではなく、境界設計の資料です。</strong><br>「危ないから気をつける」ではなく、危ない値が入っても実行しない、表示前に変換する、保存前に検査する、破壊的操作だけ止める、という設計判断として扱います。</div><div class="two-col"><article class="card pad"><h3>今の判断</h3><p>ブラウザでの登録を主導線にし、data.jsはバックアップ兼初期データとして扱います。インポート時はJavaScriptとして実行しません。</p></article><article class="card pad"><h3>完璧ではない点</h3><p>静的HTMLアプリなので、ユーザーが信頼できないファイルを自分で開くリスクまでは完全に消せません。できるのは、アプリ内の読み込み境界で任意コード実行や不正データ反映を避けることです。</p></article></div></section>
+
+    <section><div class="section-kicker">02 / BOUNDARIES</div><h2>信用境界を分ける</h2><table class="contract-table"><thead><tr><th>境界</th><th>入ってくるもの</th><th>主なリスク</th><th>守り方</th></tr></thead><tbody>
+      <tr><td>data.js</td><td>初期データ、インポートファイル</td><td>任意JavaScript実行、不正形式</td><td>実行せずJSON部分だけ読む。strict検査する。</td></tr>
+      <tr><td>localStorage</td><td>過去に保存したカタログ</td><td>破損、古い形式、手編集</td><td>JSON解析と検査を通し、失敗時は初期データへ戻す。</td></tr>
+      <tr><td>フォーム入力</td><td>タブ名、カテゴリ名、パス、ノート</td><td>空データ、HTML混入</td><td>必須チェックし、表示時にエスケープする。</td></tr>
+      <tr><td>HTML出力</td><td>一覧、検索結果、詳細</td><td>XSS、DOMの意図しない生成</td><td>動的な値は<code>toHtml</code>を通す。</td></tr>
+      <tr><td>破壊的操作</td><td>削除、インポート置き換え</td><td>意図しない消失、復元困難</td><td>確認を出し、保存失敗時は変更前へ戻す。</td></tr>
+    </tbody></table></section>
+
+    <section><div class="section-kicker">03 / DATA.JS</div><h2>data.jsは実行せず、データとして読む</h2><div class="two-col"><article class="card code-card"><div class="code-head">受け入れる形</div><pre><code>window.PATH_CATALOG = [
+  ["共通", [
+    ["申請", [
+      ["経費", [
+        ["経費精算", "\\\\server\\expense", ""]
+      ]]
+    ]]
+  ]]
+];</code></pre><div class="why">ファイルとしてはJavaScriptでも、右辺はJSON互換にします。</div></article><article class="card pad"><h3>設計判断</h3><p><code>String.raw</code>のような書きやすい形式は、インポート時の安全な解析が難しくなります。ブラウザ登録を主導線にするなら、書き出し後のdata.jsはJSON互換を優先します。</p></article></div><div class="point"><strong>判断の代償</strong><br>手書きのしやすさは少し下がります。代わりに、ブラウザで書き出したファイルをそのまま安全に読み戻しやすくなります。</div></section>
+
+    <section><div class="section-kicker">04 / OUTPUT</div><h2>HTML出力は必ず変換する</h2><div class="sample-grid">
+      <article class="card sample-card"><div class="code-head">危険な境界</div><pre><code>const html = `&lt;span&gt;${item.name}&lt;/span&gt;`;</code></pre><div class="why">値がHTMLとして解釈される可能性があります。</div></article>
+      <article class="card sample-card"><div class="code-head">守る境界</div><pre><code>const html = `&lt;span&gt;${toHtml(item.name)}&lt;/span&gt;`;</code></pre><div class="why">利用者由来の値を表示用文字列へ変換します。</div></article>
+    </div><div class="point"><strong>テンプレートリテラルは危険ではない。境界を曖昧にすると危険。</strong><br>HTMLの固定部分と、外から来た値を分けて考えます。値をHTMLへ混ぜる直前が変換ポイントです。</div></section>
+
+    <section><div class="section-kicker">05 / VALIDATION</div><h2>検査は境界ごとに強さを変える</h2><div class="two-col"><article class="card pad"><h3>通常起動は継続を優先</h3><p>既存データに多少の不備があっても、表示できるものは表示します。警告を出し、利用者の作業を止めすぎないためです。</p></article><article class="card pad"><h3>インポートは安全を優先</h3><p>外部ファイルで現在のデータを置き換えるため、strict検査にします。不正な形式は一部だけ取り込まず、全体を拒否します。</p></article></div><table class="contract-table" style="margin-top:18px"><thead><tr><th>場面</th><th>方針</th><th>理由</th></tr></thead><tbody>
+      <tr><td>起動時</td><td>警告しながら継続</td><td>過去データをできるだけ救う。</td></tr>
+      <tr><td>インポート時</td><td>strictに拒否</td><td>外部ファイルで全体を置き換えるため。</td></tr>
+      <tr><td>フォーム登録時</td><td>必要項目を必須</td><td>空データを作らせないため。</td></tr>
+    </tbody></table></section>
+
+    <section><div class="section-kicker">06 / USER FLOW</div><h2>安全性と入力しやすさのバランス</h2><div class="checklist">
+      <div class="check-item"><strong>普段は止めない</strong><p>コピーや保存成功はトーストで軽く伝える。</p></div>
+      <div class="check-item"><strong>破壊的操作だけ止める</strong><p>削除やインポート置き換えでは確認する。</p></div>
+      <div class="check-item"><strong>空登録を防ぐ</strong><p>種類を選ばせてから必要な入力へ進める。</p></div>
+      <div class="check-item"><strong>文脈を固定する</strong><p>追加先が明らかな場合は、タブやカテゴリをロックする。</p></div>
+      <div class="check-item"><strong>復元できるようにする</strong><p>保存失敗時は変更前のcatalogへ戻す。</p></div>
+      <div class="check-item"><strong>説明に頼りすぎない</strong><p>危険な境界はコードで守り、注意書きだけにしない。</p></div>
+    </div></section>
+
+    <section><div class="section-kicker">07 / LIMITS</div><h2>今の設計の限界</h2><div class="two-col">
+      <article class="card pad"><h3>ファイルを開く行為自体は制御できない</h3><p>ユーザーが信頼できないHTMLやJavaScriptを直接開くリスクは、パスノート内部だけでは防げません。</p></article>
+      <article class="card pad"><h3>localStorageは端末内の保存でしかない</h3><p>権限管理、監査、同期、バックアップ保証はありません。必要になれば別の保存方式を検討します。</p></article>
+      <article class="card pad"><h3>静的HTMLでは自動更新が難しい</h3><p>セキュリティ修正を利用者環境へ自動配布できません。配布方法の設計が別途必要です。</p></article>
+      <article class="card pad"><h3>検査ロジックも保守対象</h3><p>データ形式が増えれば、通常検査とstrict検査の差分も複雑になります。</p></article>
+    </div></section>
+
+    <section><div class="section-kicker">08 / REVIEW QUESTIONS</div><h2>安全性を見直す質問</h2><div class="checklist">
+      <div class="check-item"><strong>これは外から来た値か</strong><p>ファイル、localStorage、フォーム入力を信用していないか。</p></div>
+      <div class="check-item"><strong>実行していないか</strong><p>読み込んだdata.jsをJavaScriptとして動かしていないか。</p></div>
+      <div class="check-item"><strong>表示前に変換したか</strong><p>HTMLへ入れる直前に<code>toHtml</code>を通しているか。</p></div>
+      <div class="check-item"><strong>置き換え前に検査したか</strong><p>インポートでstrict検査を通しているか。</p></div>
+      <div class="check-item"><strong>失敗時に戻せるか</strong><p>保存失敗で中途半端なcatalogが残らないか。</p></div>
+      <div class="check-item"><strong>確認は必要な場所だけか</strong><p>安全のために通常操作まで重くしていないか。</p></div>
+    </div></section>
+  </main>
+</body>
+</html>

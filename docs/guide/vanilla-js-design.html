@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vanilla JS設計 | パスノート</title><link rel="stylesheet" href="guide.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a href="state-management.html">状態管理</a><a href="io-security.html">入出力安全</a><a class="active" href="vanilla-js-design.html">Vanilla JS設計</a><a href="security-design.html">安全設計</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
+  <main class="page">
+    <section class="hero"><div class="eyebrow">VANILLA JS DESIGN</div><h1>フレームワークなしでも、<br>構造は必要。</h1><div class="doc-tags"><span>詳細</span><span>設計</span><span>実装</span></div><p class="lead">パスノートはReactやVueを使いません。ただし、何も整理しないという意味ではありません。状態、モデル、描画、イベント、DOM更新を分けることで、単一HTMLのまま保守性を保ちます。</p></section>
+
+    <section><div class="section-kicker">01 / POSITION</div><h2>この資料の立場</h2><div class="point"><strong>Vanilla JSは方針であって、免罪符ではない。</strong><br>ビルド不要、配布しやすい、HTMLを開くだけで動くという強みを取る代わりに、状態管理、再描画、イベント設計は自分たちで律する必要があります。</div><div class="two-col"><article class="card pad"><h3>今の判断</h3><p>製品を<code>path-note.html</code>と<code>data.js</code>に保つため、アプリ本体はHTML内のJavaScriptで完結させています。</p></article><article class="card pad"><h3>見直し条件</h3><p>画面状態がさらに増え、変更のたびに副作用確認が難しくなるなら、テスト追加や内部構造の再整理を優先して検討します。</p></article></div></section>
+
+    <section><div class="section-kicker">02 / LAYERS</div><h2>責務を層で分ける</h2><table class="contract-table"><thead><tr><th>層</th><th>担当</th><th>代表</th><th>守ること</th></tr></thead><tbody>
+      <tr><td>データ正本</td><td>保存用の階層データ</td><td><code>catalog</code></td><td>表示都合で直接崩さない。</td></tr>
+      <tr><td>モデル操作</td><td>追加・編集・削除</td><td><code>catalogModel</code></td><td>階層配列への変更を集約する。</td></tr>
+      <tr><td>画面状態</td><td>選択中タブ、カテゴリ、平坦化データ</td><td><code>state</code></td><td>DOMから復元しない。</td></tr>
+      <tr><td>描画</td><td>HTML生成とDOM反映</td><td><code>build...</code> / <code>apply...</code> / <code>render...</code></td><td>生成、反映、再描画を混ぜない。</td></tr>
+      <tr><td>イベント</td><td>クリック、submit、キー操作</td><td><code>bind</code>、<code>on...Click</code></td><td>入口を明確にし、処理を関数へ逃がす。</td></tr>
+    </tbody></table></section>
+
+    <section><div class="section-kicker">03 / STATE</div><h2>状態は少なく、派生は作り直す</h2><div class="two-col"><article class="card code-card"><div class="code-head">考え方</div><pre><code>catalog       // 保存用の正本
+state.all     // catalogから作る画面用データ
+state.tab     // 今見ているタブ
+state.cat     // 今見ているカテゴリ</code></pre><div class="why">保存したいものと、表示のために作ったものを分けます。</div></article><article class="card pad"><h3>今の弱点</h3><p><code>state</code>は単純ですが、検索、詳細、編集、整理ダイアログなど一時状態が増えると読みづらくなります。今後は一時状態の置き場所をさらに明確にする余地があります。</p></article></div><div class="point"><strong><code>state.all</code>だけを更新しない</strong><br>画面だけ変わって保存されない変更が生まれます。保存したい変更は<code>catalogModel</code>を通して<code>catalog</code>へ入れます。</div></section>
+
+    <section><div class="section-kicker">04 / MODEL</div><h2><code>catalogModel</code>に階層操作を閉じ込める</h2><div class="sample-grid">
+      <article class="card sample-card"><div class="code-head">外から見たい形</div><pre><code>commitCatalogChange(() => {
+  catalogModel.appendItem({
+    tab, category, subCategory, name, path, note
+  });
+});</code></pre><div class="why">UI側は配列の深い構造を知らなくてよい状態を目指します。</div></article>
+      <article class="card sample-card"><div class="code-head">避けたい形</div><pre><code>catalog[t][1][c][1][s][1].push(item);</code></pre><div class="why">階層構造の知識が画面処理へ漏れ、形式変更に弱くなります。</div></article>
+    </div><div class="point"><strong>改善余地</strong><br>現在も<code>_meta</code>や階層配列の知識は一部の処理に見えています。将来データ形式を変えるなら、モデル操作の境界をさらに厚くする必要があります。</div></section>
+
+    <section><div class="section-kicker">05 / RENDERING</div><h2>描画は build / apply / render で分ける</h2><div class="reading-flow"><div><b>build</b><span>HTML文字列を作る</span></div><i>→</i><div><b>apply</b><span>DOMへ反映する</span></div><i>→</i><div><b>render</b><span>必要な再描画をまとめる</span></div></div><div class="two-col" style="margin-top:18px"><article class="card pad"><h3>得られるもの</h3><p>HTML生成だけを読める。DOM更新の場所が分かる。表示モードごとの差分を追いやすい。</p></article><article class="card pad"><h3>失うもの</h3><p>仮想DOMやコンポーネントの差分更新はありません。再描画範囲を自分たちで判断する必要があります。</p></article></div></section>
+
+    <section><div class="section-kicker">06 / EVENTS</div><h2>イベント委譲で再描画に強くする</h2><div class="two-col"><article class="card code-card"><div class="code-head">親に登録する</div><pre><code>list.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-path-details]");
+  if (!button) return;
+  openPathDetailsDialog(findItem(button.dataset.pathDetails));
+});</code></pre><div class="why">一覧を再描画しても、子要素へイベントを付け直す必要がありません。</div></article><article class="card pad"><h3>注意点</h3><p><code>data-*</code>属性が増えすぎると、HTMLとイベント処理の契約が見えづらくなります。新しい操作を足すときは、属性名を意味で揃える必要があります。</p></article></div></section>
+
+    <section><div class="section-kicker">07 / IIFE</div><h2>IIFEで小さな閉じた領域を作る</h2><div class="sample-grid">
+      <article class="card sample-card"><div class="code-head">公開するものだけ返す</div><pre><code>const menuController = (() => {
+  const close = (name) => { ... };
+  const toggle = (name) => { ... };
+  return { close, toggle };
+})();</code></pre><div class="why">内部の補助関数や状態を外へ漏らさず、使い方を絞ります。</div></article>
+      <article class="card sample-card"><div class="code-head">使いどころ</div><pre><code>catalogModel
+menuController
+noteTooltip</code></pre><div class="why">小さな責務があり、内部の細部を隠したい場所に向きます。</div></article>
+    </div></section>
+
+    <section><div class="section-kicker">08 / WHEN TO RECONSIDER</div><h2>この設計を見直す条件</h2><div class="checklist">
+      <div class="check-item"><strong>状態が増えすぎる</strong><p>ダイアログや一時編集状態が絡み合い、どこで変わるか追えなくなる。</p></div>
+      <div class="check-item"><strong>描画差分が複雑になる</strong><p>表示モードや条件分岐が増え、<code>build...</code>が肥大化する。</p></div>
+      <div class="check-item"><strong>イベント契約が読めない</strong><p><code>data-*</code>属性の意味が散らばり、どの操作か分からなくなる。</p></div>
+      <div class="check-item"><strong>テストなしでは怖くなる</strong><p>保存、編集、削除、インポートが絡む変更で手動確認が限界になる。</p></div>
+      <div class="check-item"><strong>配布要件が変わる</strong><p>ビルドやサーバーを許容できるなら、別の設計選択が現実的になる。</p></div>
+      <div class="check-item"><strong>複数人で触る</strong><p>単一HTMLの読みやすさより、責務境界とレビューしやすさを優先する必要が出る。</p></div>
+    </div></section>
+  </main>
+</body>
+</html>
