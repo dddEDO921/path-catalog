@@ -170,6 +170,11 @@
       border-color: transparent;
     }
 
+    .list-row.keyboard-active {
+      background-color: var(--accent-soft);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
     .path-chip {
       display: inline-block;
       max-width: 100%;
@@ -273,8 +278,13 @@
     }
 
     .search-result:hover,
-    .search-result:focus-within {
+    .search-result:focus-within,
+    .search-result.active {
       background-color: var(--bg-hover);
+    }
+
+    .search-result.active {
+      box-shadow: inset 3px 0 0 var(--accent);
     }
 
     .search-result-path {
@@ -643,7 +653,8 @@
       cursor: pointer;
     }
 
-    .compact-row:hover {
+    .compact-row:hover,
+    .compact-row.keyboard-active {
       background: var(--accent-soft);
       box-shadow: inset 3px 0 var(--accent);
     }
@@ -711,7 +722,8 @@
         <div class="relative flex items-center gap-2 pb-1">
           <button id="openSearchButton" type="button"
             class="secondary-button rounded-md border px-3 py-1.5 text-sm font-semibold"
-            aria-keyshortcuts="Control+K Meta+K /">
+            aria-keyshortcuts="Control+K Meta+K /"
+            title="検索を開く（Ctrl/Cmd + K または /）">
             検索 <span class="search-shortcut ml-1 text-xs opacity-60">Ctrl K</span>
           </button>
           <button id="openViewMenuButton" type="button" aria-expanded="false" aria-controls="viewMenu"
@@ -774,11 +786,12 @@
           <nav class="mt-2 space-y-0" id="catList"></nav>
 
           <div class="mt-4 text-sm" style="color: var(--text-muted);">
-            <p>操作:</p>
-            <ul class="list-disc ml-4 mt-1 space-y-1">
-              <li>一覧のパスをクリックでコピー</li>
-              <li>キー: ←/→ タブ、↑/↓ カテゴリ</li>
-            </ul>
+            <button id="openShortcutsButton" type="button"
+              class="secondary-button w-full rounded-md border px-3 py-2 text-left text-sm font-semibold"
+              aria-keyshortcuts="?"
+              title="キーボード操作を表示（?）">
+              キーボード操作を見る <span class="float-right opacity-60">?</span>
+            </button>
           </div>
 
           <div id="warningPanel" class="mt-4 hidden"></div>
@@ -885,7 +898,8 @@
   </dialog>
 
   <dialog id="pathDetailsDialog"
-    class="dialog-shell path-details-dialog rounded-xl border p-0 shadow-2xl">
+    class="dialog-shell path-details-dialog rounded-xl border p-0 shadow-2xl"
+    tabindex="-1">
     <div>
       <div class="dialog-divider flex items-start justify-between gap-4 border-b px-5 py-4">
         <div class="min-w-0">
@@ -894,7 +908,9 @@
         </div>
         <div class="flex shrink-0 gap-2">
           <button id="editPathDetailsButton" type="button"
-            class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold">
+            class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold"
+            aria-keyshortcuts="e"
+            title="編集する（E）">
             編集
           </button>
           <button id="closePathDetailsButton" type="button"
@@ -910,7 +926,9 @@
           <div class="detail-path-row mt-1 flex items-start gap-2">
             <div id="detailPath" class="detail-path min-w-0 flex-1 break-all rounded-md border px-3 py-2 font-mono text-sm"></div>
             <button id="copyDetailPathButton" type="button"
-              class="primary-button shrink-0 rounded-md border px-3 py-2 text-sm font-semibold">
+              class="primary-button shrink-0 rounded-md border px-3 py-2 text-sm font-semibold"
+              aria-keyshortcuts="Enter"
+              title="パスをコピー（Enter）">
               コピー
             </button>
           </div>
@@ -920,6 +938,7 @@
           <div id="detailNote" class="detail-value mt-1 whitespace-pre-wrap break-words text-sm"></div>
         </section>
         <div class="dialog-divider flex justify-end border-t pt-4">
+          <span class="dialog-muted mr-auto self-center text-xs">Enter コピー　E 編集　Esc 閉じる</span>
           <button id="deletePathButton" type="button"
             class="danger-button rounded-md border px-3 py-2 text-sm font-semibold">
             このパスを削除
@@ -961,12 +980,14 @@
           <p id="editPathError" class="hidden text-sm text-rose-300 sm:col-span-2"></p>
         </div>
         <div class="dialog-divider flex justify-end gap-2 border-t px-5 py-4">
+          <span class="dialog-muted mr-auto self-center text-xs">Ctrl/Cmd S 保存　Esc キャンセル</span>
           <button id="cancelEditPathButton" type="button"
             class="secondary-button rounded-md border px-3 py-2 text-sm font-semibold">
             キャンセル
           </button>
           <button type="submit"
-            class="primary-button rounded-md border px-3 py-2 text-sm font-semibold">
+            class="primary-button rounded-md border px-3 py-2 text-sm font-semibold"
+            title="保存（Ctrl/Cmd + S）">
             保存
           </button>
         </div>
@@ -988,9 +1009,67 @@
         <input id="searchInput" type="search" autocomplete="off"
           placeholder="名前、パス、ノート、分類から検索"
           class="dialog-input mt-3 w-full rounded-md border px-3 py-2.5 outline-none">
-        <p id="searchSummary" class="dialog-muted mt-2 text-xs"></p>
+        <div class="mt-2 flex flex-wrap items-center justify-between gap-1 text-xs">
+          <p id="searchSummary" class="dialog-muted"></p>
+          <p class="dialog-muted">↑↓ 選択　Enter コピー　Ctrl/Cmd Enter 詳細</p>
+        </div>
       </div>
       <div id="searchResults" class="search-results"></div>
+    </div>
+  </dialog>
+
+  <dialog id="shortcutsDialog"
+    class="dialog-shell w-[min(560px,calc(100vw-2rem))] rounded-xl border p-0 shadow-2xl">
+    <div>
+      <div class="dialog-divider flex items-center justify-between gap-3 border-b px-5 py-4">
+        <div>
+          <h2 class="text-lg font-semibold">キーボード操作</h2>
+          <p class="dialog-muted mt-1 text-sm">よく使う操作を、マウスなしで行えます。</p>
+        </div>
+        <button id="closeShortcutsButton" type="button"
+          class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold">
+          閉じる
+        </button>
+      </div>
+      <div class="grid grid-cols-1 gap-x-8 gap-y-5 px-5 py-4 sm:grid-cols-2">
+        <section>
+          <h3 class="font-semibold">どこでも</h3>
+          <dl class="dialog-muted mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
+            <dt class="font-mono">Ctrl/Cmd K・/</dt><dd>検索を開く</dd>
+            <dt class="font-mono">?</dt><dd>この操作一覧を開く</dd>
+            <dt class="font-mono">Esc</dt><dd>画面を閉じる</dd>
+          </dl>
+        </section>
+        <section>
+          <h3 class="font-semibold">一覧</h3>
+          <dl class="dialog-muted mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
+            <dt class="font-mono">↑ / ↓</dt><dd>パスを選択</dd>
+            <dt class="font-mono">Enter</dt><dd>コピー</dd>
+            <dt class="font-mono">Space</dt><dd>詳細を開く</dd>
+            <dt class="font-mono">Home / End</dt><dd>先頭・末尾へ移動</dd>
+            <dt class="font-mono">PageUp / Down</dt><dd>10件ずつ移動</dd>
+            <dt class="font-mono">← / →</dt><dd>タブを移動</dd>
+            <dt class="font-mono">Alt ↑ / ↓</dt><dd>カテゴリを移動</dd>
+          </dl>
+        </section>
+        <section>
+          <h3 class="font-semibold">検索</h3>
+          <dl class="dialog-muted mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
+            <dt class="font-mono">↑ / ↓</dt><dd>結果を選択</dd>
+            <dt class="font-mono">Enter</dt><dd>コピー</dd>
+            <dt class="font-mono">Ctrl/Cmd Enter</dt><dd>詳細を開く</dd>
+          </dl>
+        </section>
+        <section>
+          <h3 class="font-semibold">詳細・編集</h3>
+          <dl class="dialog-muted mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
+            <dt class="font-mono">Enter</dt><dd>コピー</dd>
+            <dt class="font-mono">E</dt><dd>編集を開始</dd>
+            <dt class="font-mono">Ctrl/Cmd S</dt><dd>編集を保存</dd>
+            <dt class="font-mono">Esc</dt><dd>編集をキャンセル・閉じる</dd>
+          </dl>
+        </section>
+      </div>
     </div>
   </dialog>
 
@@ -1487,6 +1566,7 @@
         cat: "",
       };
       let activeNoteRow = null;
+      let selectedPathId = null;
 
       // 現在の選択状態で絞り込み
       const getFilteredItems = () => state.all.filter(x => {
@@ -1538,9 +1618,13 @@
       const actions = {
         setTab: (tab) => {
           if (tab === state.tab) return;
+          selectedPathId = null;
           setSelection({ tab, cat: "" });
         },
-        setCat: (cat) => setSelection({ cat }),
+        setCat: (cat) => {
+          selectedPathId = null;
+          setSelection({ cat });
+        },
       };
 
       // ===== 描画: HTML生成・画面反映 =====
@@ -1670,6 +1754,8 @@
       };
 
       const SEARCH_RESULT_LIMIT = 100;
+      let visibleSearchResults = [];
+      let selectedSearchResultIndex = -1;
       const normalizeSearchText = (value) => toSafeString(value).normalize("NFKC").toLocaleLowerCase();
       const getSearchResults = (query) => {
         const terms = normalizeSearchText(query).split(/\s+/).filter(Boolean);
@@ -1686,8 +1772,9 @@
           return terms.every((term) => haystack.includes(term));
         });
       };
-      const buildSearchResultHtml = (item) => `
-        <li class="search-result flex items-start gap-3 px-5 py-3">
+      const buildSearchResultHtml = (item, index) => `
+        <li class="search-result flex items-start gap-3 px-5 py-3 ${index === selectedSearchResultIndex ? "active" : ""}"
+            data-search-result-index="${index}">
           <button type="button" class="min-w-0 flex-1 text-left" data-search-copy="${item.id}">
             <span class="block text-xs" style="color: var(--text-muted);">
               ${toHtml([item.tab, item.category, item.subCategory].filter(Boolean).join(" / "))}
@@ -1710,6 +1797,8 @@
         const summary = $("searchSummary");
         if (!holder || !summary) return;
         if (!query.trim()) {
+          visibleSearchResults = [];
+          selectedSearchResultIndex = -1;
           summary.textContent = `全 ${state.all.length}件から検索します`;
           holder.innerHTML = `
             <p class="dialog-muted px-5 py-8 text-center text-sm">
@@ -1717,13 +1806,38 @@
             </p>`;
           return;
         }
-        const visibleResults = results.slice(0, SEARCH_RESULT_LIMIT);
+        visibleSearchResults = results.slice(0, SEARCH_RESULT_LIMIT);
+        selectedSearchResultIndex = visibleSearchResults.length ? 0 : -1;
         summary.textContent = results.length > SEARCH_RESULT_LIMIT
           ? `${results.length}件見つかりました（先頭${SEARCH_RESULT_LIMIT}件を表示）`
           : `${results.length}件見つかりました`;
         holder.innerHTML = results.length
-          ? `<ul>${visibleResults.map(buildSearchResultHtml).join("")}</ul>`
+          ? `<ul>${visibleSearchResults.map(buildSearchResultHtml).join("")}</ul>`
           : `<p class="dialog-muted px-5 py-8 text-center text-sm">一致するパスがありません</p>`;
+      };
+      const updateSearchResultSelection = (nextIndex, { scroll = true } = {}) => {
+        if (!visibleSearchResults.length) return;
+        selectedSearchResultIndex = Math.max(0, Math.min(nextIndex, visibleSearchResults.length - 1));
+        document.querySelectorAll("[data-search-result-index]").forEach((row) => {
+          row.classList.toggle("active", Number(row.dataset.searchResultIndex) === selectedSearchResultIndex);
+        });
+        if (scroll) {
+          document.querySelector(`[data-search-result-index="${selectedSearchResultIndex}"]`)
+            ?.scrollIntoView({ block: "nearest" });
+        }
+      };
+      const getSelectedSearchResult = () => visibleSearchResults[selectedSearchResultIndex];
+      const copySelectedSearchResult = async () => {
+        const item = getSelectedSearchResult();
+        if (!item) return;
+        const row = document.querySelector(`[data-search-result-index="${selectedSearchResultIndex}"]`);
+        await copyTextToClipboard(item.path, row);
+      };
+      const openSelectedSearchResultDetails = () => {
+        const item = getSelectedSearchResult();
+        if (!item) return;
+        dialogController.close("searchDialog");
+        openPathDetailsDialog(item);
       };
 
       // 一覧の1行分HTML生成
@@ -1733,7 +1847,8 @@
         const noteText = item.note || "";
         const detailsButton = buildDetailsButton(item);
         return `
-          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-0.5 rounded-md shadow-sm grid grid-cols-[18px_220px_minmax(0,1fr)] gap-x-3 gap-y-0 items-center transition overflow-visible list-row"
+          <li class="group relative z-0 hover:z-10 cursor-pointer px-0 py-0.5 rounded-md shadow-sm grid grid-cols-[18px_220px_minmax(0,1fr)] gap-x-3 gap-y-0 items-center transition overflow-visible list-row ${item.id === selectedPathId ? "keyboard-active" : ""}"
+              data-list-item-id="${item.id}"
               data-copy="${toHtml(item.path)}"
               data-note="${toHtml(noteText)}">
             <div class="row-accent w-0.5 rounded-full opacity-30 group-hover:opacity-90 transition col-span-3"></div>
@@ -1829,7 +1944,8 @@
 
       const buildCompactMainHtml = (items) => {
         const rows = items.map((item) => `
-          <li class="compact-row"
+          <li class="compact-row ${item.id === selectedPathId ? "keyboard-active" : ""}"
+              data-list-item-id="${item.id}"
               data-copy="${toHtml(item.path)}"
               data-note="${toHtml(item.note || "")}">
             <span class="compact-tag compact-tag--category">${toHtml(item.category)}</span>
@@ -1966,6 +2082,12 @@
         dialogController.open("searchDialog");
         requestAnimationFrame(() => input?.focus());
       };
+      const openShortcutsDialog = () => {
+        menuController.close("add");
+        menuController.close("data");
+        menuController.close("view");
+        dialogController.open("shortcutsDialog");
+      };
 
       let detailItem = null;
       const setPathDetailsEditing = (isEditing) => {
@@ -1983,6 +2105,7 @@
         $("detailNote").classList.toggle("dialog-muted", !item.note);
         setPathDetailsEditing(false);
         dialogController.open("pathDetailsDialog");
+        requestAnimationFrame(() => $("pathDetailsDialog")?.focus());
       };
       const startPathDetailsEditing = () => {
         if (!detailItem) return;
@@ -2536,8 +2659,52 @@
         return list[next];
       };
 
-      // キー操作（左右でタブ、上下でカテゴリ）
+      const getVisibleListRows = () =>
+        Array.from(document.querySelectorAll("[data-list-item-id]"))
+          .filter((row) => row.offsetParent !== null);
+      const updateListSelection = (id, { scroll = true } = {}) => {
+        selectedPathId = id;
+        document.querySelectorAll("[data-list-item-id]").forEach((row) => {
+          row.classList.toggle("keyboard-active", Number(row.dataset.listItemId) === selectedPathId);
+        });
+        if (scroll) {
+          document.querySelector(`[data-list-item-id="${selectedPathId}"]`)?.scrollIntoView({ block: "nearest" });
+        }
+      };
+      const moveListSelection = (delta) => {
+        const rows = getVisibleListRows();
+        if (!rows.length) return;
+        const currentIndex = rows.findIndex((row) => Number(row.dataset.listItemId) === selectedPathId);
+        const nextIndex = currentIndex < 0
+          ? (delta > 0 ? 0 : rows.length - 1)
+          : Math.max(0, Math.min(currentIndex + delta, rows.length - 1));
+        updateListSelection(Number(rows[nextIndex].dataset.listItemId));
+      };
+      const moveListSelectionTo = (position) => {
+        const rows = getVisibleListRows();
+        if (!rows.length) return;
+        const index = position === "end" ? rows.length - 1 : 0;
+        updateListSelection(Number(rows[index].dataset.listItemId));
+      };
+      const getSelectedPath = () => {
+        const row = document.querySelector(`[data-list-item-id="${selectedPathId}"]`);
+        if (!row || row.offsetParent === null) return undefined;
+        return state.all.find((item) => item.id === selectedPathId);
+      };
+
+      // キー操作（左右でタブ、Alt+上下でカテゴリ、上下でパス）
       const onKeydown = (event) => {
+        const isShortcutHelp = event.key === "?"
+          && !event.ctrlKey
+          && !event.metaKey
+          && !event.altKey
+          && !isEditableTarget(event.target);
+        if (isShortcutHelp && !document.querySelector("dialog[open]")) {
+          event.preventDefault();
+          openShortcutsDialog();
+          return;
+        }
+        if (document.querySelector("dialog[open]")) return;
         const isSearchShortcut = (event.ctrlKey || event.metaKey)
           && !event.altKey
           && event.key.toLocaleLowerCase() === "k";
@@ -2552,9 +2719,10 @@
           return;
         }
         if (isEditableTarget(event.target)) return;
-        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        if (event.ctrlKey || event.metaKey) return;
 
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          if (event.altKey) return;
           const tabs = getTabs();
           if (!tabs.length) return;
           const delta = event.key === "ArrowRight" ? 1 : -1;
@@ -2563,12 +2731,42 @@
           return;
         }
 
-        if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        if (event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
           const cats = [""].concat(getCats());
           if (!cats.length) return;
           const delta = event.key === "ArrowDown" ? 1 : -1;
           actions.setCat(getSteppedItem(cats, state.cat, delta));
           event.preventDefault();
+          return;
+        }
+
+        if (!event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+          moveListSelection(event.key === "ArrowDown" ? 1 : -1);
+          event.preventDefault();
+          return;
+        }
+        if (!event.altKey && (event.key === "Home" || event.key === "End")) {
+          moveListSelectionTo(event.key === "End" ? "end" : "start");
+          event.preventDefault();
+          return;
+        }
+        if (!event.altKey && (event.key === "PageUp" || event.key === "PageDown")) {
+          moveListSelection(event.key === "PageDown" ? 10 : -10);
+          event.preventDefault();
+          return;
+        }
+
+        const selected = getSelectedPath();
+        if (!selected || event.altKey) return;
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const row = document.querySelector(`[data-list-item-id="${selectedPathId}"]`);
+          copyTextToClipboard(selected.path, row);
+          return;
+        }
+        if (event.key === " ") {
+          event.preventDefault();
+          openPathDetailsDialog(selected);
         }
       };
 
@@ -2602,11 +2800,15 @@
         if (event.target.closest("[data-path-details]")) return;
         const row = event.target.closest("li[data-copy]");
         if (!row) return;
+        const id = Number(row.getAttribute("data-list-item-id"));
+        if (Number.isFinite(id)) updateListSelection(id, { scroll: false });
         const p = row.getAttribute("data-copy") || "";
         await copyTextToClipboard(p, row);
       };
 
       const onSearchResultClick = async (event) => {
+        const row = event.target.closest("[data-search-result-index]");
+        if (row) updateSearchResultSelection(Number(row.dataset.searchResultIndex), { scroll: false });
         const detailsButton = event.target.closest("[data-search-details]");
         if (detailsButton) {
           const id = Number(detailsButton.getAttribute("data-search-details"));
@@ -2621,6 +2823,63 @@
         if (!item) return;
         await copyTextToClipboard(item.path, copyButton);
       };
+      const onSearchKeydown = async (event) => {
+        if (event.isComposing || event.keyCode === 229) return;
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+          if (!visibleSearchResults.length) return;
+          event.preventDefault();
+          const delta = event.key === "ArrowDown" ? 1 : -1;
+          const nextIndex = selectedSearchResultIndex < 0 ? 0 : selectedSearchResultIndex + delta;
+          updateSearchResultSelection(nextIndex);
+          return;
+        }
+        if (event.key !== "Enter" || !visibleSearchResults.length) return;
+        event.preventDefault();
+        if (event.ctrlKey || event.metaKey) {
+          openSelectedSearchResultDetails();
+          return;
+        }
+        await copySelectedSearchResult();
+      };
+      const onPathDetailsKeydown = async (event) => {
+        if (event.isComposing || event.keyCode === 229) return;
+        const isEditing = !$("editPathForm")?.classList.contains("hidden");
+        if (event.key === "Escape") {
+          event.preventDefault();
+          event.stopPropagation();
+          if (isEditing) {
+            setPathDetailsEditing(false);
+            requestAnimationFrame(() => $("pathDetailsDialog")?.focus());
+          } else {
+            dialogController.close("pathDetailsDialog");
+          }
+          return;
+        }
+        if (isEditing && (event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === "s") {
+          event.preventDefault();
+          $("editPathForm")?.requestSubmit();
+          return;
+        }
+        if (isEditing) return;
+        if (!event.ctrlKey && !event.metaKey && !event.altKey
+          && event.key.toLocaleLowerCase() === "e"
+          && !isEditableTarget(event.target)) {
+          event.preventDefault();
+          startPathDetailsEditing();
+          return;
+        }
+        if (event.key === "Enter" && event.target === $("pathDetailsDialog") && detailItem) {
+          event.preventDefault();
+          await copyTextToClipboard(detailItem.path, $("detailPath"));
+        }
+      };
+      const onPathDetailsCancel = (event) => {
+        const isEditing = !$("editPathForm")?.classList.contains("hidden");
+        if (!isEditing) return;
+        event.preventDefault();
+        setPathDetailsEditing(false);
+        requestAnimationFrame(() => $("pathDetailsDialog")?.focus());
+      };
 
       // イベント委譲: サブカテゴリの折りたたみ
       const onSubcatToggle = (event) => {
@@ -2630,6 +2889,9 @@
         const list = btn.parentElement?.nextElementSibling;
         if (!list || !list.classList.contains("subcat-list")) return;
         const willCollapse = !list.classList.contains("hidden");
+        if (willCollapse && list.querySelector(`[data-list-item-id="${selectedPathId}"]`)) {
+          selectedPathId = null;
+        }
         list.classList.toggle("hidden");
         btn.setAttribute("aria-expanded", (!willCollapse).toString());
         if (key) {
@@ -2684,8 +2946,11 @@
         if (tabNav) tabNav.addEventListener("click", onTabClick);
         if (catList) catList.addEventListener("click", onCatClick);
         $("openSearchButton")?.addEventListener("click", openSearchDialog);
+        $("openShortcutsButton")?.addEventListener("click", openShortcutsDialog);
+        $("closeShortcutsButton")?.addEventListener("click", () => dialogController.close("shortcutsDialog"));
         $("closeSearchButton")?.addEventListener("click", () => dialogController.close("searchDialog"));
         $("searchInput")?.addEventListener("input", renderSearchResults);
+        $("searchInput")?.addEventListener("keydown", onSearchKeydown);
         $("searchResults")?.addEventListener("click", onSearchResultClick);
         $("openAddMenuButton")?.addEventListener("click", toggleAddMenu);
         $("addMenu")?.addEventListener("click", onAddMenuAction);
@@ -2699,6 +2964,8 @@
         $("closePathDetailsButton")?.addEventListener("click", () => dialogController.close("pathDetailsDialog"));
         $("editPathDetailsButton")?.addEventListener("click", startPathDetailsEditing);
         $("cancelEditPathButton")?.addEventListener("click", () => setPathDetailsEditing(false));
+        $("pathDetailsDialog")?.addEventListener("keydown", onPathDetailsKeydown);
+        $("pathDetailsDialog")?.addEventListener("cancel", onPathDetailsCancel);
         $("deletePathButton")?.addEventListener("click", deleteDetailItem);
         $("closeOrganizeButton")?.addEventListener("click", () => dialogController.close("organizeDialog"));
         $("deleteGroupButton")?.addEventListener("click", deleteOrganizeSelection);

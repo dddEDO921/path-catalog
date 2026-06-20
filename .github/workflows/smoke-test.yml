@@ -39,6 +39,8 @@ jobs:
             "searchDialog",
             "searchInput",
             "searchResults",
+            "openShortcutsButton",
+            "shortcutsDialog",
             "openAddMenuButton",
             "openDataMenuButton",
             "openViewMenuButton",
