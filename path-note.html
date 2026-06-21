@@ -307,6 +307,21 @@
       border-color: var(--cat-header-border, var(--border));
     }
 
+    .category-select {
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
+    }
+
+    .category-select:hover,
+    .category-select:focus-visible,
+    .subcat-toggle:focus-visible {
+      background-color: var(--bg-hover);
+      color: var(--text-heading);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
     .cat-card__topline {
       background-color: var(--cat-line, transparent);
     }
@@ -1810,7 +1825,12 @@
             <div class="cat-card__header relative px-4 py-1.5 grid grid-cols-[18px_1fr_auto] items-center gap-3 border-b">
               <span class="cat-card__topline absolute left-0 top-0 h-px w-full"></span>
               <span class="cat-card__pill inline-block h-1 w-5 rounded-full"></span>
-              <div class="text-lg font-semibold leading-tight" style="color: var(--text-heading);">${toHtml(cat)}</div>
+              <button type="button"
+                      class="category-select min-w-0 px-2 py-1 text-left text-lg font-semibold leading-tight"
+                      data-main-category="${toHtml(cat)}"
+                      style="color: var(--text-heading);">
+                ${toHtml(cat)}
+              </button>
               <button type="button" class="add-inline-btn"
                       data-add-group="subCategory"
                       data-add-tab="${toHtml(state.tab)}"
@@ -2586,6 +2606,12 @@
         actions.setCat(btn.getAttribute("data-cat") || "");
       };
 
+      const onMainCategoryClick = (event) => {
+        const btn = event.target.closest("button[data-main-category]");
+        if (!btn) return;
+        actions.setCat(btn.getAttribute("data-main-category") || "");
+      };
+
       // イベント委譲: パス詳細を表示
       const onPathDetailsClick = (event) => {
         const button = event.target.closest("[data-path-details]");
@@ -2722,6 +2748,7 @@
         if (list) {
           list.addEventListener("click", onAddShortcutClick);
           list.addEventListener("click", onOpenAddGroupClick);
+          list.addEventListener("click", onMainCategoryClick);
           list.addEventListener("click", onSubcatToggle);
           list.addEventListener("click", onPathDetailsClick);
           list.addEventListener("click", onListClick);
