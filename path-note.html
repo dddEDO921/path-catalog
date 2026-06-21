@@ -979,7 +979,7 @@
     <div>
       <div class="dialog-divider border-b px-5 py-4">
         <div class="flex items-center justify-between gap-3">
-          <h2 class="text-lg font-semibold">パス・分類を検索</h2>
+          <h2 class="text-lg font-semibold">パスを検索</h2>
           <button id="closeSearchButton" type="button"
             class="secondary-button rounded-md border px-2.5 py-1.5 text-sm font-semibold">
             閉じる
@@ -1671,44 +1671,22 @@
 
       const SEARCH_RESULT_LIMIT = 100;
       const normalizeSearchText = (value) => toSafeString(value).normalize("NFKC").toLocaleLowerCase();
-      const matchesSearchTerms = (terms, values) => {
-        const haystack = normalizeSearchText(values.filter(Boolean).join("\n"));
-        return terms.every((term) => haystack.includes(term));
-      };
-      const getCategorySearchTargets = (terms) => {
-        const targets = [];
-        catalogModel.getTabBlocks().forEach((tabBlock) => {
-          const tab = toSafeString(tabBlock[0]).trim();
-          catalogModel.getCategoryBlocks(tab).forEach((categoryBlock) => {
-            const category = toSafeString(categoryBlock[0]).trim();
-            if (category && matchesSearchTerms(terms, [tab, category])) {
-              targets.push({ type: "category", tab, category });
-            }
-            catalogModel.getSubCategoryBlocks(tab, category).forEach((subBlock) => {
-              const subCategory = toSafeString(subBlock[0]).trim();
-              if (subCategory && matchesSearchTerms(terms, [tab, category, subCategory])) {
-                targets.push({ type: "subCategory", tab, category, subCategory });
-              }
-            });
-          });
-        });
-        return targets;
-      };
       const getSearchResults = (query) => {
         const terms = normalizeSearchText(query).split(/\s+/).filter(Boolean);
         if (!terms.length) return [];
-        const categoryTargets = getCategorySearchTargets(terms);
-        const pathTargets = state.all.filter((item) => matchesSearchTerms(terms, [
-          item.name,
-          item.path,
-          item.note,
-          item.tab,
-          item.category,
-          item.subCategory,
-        ])).map((item) => ({ type: "path", item }));
-        return categoryTargets.concat(pathTargets);
+        return state.all.filter((item) => {
+          const haystack = normalizeSearchText([
+            item.name,
+            item.path,
+            item.note,
+            item.tab,
+            item.category,
+            item.subCategory,
+          ].join("\n"));
+          return terms.every((term) => haystack.includes(term));
+        });
       };
-      const buildSearchPathResultHtml = (item) => `
+      const buildSearchResultHtml = (item) => `
         <li class="search-result flex items-start gap-3 px-5 py-3">
           <button type="button" class="min-w-0 flex-1 text-left" data-search-copy="${item.id}">
             <span class="block text-xs" style="color: var(--text-muted);">
@@ -1725,35 +1703,6 @@
           </button>
         </li>
       `;
-      const buildSearchCategoryResultHtml = (target) => {
-        const isSubCategory = target.type === "subCategory";
-        const label = isSubCategory ? "サブカテゴリ" : "カテゴリ";
-        const location = isSubCategory
-          ? [target.tab, target.category].filter(Boolean).join(" / ")
-          : target.tab;
-        const title = isSubCategory ? target.subCategory : target.category;
-        return `
-          <li class="search-result flex items-start gap-3 px-5 py-3">
-            <button type="button" class="min-w-0 flex-1 text-left"
-                    data-search-select="${target.type}"
-                    data-search-tab="${toHtml(target.tab)}"
-                    data-search-category="${toHtml(target.category)}"
-                    data-search-sub-category="${toHtml(target.subCategory || "")}">
-              <span class="block text-xs" style="color: var(--text-muted);">
-                ${toHtml(label)}${location ? ` / ${toHtml(location)}` : ""}
-              </span>
-              <span class="mt-1 block font-semibold" style="color: var(--text-heading);">
-                ${toHtml(title)}
-              </span>
-              <span class="mt-1 block text-xs" style="color: var(--text-muted);">
-                選択してこの分類へ移動
-              </span>
-            </button>
-          </li>
-        `;
-      };
-      const buildSearchResultHtml = (result) =>
-        result.type === "path" ? buildSearchPathResultHtml(result.item) : buildSearchCategoryResultHtml(result);
       const renderSearchResults = () => {
         const query = $("searchInput")?.value || "";
         const results = getSearchResults(query);
@@ -1761,7 +1710,7 @@
         const summary = $("searchSummary");
         if (!holder || !summary) return;
         if (!query.trim()) {
-          summary.textContent = `分類と全 ${state.all.length}件のパスから検索します`;
+          summary.textContent = `全 ${state.all.length}件から検索します`;
           holder.innerHTML = `
             <p class="dialog-muted px-5 py-8 text-center text-sm">
               キーワードを入力してください
@@ -1774,7 +1723,7 @@
           : `${results.length}件見つかりました`;
         holder.innerHTML = results.length
           ? `<ul>${visibleResults.map(buildSearchResultHtml).join("")}</ul>`
-          : `<p class="dialog-muted px-5 py-8 text-center text-sm">一致する項目がありません</p>`;
+          : `<p class="dialog-muted px-5 py-8 text-center text-sm">一致するパスがありません</p>`;
       };
 
       // 一覧の1行分HTML生成
@@ -1825,7 +1774,7 @@
         const listId = `subcat-${subcatIdCounter++}`;
         return `
           <div class="space-y-0">
-            <div class="flex items-center gap-1" data-subcategory-key="${toHtml(key)}">
+            <div class="flex items-center gap-1">
               <button class="subcat-toggle flex flex-1 items-center gap-2 px-2 py-2 text-left"
                       data-subcat-toggle="${toHtml(key)}"
                       aria-expanded="${(!isCollapsed).toString()}"
@@ -1856,9 +1805,8 @@
       const buildCategoryCardHtml = (cat, subMap) => {
         const color = colorForCat(cat);
         const subLabels = Object.keys(subMap);
-        const categoryKey = subcatKeyFor(state.tab, cat, "");
         return `
-          <div class="cat-card rounded-xl border shadow-lg overflow-hidden" data-category-key="${toHtml(categoryKey)}" style="${buildCategoryStyleVars(color)}">
+          <div class="cat-card rounded-xl border shadow-lg overflow-hidden" style="${buildCategoryStyleVars(color)}">
             <div class="cat-card__header relative px-4 py-1.5 grid grid-cols-[18px_1fr_auto] items-center gap-3 border-b">
               <span class="cat-card__topline absolute left-0 top-0 h-px w-full"></span>
               <span class="cat-card__pill inline-block h-1 w-5 rounded-full"></span>
@@ -2659,30 +2607,6 @@
       };
 
       const onSearchResultClick = async (event) => {
-        const selectButton = event.target.closest("[data-search-select]");
-        if (selectButton) {
-          const type = selectButton.getAttribute("data-search-select") || "";
-          const tab = selectButton.getAttribute("data-search-tab") || "";
-          const category = selectButton.getAttribute("data-search-category") || "";
-          const subCategory = selectButton.getAttribute("data-search-sub-category") || "";
-          if (!tab || !category) return;
-          if (type === "subCategory" && subCategory) {
-            collapsedSubcats.delete(subcatKeyFor(tab, category, subCategory));
-            saveCollapsedSubcats(collapsedSubcats);
-          }
-          dialogController.close("searchDialog");
-          setSelection({ tab, cat: category });
-          const targetKey = type === "subCategory"
-            ? subcatKeyFor(tab, category, subCategory)
-            : subcatKeyFor(tab, category, "");
-          const targetAttr = type === "subCategory" ? "data-subcategory-key" : "data-category-key";
-          requestAnimationFrame(() => {
-            Array.from(document.querySelectorAll(`[${targetAttr}]`))
-              .find((node) => node.getAttribute(targetAttr) === targetKey)
-              ?.scrollIntoView({ block: "start", behavior: "smooth" });
-          });
-          return;
-        }
         const detailsButton = event.target.closest("[data-search-details]");
         if (detailsButton) {
           const id = Number(detailsButton.getAttribute("data-search-details"));

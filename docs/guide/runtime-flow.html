@@ -35,7 +35,7 @@
       <article class="card sample-card"><div class="code-head">検索した場合</div><pre><code>searchInput input
   → getSearchResults(query)
   → buildSearchResultHtml(...)
-  → renderSearchResults()</code></pre><div class="why">パスはコピーや詳細表示、カテゴリ・サブカテゴリは選択移動につなげます。catalog自体は変更しません。</div></article>
+  → renderSearchResults()</code></pre><div class="why">検索結果は一時表示です。catalog自体は変更しません。</div></article>
       <article class="card sample-card"><div class="code-head">表示モードを変えた場合</div><pre><code>onThemeAction
   → applyTheme(theme)
   → storage.write(...)
