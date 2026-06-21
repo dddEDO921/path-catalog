@@ -5,7 +5,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>パスノート</title>
-  <link rel="icon" href="docs/path-note-icon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='background' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%23443d70'/%3E%3Cstop offset='1' stop-color='%23201c38'/%3E%3C/linearGradient%3E%3CclipPath id='icon'%3E%3Crect width='512' height='512' rx='116'/%3E%3C/clipPath%3E%3C/defs%3E%3Cg clip-path='url(%23icon)'%3E%3Crect width='512' height='512' fill='url(%23background)'/%3E%3Cg font-family='ui-monospace, SFMono-Regular, Consolas, monospace' font-size='34' font-weight='700'%3E%3Ctext x='82' y='142' fill='%23b0a9c3'%3E/work/src%3C/text%3E%3Ctext x='82' y='228' fill='%23b0a9c3'%3E../docs%3C/text%3E%3Ctext x='82' y='314' fill='%23d1b46d'%3E~/assets%3C/text%3E%3Ctext x='82' y='400' fill='%23b0a9c3'%3EC:%5Cmemo%3C/text%3E%3C/g%3E%3Cg fill='%236c648a'%3E%3Crect x='48' y='114' width='12' height='34' rx='6'/%3E%3Crect x='48' y='200' width='12' height='34' rx='6'/%3E%3Crect x='48' y='286' width='12' height='34' rx='6'/%3E%3Crect x='48' y='372' width='12' height='34' rx='6'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E">
 
   <!-- 開発・配布を簡単にするため CDN 版 Tailwind を利用 -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -718,7 +719,15 @@
       <div class="grid grid-cols-[260px_1fr_auto] items-end gap-3">
         <div class="flex items-center">
           <div class="header-logo" aria-label="パスノート">
-            <img src="docs/path-note-header-mark.svg" alt="" class="header-logo__mark">
+            <svg class="header-logo__mark" viewBox="0 0 92 64" aria-hidden="true" focusable="false">
+              <rect width="92" height="64" rx="14" fill="#332e50" />
+              <rect x="8" y="25" width="4" height="17" rx="2" fill="#c6a956" />
+              <g font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="8.5" font-weight="700">
+                <text x="17" y="18" fill="#aaa4bc">C:\work</text>
+                <text x="17" y="36" fill="#c6a956">~/docs</text>
+                <text x="17" y="54" fill="#aaa4bc">\\share</text>
+              </g>
+            </svg>
             <span class="header-logo__name" aria-hidden="true">パスノート</span>
           </div>
         </div>
