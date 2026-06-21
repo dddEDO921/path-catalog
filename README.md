@@ -43,6 +43,10 @@
 - 大切なデータは、`データ管理`から定期的に書き出してください。
 - スタイルとフォントの表示にはインターネット接続が必要です。
 
+## 開発資料
+
+仕組みやコードの構成を知りたい場合は、ブラウザで[`docs/path-note-guide.html`](docs/path-note-guide.html)を開いてください。
+
 ## License
 
 [MIT License](LICENSE)

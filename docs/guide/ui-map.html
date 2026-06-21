@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>画面UIの地図 | パスノート</title><link rel="stylesheet" href="guide.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a class="active" href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a href="state-management.html">状態管理</a><a href="io-security.html">入出力安全</a><a href="vanilla-js-design.html">Vanilla JS設計</a><a href="security-design.html">安全設計</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
+  <main class="page">
+    <section class="hero"><div class="eyebrow">UI MAP</div><h1>見えている画面から、<br>担当コードを探す。</h1><div class="doc-tags"><span>実践</span><span>構造</span><span>UI</span></div><p class="lead">利用者が触る場所と、静的HTML、描画関数、イベント処理を対応させます。</p></section>
+    <section><div class="section-kicker">01 / SCREEN REGIONS</div><h2>基本画面は3領域</h2><div class="card screen-map">
+      <div class="screen-header"><h3>ヘッダー</h3><span>ロゴ・タブ・検索・表示・データ管理・追加</span></div>
+      <div class="screen-side"><h3>カテゴリ</h3><p>選択中タブのカテゴリと警告。</p><span class="function-name">catList</span><span class="function-name">renderCategoryList</span></div>
+      <div class="screen-main"><h3>メイン一覧</h3><div class="screen-main-grid"><div class="screen-part"><strong>カテゴリ見出し</strong><span>カテゴリ単位のまとまり</span></div><div class="screen-part"><strong>サブカテゴリ</strong><span>開閉と追加ショートカット</span></div><div class="screen-part"><strong>パス一覧</strong><span>クリックでコピー、詳細ボタン</span></div></div></div>
+    </div></section>
+    <section><div class="section-kicker">02 / HEADER</div><h2>ヘッダーの操作</h2><table class="contract-table"><thead><tr><th>見える操作</th><th>HTMLの入口</th><th>担当処理</th></tr></thead><tbody>
+      <tr><td>タブを選ぶ</td><td><code>#tabNav</code></td><td><code>renderTabList</code> / <code>onTabClick</code> / <code>actions.setTab</code></td></tr>
+      <tr><td>検索する</td><td><code>#openSearchButton</code></td><td><code>openSearchDialog</code> / <code>renderSearchResults</code></td></tr>
+      <tr><td>表示モードを変える</td><td><code>#viewMenu</code></td><td><code>onThemeAction</code> / <code>applyTheme</code></td></tr>
+      <tr><td>データを管理する</td><td><code>#dataMenu</code></td><td><code>onDataMenuAction</code></td></tr>
+      <tr><td>追加する</td><td><code>#addMenu</code></td><td><code>onAddMenuAction</code></td></tr>
+    </tbody></table></section>
+    <section><div class="section-kicker">03 / DIALOGS</div><h2>ダイアログは5種類</h2><div class="responsibility-grid">
+      <article class="card responsibility"><h3>パスを追加</h3><p><code>#addPathDialog</code><br><code>prepareAddDialog</code> / <code>onAddPathSubmit</code></p></article>
+      <article class="card responsibility"><h3>分類を追加</h3><p><code>#addGroupDialog</code><br><code>openAddGroupDialog</code> / <code>onAddGroupSubmit</code></p></article>
+      <article class="card responsibility"><h3>パス詳細・編集</h3><p><code>#pathDetailsDialog</code><br><code>openPathDetailsDialog</code> / <code>onEditPathSubmit</code></p></article>
+      <article class="card responsibility"><h3>横断検索</h3><p><code>#searchDialog</code><br><code>openSearchDialog</code> / <code>renderSearchResults</code></p></article>
+      <article class="card responsibility"><h3>分類を整理</h3><p><code>#organizeDialog</code><br><code>openOrganizeDialog</code> / <code>deleteOrganizeSelection</code></p></article>
+    </div></section>
+    <section><div class="section-kicker">04 / UI CONTRACTS</div><h2>HTMLとJavaScriptをつなぐ印</h2><table class="contract-table"><thead><tr><th>印</th><th>役割</th><th>例</th></tr></thead><tbody>
+      <tr><td><code>id</code></td><td>1つの決まった要素を処理から取得する。</td><td><code>searchInput</code>、<code>addPathDialog</code></td></tr>
+      <tr><td><code>data-*</code></td><td>繰り返し生成される要素へ操作の意味を持たせる。</td><td><code>data-path-details</code>、<code>data-add-path</code></td></tr>
+      <tr><td><code>aria-*</code></td><td>支援技術とキーボード操作へ意味を伝える。</td><td><code>aria-expanded</code>、<code>aria-keyshortcuts</code></td></tr>
+      <tr><td>CSSクラス</td><td>見た目と、表示・非表示など一部の状態を表す。</td><td><code>hidden</code>、<code>active</code></td></tr>
+    </tbody></table></section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>コードの地図 | パスノート</title><link rel="stylesheet" href="guide.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="../path-note-guide.html"><span class="brand-mark"></span>パスノート 開発ガイド</a><nav class="doc-nav"><a href="architecture.html">アーキテクチャ</a><a class="active" href="code-map.html">コードの地図</a><a href="change-guide.html">変更ガイド</a><a href="ui-map.html">画面UI</a><a href="data-spec.html">データ仕様</a><a href="web-techniques.html">Web技術</a><a href="runtime-flow.html">実行フロー</a><a href="state-management.html">状態管理</a><a href="io-security.html">入出力安全</a><a href="vanilla-js-design.html">Vanilla JS設計</a><a href="security-design.html">安全設計</a><a href="design-guide.html">デザイン</a><a href="css-guide.html">CSS</a></nav></header>
+  <main class="page">
+    <section class="hero"><div class="eyebrow">CODE MAP</div><h1>巨大なHTMLは、<br>上から読まない。</h1><div class="doc-tags"><span>実践</span><span>構造</span><span>実装</span></div><p class="lead">目的に合う章コメントを検索し、入口のイベントから必要な関数だけを追います。</p></section>
+    <section><div class="section-kicker">01 / READING RULE</div><h2>読む範囲を先に絞る</h2><div class="reading-flow"><div><b>1</b><span>画面の要素や<br>章コメントを探す</span></div><i>→</i><div><b>2</b><span>イベント処理から<br>呼び先を追う</span></div><i>→</i><div><b>3</b><span>変更する責務の<br>内側だけ読む</span></div></div><div class="point">行番号は変更でずれます。<code>===== 描画</code>のような章コメントと、関数名を検索の入口にします。</div></section>
+    <section><div class="section-kicker">02 / RESPONSIBILITIES</div><h2>コードは6つの責務で見る</h2><p class="lead">カードを選ぶと、処理のつながりと境界を確認できます。</p><div class="responsibility-grid" id="areaGrid"></div><article class="card detail" id="areaDetail"></article></section>
+    <section><div class="section-kicker">03 / MAIN FLOWS</div><h2>よく追う処理の流れ</h2><div class="two-col">
+      <article class="card pad"><h3>パスを追加する</h3><p><span class="function-name">onAddPathSubmit</span> → <span class="function-name">catalogModel.appendItem</span> → <span class="function-name">commitCatalogChange</span> → <span class="function-name">refreshCatalog</span></p></article>
+      <article class="card pad"><h3>一覧を表示する</h3><p><span class="function-name">renderMain</span> → <span class="function-name">buildMainHtml</span> → <span class="function-name">buildListRow</span> → <span class="function-name">applyMain</span></p></article>
+      <article class="card pad"><h3>横断検索する</h3><p><span class="function-name">renderSearchResults</span> → <span class="function-name">getSearchResults</span> → <span class="function-name">buildSearchResultHtml</span></p></article>
+      <article class="card pad"><h3>データを読み込む</h3><p><span class="function-name">parseDataJs</span> → <span class="function-name">inspectCatalog</span> → <span class="function-name">saveCatalog</span> → <span class="function-name">refreshCatalog</span></p></article>
+    </div></section>
+    <section><div class="section-kicker">04 / GLOSSARY</div><h2>頻出する名前</h2><div class="glossary">
+      <article class="card term"><code>catalog</code><p>保存・編集用の階層データ。</p></article>
+      <article class="card term"><code>state.all</code><p>検索・表示用の平坦なパス一覧。</p></article>
+      <article class="card term"><code>catalogModel</code><p>階層データを変更する窓口。</p></article>
+      <article class="card term"><code>commitCatalogChange</code><p>変更、保存、復元、再描画をまとめる処理。</p></article>
+      <article class="card term"><code>inspectCatalog</code><p>外部データの形を検査する処理。</p></article>
+      <article class="card term"><code>normalize</code><p>検査済みデータを画面用へ整える処理。</p></article>
+      <article class="card term"><code>build...Html</code><p>表示するHTML文字列を作る処理。</p></article>
+      <article class="card term"><code>renderAll</code><p>主要な画面をまとめて描き直す処理。</p></article>
+    </div></section>
+  </main>
+  <script>
+    const areas = [
+      { title:"画面を描く", note:"一覧・検索結果・分類の見た目", flow:["build...Html","apply...","render...","renderAll"], start:"「===== 描画」から、表示したい部品の build 関数を探します。", boundary:"描画処理から catalog や localStorage を直接変更しません。" },
+      { title:"データを変える", note:"追加・編集・削除", flow:["catalogModel","commitCatalogChange","refreshCatalog","renderAll"], start:"「===== データモデル」と catalogModel 内の操作を探します。", boundary:"変更は commitCatalogChange を通し、保存失敗時に復元できるようにします。" },
+      { title:"操作を受ける", note:"クリック・フォーム・キー操作", flow:["bind","on...Click / Submit","処理本体","画面更新"], start:"「===== イベント」と bind のイベント登録を探します。", boundary:"イベント処理を巨大にせず、担当関数へ処理を渡します。" },
+      { title:"保存・読込", note:"localStorage・data.js", flow:["loadCatalog / parseDataJs","inspectCatalog","saveCatalog","refreshCatalog"], start:"「===== 設定・永続化」と「===== データ入出力」を探します。", boundary:"保存形式の変更は、既存利用者と過去の data.js に影響します。" },
+      { title:"状態を選ぶ", note:"現在のタブ・カテゴリ・絞り込み", flow:["state","actions / setSelection","getFilteredItems","renderAll"], start:"「===== 状態管理」から state と actions を探します。", boundary:"state を各所から直接変更せず、選択変更の窓口を使います。" },
+      { title:"安全に整える", note:"文字列・検査・パス判定", flow:["toSafeString / toHtml","inspectCatalog","normalize","利用処理"], start:"「===== 共通処理」と inspectCatalog を探します。", boundary:"外部データや入力値を、そのまま innerHTML へ入れません。" }
+    ];
+    const grid = document.getElementById("areaGrid");
+    const detail = document.getElementById("areaDetail");
+    function showArea(index) {
+      const area = areas[index];
+      detail.innerHTML = `<h3>${area.title}</h3><p>${area.note}</p><p>${area.flow.map(x=>`<span class="function-name">${x}</span>`).join(" → ")}</p><div class="detail-grid"><div class="detail-cell"><strong>最初に見る場所</strong><p>${area.start}</p></div><div class="detail-cell"><strong>越えない境界</strong><p>${area.boundary}</p></div><div class="detail-cell"><strong>次に読む資料</strong><p>実装する場合は変更ガイドで、影響範囲と確認方法を整理します。</p></div></div>`;
+      document.querySelectorAll(".responsibility").forEach((x,i)=>x.classList.toggle("active",i===index));
+    }
+    grid.innerHTML = areas.map((x,i)=>`<article class="card responsibility" data-area="${i}"><h3>${x.title}</h3><p>${x.note}</p></article>`).join("");
+    grid.addEventListener("click",e=>{const card=e.target.closest("[data-area]");if(card)showArea(Number(card.dataset.area));});
+    showArea(0);
+  </script>
+</body>
+</html>
